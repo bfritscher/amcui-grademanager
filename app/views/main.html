@@ -1,0 +1,36 @@
+<div id="dropbox">
+	DROPZONE
+</div>
+	
+<div>
+  <md-content class="md-padding">
+    <md-tabs md-dynamic-height>
+      <md-tab label="{{file.name.substring(0,20)}}" ng-repeat="file in main.files">
+        <md-content class="md-padding">
+          <table>
+          	<thead>
+          		<tr>
+          			<th ng-repeat="key in file.meta.fields track by $index">{{key}}</th>
+                <th>
+                  <textarea ng-model="main.source"></textarea>
+                  <textarea ng-model="main.idx"></textarea>
+                  <textarea ng-model="main.match"></textarea>
+                  <textarea ng-model="main.display"></textarea>
+                  
+                </th>
+          		</tr>
+          	</thead>
+          	<tbody>
+          		<tr ng-repeat="row in file.data">
+          			<td ng-repeat="(key, value) in row">{{value}}</td>
+                <td>{{main.vLookup2(row[main.source], main.idx, main.match, main.display)}}</td>
+                <td ng-if="row.Group">{{main.vLookup(row.Group, main.idx, 'groupe', 'note')}}</td>
+          		</tr>
+          	</tbody>
+          </table>
+          <md-button class="md-raised md-warn" ng-click="main.removeFile(file)">Remove</md-button>           
+        </md-content>
+      </md-tab>
+    </md-tabs>
+  </md-content>
+</div>
