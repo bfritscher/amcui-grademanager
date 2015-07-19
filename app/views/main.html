@@ -10,7 +10,10 @@
           <table>
           	<thead>
           		<tr>
-          			<th ng-repeat="key in file.meta.fields track by $index">{{key}}</th>
+          			<th ng-repeat="key in file.meta.fields track by $index">
+                  {{key}}
+                  <md-button class="" ng-click="main.calculate(file, $index)">calculate</md-button>
+                </th>
                 <th>
                   <textarea ng-model="main.source"></textarea>
                   <textarea ng-model="main.idx"></textarea>
@@ -22,8 +25,12 @@
           	</thead>
           	<tbody>
           		<tr ng-repeat="row in file.data">
-          			<td ng-repeat="(key, value) in row">{{value}}</td>
-                <td>{{main.vLookup2(row[main.source], main.idx, main.match, main.display)}}</td>
+          			<td ng-repeat="(key, value) in row">{{value}}
+                  <span ng-if="file.meta.calculated[$index]">
+                    {{main[file.meta.calculated[$index].type](row, key, row[file.meta.calculated[$index].source], file.meta.calculated[$index].targetFile, file.meta.calculated[$index].match, file.meta.calculated[$index].display)}}
+                  </span>
+                </td>
+                <td></td>
                 <td ng-if="row.Group">{{main.vLookup(row.Group, main.idx, 'groupe', 'note')}}</td>
           		</tr>
           	</tbody>

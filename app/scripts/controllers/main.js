@@ -32,16 +32,35 @@ angular.module('grademanagerApp')
       return undefined;    
     };
     
-    this.vLookup2 = function(lookupValue, fileIdx, matchFunc, displayFunc){
+    this.vLookup2 = function(row, key, lookupValue, fileIdx, matchFunc, displayFunc){
       var file = self.files[fileIdx];
       var match = new Function('lookupValue', 'row', 'return  ' + matchFunc + ';');
       var display = new Function('row', 'return  ' + displayFunc + ';');
       for( var i=0; i < file.data.length; i++){
         if(match(lookupValue || '', file.data[i])){
-          return display(file.data[i]);
+          var value = display(file.data[i]);
+          //save value to cache
+          row[key] = value;
+          //TODO save when finished
+          return value;
         }        
       }
+      row[key] = undefined;
       return undefined;
+    };
+
+    this.calculate = function(file, index){
+      if(!file.meta.calculated){
+        file.meta.calculated = []; 
+      }
+      file.meta.calculated[index] = {
+        type: 'vLookup2',
+        source: 'Group',
+        targetFile: 0,
+        match: 'row.groupe === lookupValue',
+        display: 'row.note'
+      };
+      save();
     };
 
     this.removeFile = function(file){
