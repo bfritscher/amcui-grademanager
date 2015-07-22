@@ -8,7 +8,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('MainCtrl', function ($scope) {
+  .controller('GradeCtrl', function ($scope) {
     var dropbox;
     var self = this;
     self.files = JSON.parse(localStorage.getItem('files') || '[]');
@@ -34,6 +34,7 @@ angular.module('grademanagerApp')
     
     this.vLookup2 = function(row, key, lookupValue, fileIdx, matchFunc, displayFunc){
       var file = self.files[fileIdx];
+      /*jslint evil: true */
       var match = new Function('lookupValue', 'row', 'return  ' + matchFunc + ';');
       var display = new Function('row', 'return  ' + displayFunc + ';');
       for( var i=0; i < file.data.length; i++){
@@ -92,10 +93,10 @@ angular.module('grademanagerApp')
       return function handleData(results) {
         $scope.$apply(function(){
           results.name = fileName;
-    		  self.files.push(results)
+    		  self.files.push(results);
           save();
         });
-    	}
+    	};
     }
     
     function handleFiles(files) {

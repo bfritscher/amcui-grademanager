@@ -29,7 +29,12 @@
         </h3>
       </div>
     </md-toolbar>
-
+    
+     <md-tabs class="md-whiteframe-z2">
+      <md-tab label="Edit"></md-tab>
+      <md-tab label="Scan"></md-tab>
+      <md-tab label="Grade"></md-tab>
+    </md-tabs>
     <div ng-view=""></div>
 
 
@@ -57,13 +62,15 @@
     <script src="bower_components/angular-aria/angular-aria.js"></script>
     <script src="bower_components/angular-material/angular-material.js"></script>
     <script src="bower_components/angular-ui-tree/dist/angular-ui-tree.js"></script>
+    <script src="bower_components/wysihtml/dist/wysihtml-toolbar.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
         <!-- build:js({.tmp,app}) scripts/scripts.js -->
         <script src="scripts/app.js"></script>
-        <script src="scripts/controllers/main.js"></script>
-        <script src="scripts/controllers/about.js"></script>
+        <script src="scripts/controllers/edit.js"></script>
+        <script src="scripts/controllers/scan.js"></script>
+        <script src="scripts/controllers/grade.js"></script>
         <!-- endbuild -->
 </body>
 </html>

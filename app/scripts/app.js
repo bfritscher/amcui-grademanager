@@ -15,19 +15,25 @@ angular
     'ngRoute',
     'ngSanitize',
     'ngTouch',
-    'ngMaterial'
+    'ngMaterial',
+    'ui.tree'
   ])
   .config(function ($routeProvider) {
     $routeProvider
-      .when('/', {
-        templateUrl: 'views/main.html',
-        controller: 'MainCtrl',
-        controllerAs: 'main'
+      .when('/edit', {
+        templateUrl: 'views/edit.html',
+        controller: 'EditCtrl',
+        controllerAs: 'editor'
       })
-      .when('/about', {
-        templateUrl: 'views/about.html',
-        controller: 'AboutCtrl',
-        controllerAs: 'about'
+      .when('/scan', {
+        templateUrl: 'views/scan.html',
+        controller: 'ScanCtrl',
+        controllerAs: 'scan'
+      })      
+      .when('/grade', {
+        templateUrl: 'views/grade.html',
+        controller: 'GradeCtrl',
+        controllerAs: 'grade'
       })
       .otherwise({
         redirectTo: '/'
