@@ -31,6 +31,7 @@ module.exports = function(config) {
       'bower_components/papaparse/papaparse.js',
       'bower_components/angular-aria/angular-aria.js',
       'bower_components/angular-material/angular-material.js',
+      'bower_components/angular-ui-tree/dist/angular-ui-tree.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       "app/scripts/**/*.js",
