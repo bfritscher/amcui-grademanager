@@ -1,17 +1,17 @@
 <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left"  md-is-locked-open="'true'">
-  <md-content>
-<h3>{{editor.exam.course}} - {{editor.exam.session}}</h3>
+  <md-content layout-padding>
+    <h3>{{editor.exam.course}} - {{editor.exam.session}}</h3>
     <div ui-tree="editor.examMenuOptions">
       <ol ui-tree-nodes="" ng-model="editor.exam.sections" data-type="section">
-        <li ng-repeat="section in editor.exam.sections" ng:init="parentIndex = $index" ui-tree-node>
+        <li class="section-menu" ng-repeat="section in editor.exam.sections" ng:init="parentIndex = $index" ui-tree-node>
           <div ui-tree-handle>
             {{section.title}}
           </div>
           <ol ui-tree-nodes="" ng-model="section.questions" data-type="question">
-            <li ng-repeat="question in section.questions" ui-tree-node>
+            <li class="question-menu" ng-repeat="question in section.questions" ui-tree-node>
               <div ui-tree-handle>
-                Question {{editor.getConsecutiveIndex(parentIndex, $index)}}
-                <div>{{question.content | limitTo: 30}}...</div>
+                <strong>Question {{editor.getConsecutiveIndex(parentIndex, $index)}}</strong>
+                <em>{{question.content | limitTo: 30}}...</em>
               </div>
             </li>
           </ol>
@@ -20,9 +20,73 @@
     </div>
   </md-content>
 </md-sidenav>
-<md-content>
+<md-content flex layout-padding>
   <h2>{{editor.exam.course}} - {{editor.exam.session}}</h2>
-  <p>This is the editor view.
+
+  <div class="section" ng-repeat="section in editor.exam.sections">
+    <md-button class="md-warn" ng-click="editor.removeSection(section)"><md-icon class="mdi-delete"></md-icon></md-button>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+      </div>
+    </md-toolbar>
+<!-- TODO: support multi column display-->
+		<div>
+        <!-- TODO: support display of isNumbered-->
+        <input type="text" ng-model="section.title"/>
+      <md-select placeholder="Level" ng-model="ctrl.userState">
+        <md-option ng-repeat="(key, value) in {'Level 1':'section', 'Level 2':'subsection', 'Level 3':'subsubsection'}" value="{{value}}">{{key}}</md-option>
+      </md-select>
+      <md-icon class="mdi-format-list-numbers"></md-icon>
+      <md-checkbox ng-model="section.isNumbered">Show number</md-checkbox>
+      <md-icon class="mdi-file-document"></md-icon>
+      <md-checkbox ng-model="section.isSectionTitleVisibleOnAMC">Show in separate answer sheet</md-checkbox>
+      <md-icon class="mdi-shuffle"></md-icon>
+      <md-checkbox ng-model="section.shuffle">Shuffle questions</md-checkbox>
+      <!-- TODO columns?      ng-model="section.columns" -->
+      <md-icon class="mdi-view-list"></md-icon>
+      <md-icon class="mdi-view-module"></md-icon>
+		</div>
+
+
+    <my-rich-text-editor ng-model="section.content"></my-rich-text-editor>
+
+    <div class="question" ng-class="{'layout-horizontal': question.layout == 'HORIZONTAL'}" ng-repeat="question in section.questions">
+        <button class="block-remove btn" ng-click="block.removeQuestion(question)"><i class="icon-trash"></i></button>
+        <h3><i class="icon-large icon-warning-sign invalid" ng-hide="isValid(question)" title="Question not valid! Check correct count."></i> Question <span class="counter"></span>
+			       <md-icon class="mdi-message"></md-icon>
+             <md-icon class="mdi-message-text"></md-icon>
+             <md-icon class="mdi-forum"></md-icon>
+             <input type="checkbox" id="id{{question.id}}" ng-model="question.type"  ng-true-value="2" ng-false-value="1" class="hide"/><label title="single answer or multiple answers" for="id{{question.id}}" class="icon-large checkbox-icon question-type"></label>
+             <input type="checkbox" id="idl{{question.id}}" ng-model="question.layout" class="hide"/><label title="answer layout for this question horizontal|vertical" for="idl{{question.id}}" class="icon-large checkbox-icon question-layout"></label>
+             <md-icon class="mdi-dots-horizontal"></md-icon>
+             <md-icon class="mdi-dots-vertical"></md-icon>
+             <md-icon class="mdi-alert"></md-icon>
+             <md-icon class="mdi-check"></md-icon>
+             <md-icon class="mdi-close"></md-icon>
+             <md-icon class="mdi-menu"></md-icon>
+             <md-icon class="mdi-plus"></md-icon>
+             <md-icon class="mdi-upload"></md-icon>
+             <md-icon class="mdi-download"></md-icon>
+             <md-icon class="mdi-file-image-box"></md-icon>
+             <md-icon class="mdi-file-xml"></md-icon>
+             <md-icon class="mdi-format-italic"></md-icon>
+             <md-icon class="mdi-format-bold"></md-icon>
+             <md-icon class="mdi-printer"></md-icon>
+			  </h3>
+        <my-rich-text-editor ng-model="question.content"></my-rich-text-editor>
+        <div ng-repeat="answer in question.answers" class="answer">
+            <input id="id{{answer.id}}" type="checkbox" ng-model="answer.correct"><label for="id{{answer.id}}" class="icon-large"></label> <my-rich-text-editor ng-model="answer.content"></my-rich-text-editor> <button ng-click="question.removeAnswer(answer)" class="btn btn-link"><i class="icon-trash"></i></button>
+        </div>
+        <div class="add-answer"><button ng-click="question.addAnswer()" class="btn"><i class="icon icon-plus"></i> answer</button></div>
+    </div>
+    <div class="add-question"><button ng-click="block.addQuestion()" class="btn"><i class="icon icon-plus"></i> question</button></div>
+  </div>
+
+  <div class="add-section">
+    <button ng-click="exam.addBlock()" class="btn"><i class="icon icon-plus"></i> section</button>
+  </div>
+</md-content>
+<!--
     preview
     option-> template list
     custom template
@@ -30,49 +94,4 @@
     upload custom project -> disable edit
     print nb series
     d/l zipped?
-  </p>
-</md-content>
-<!--
- css http://jimliu.github.io/angular-ui-tree/
-  https://github.com/angular-ui-tree/angular-ui-tree
-
-<div  ng-class="{'sorting-question': draggingQuestion, 'sorting-block': draggingBlock}" ui-sortable="sortableBlocksOptions" ng-model="exam.blocks">
-  <div class="block" ng-repeat="block in exam.blocks.asArray()">
-    <div class="handle" title="drag to reorder"><i class="icon-reorder"></i></div>
-    <button class="block-remove btn" ng-click="exam.removeBlock(block)"><i class="icon-trash"></i></button>
-
-    <div class="group" ng-class="{'two-column': block.columns == 2}">
-		<div class="section {{block.sectionLevel}}" ng-class="{'section-counter': block.sectionContent && block.sectionNumbered}">
-        <input ui-jq="autosizeInput" type="text" ng-model="block.sectionContent"/>
-		    <select class="input-small" ng-model="block.sectionLevel" ng-options="key for (key , value) in {'Level 1':'section', 'Level 2':'subsection', 'Level 3':'subsubsection'}"></select>
-		    <input type="checkbox" id="idn{{block.id}}" ng-model="block.sectionNumbered" class="hide"/><label title="numbered section" for="idn{{block.id}}" class="icon-large checkbox-icon section-numbered"></label>
-		    <input type="checkbox" id="ida{{block.id}}" ng-model="block.sectionIsAmc"  class="hide"/><label title="display on answer sheet" for="ida{{block.id}}" class="icon-large checkbox-icon section-isamc"></label>
-		    <input type="checkbox" id="ids{{block.id}}" ng-model="block.shuffle"  class="hide"/><label title="shuffle questions" for="ids{{block.id}}" class="icon-large checkbox-icon section-shuffle"></label>
-		    <input type="checkbox" id="id{{block.id}}" ng-model="block.columns" ng-true-value="2" ng-false-value="1" class="hide"/><label title="column layout for this group" for="id{{block.id}}" class="icon-large checkbox-icon column-layout"></label>
-		</div>
-
-    <div rich-text-editor ng-model="block.content"></div>
-
-    <div class="questions" ui-multi-sortable ng-model="exam" model-subset="blocks.get({{$index}}).questions">
-      <div class="question" ng-class="{'layout-horizontal': question.layout == 1}" ng-repeat="question in block.questions.asArray()">
-			   <button class="block-remove btn" ng-click="block.removeQuestion(question)"><i class="icon-trash"></i></button>
-          <h3><i class="icon-large icon-warning-sign invalid" ng-hide="isValid(question)" title="Question not valid! Check correct count."></i> Question <span class="counter"></span>
-			       <input type="checkbox" id="id{{question.id}}" ng-model="question.type"  ng-true-value="2" ng-false-value="1" class="hide"/><label title="single answer or multiple answers" for="id{{question.id}}" class="icon-large checkbox-icon question-type"></label>
-              <input type="checkbox" id="idl{{question.id}}" ng-model="question.layout" class="hide"/><label title="answer layout for this question horizontal|vertical" for="idl{{question.id}}" class="icon-large checkbox-icon question-layout"></label>
-			    </h3>
-          <div>
-            <div rich-text-editor ng-model="question.content"></div>
-                <div ng-repeat="answer in question.answers.asArray()" class="answer">
-                  <input id="id{{answer.id}}" type="checkbox" ng-model="answer.correct"><label for="id{{answer.id}}" class="icon-large"></label> <div rich-text-editor ng-model="answer.content"></div> <button ng-click="question.removeAnswer(answer)" class="btn btn-link"><i class="icon-trash"></i></button>
-                </div>
-
-                <div class="add-answer"><button ng-click="question.addAnswer()" class="btn"><i class="icon icon-plus"></i> answer</button></div>
-          </div>
-       </div>
-          <div class="add-question"><button ng-click="block.addQuestion()" class="btn"><i class="icon icon-plus"></i> question</button></div>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="add-section"><button ng-click="exam.addBlock()" class="btn"><i class="icon icon-plus"></i> section</button></div>
--->
+  -->

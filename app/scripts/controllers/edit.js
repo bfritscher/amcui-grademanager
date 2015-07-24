@@ -52,6 +52,11 @@ angular.module('grademanagerApp')
 	    }
 	    return total + $index + 1;
 	  };
+
+	this.removeSection = function(section){
+		editor.exam.sections.splice(editor.exam.sections.indexOf(section), 1);
+	};
+
   });
 
 /*
