@@ -31,18 +31,18 @@ to a value of order 0.5.
         <table>
           <thead>
             <tr>
-              <th>Identifier
+              <th ng-class="{'sort-asc': scan.orderBy == 'id' && !scan.reverse, 'sort-desc': scan.orderBy == 'id' && scan.reverse}" ng-click="scan.sort('id')">Identifier
                 <md-icon class="mdi-help-circle">
                   <md-tooltip>Student/Page/Copy green=auto blue=manual</md-tooltip></md-icon>
               </th>
-              <th>Updated</th>
-              <th>MSD
+              <th ng-class="{'sort-asc': scan.orderBy == 'timestamp_auto' && !scan.reverse, 'sort-desc': scan.orderBy == 'timestamp_auto' && scan.reverse}" ng-click="scan.sort('timestamp_auto')">Updated</th>
+              <th ng-class="{'sort-asc': scan.orderBy == 'mse' && !scan.reverse, 'sort-desc': scan.orderBy == 'mse' && scan.reverse}" ng-click="scan.sort('mse')">MSD
                 <md-icon class="mdi-help-circle">
                   <md-tooltip>The value MSD (mean square deviation) is an indication
                     of the good framing of the marks (the four black dots surrounding each copy).
                     When it is too great, the framing must be checked.</md-tooltip></md-icon>
               </th>
-              <th>Sensitivity <md-icon class="mdi-help-circle">
+              <th ng-class="{'sort-asc': scan.orderBy == 's' && !scan.reverse, 'sort-desc': scan.orderBy == 's' && scan.reverse}" ng-click="scan.sort('s')">Sensitivity <md-icon class="mdi-help-circle">
                   <md-tooltip>The value sensitivity is an indicator of proximity of the filling of
                     the boxes with the threshold. If it is too great (from 8 to its max value 10),
                     we must check whether the boxes recognized as checked are the good ones.</md-tooltip></md-icon>
@@ -50,7 +50,7 @@ to a value of order 0.5.
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="p in scan.pages | filter:{id:scan.filter}" ng-click="scan.loadPage(p)" ng-class="{active: scan.page.student == p.student && scan.page.page == p.page && scan.page.copy == p.copy}">
+            <tr ng-repeat="p in scan.pages | filter:{id:scan.filter} | orderBy: (scan.reverse?'-':'') + scan.orderBy" ng-click="scan.loadPage(p)" ng-class="{active: scan.page.student == p.student && scan.page.page == p.page && scan.page.copy == p.copy}">
               <td ng-class="{'manual': p.timestamp_manual > 0, 'auto': p.timestamp_auto > 0}">{{p.student}}/{{p.page}}<span ng-show="p.copy > 0">:{{p.copy}}</span></td>
               <td>{{(p.timestamp_manual || p.timestamp_auto)*1000 | date:'yyyy-MM-dd HH:mm'}}</td>
               <td class="text-right" ng-class="{'s-threshold': p.mse >=3}">{{p.tm > 0 && '(' || ''}}{{p.mse.toFixed(1)}}{{p.tm > 0 && ')' || ''}}</td>

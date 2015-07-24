@@ -10,6 +10,16 @@
 angular.module('grademanagerApp')
   .controller('ScanCtrl', function ($http, $state) {
     var scan = this;
+    scan.orderBy = 'id';
+    scan.reverse = false;
+    scan.sort = function(field){
+      if (field === scan.orderBy){
+        scan.reverse = ! scan.reverse;
+      } else {
+        scan.orderBy = field;
+      }
+    };
+
     $http.get('http://192.168.59.103:9001/capture')
     .success(function(data){
       scan.pages = data;
