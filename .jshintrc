@@ -12,6 +12,7 @@
   "unused": true,
   "globals": {
     "angular": false,
-    "Papa": false
+    "Papa": false,
+    "svgPanZoom": false
   }
 }

@@ -8,41 +8,52 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('EditCtrl', function () {
-    this.exam = {
-      course: '',
-      session: '',
-      teacher: '',
-      //POINTS?
-      sections: [
-        {
-          title: 'Section 1',
-          content: '',
-          level: 0, //section or sub* sections
-          isNumbered: true, // * in LaTeX
-          isSectionTitleVisibleOnAMC: true, // AMC before section in LaTeX
-          shuffle: false,
-          columns: 1,
-          questions: [
-            {
-              content: '',
-              type: '', // SINGLE, MULTIPLE, OPEN
-              layout: '', //VERTICAL HORIZONTAL
-              //POINTS?
-              answers: [
-                {
-                  content:'',
-                  correct: false
-                  //POINTS?
-                }
-              ]
-            }
-          ]
+  .controller('EditCtrl', function ($http) {
+	var editor = this;
+    $http.get('data/exam_test.json')
+	.success(function(data){
+		editor.exam = data;
+	});
+
+	this.examMenuOptions = {
+		accept: function(sourceNode, destNodes, destIndex) {
+        var data = sourceNode.$modelValue;
+		var srcType = undefined;
+		if(data.hasOwnProperty('questions')){
+			srcType = 'section';
+		}else{
+			srcType = 'question';
+		}
+        var destType = destNodes.$element.attr('data-type');
+        return (srcType === destType);
+      },
+	  dropped: function(event) {
+        console.log(event);
+        /*
+        var sourceNode = event.source.nodeScope;
+        var destNodes = event.dest.nodesScope;
+        // update changes to server
+
+		if (destNodes.isParent(sourceNode)
+          && destNodes.$element.attr('data-type') == 'category') { // If it moves in the same group, then only update group
+          var group = destNodes.$nodeScope.$modelValue;
+          group.save();
+        } else { // save all
+          $scope.saveGroups();
         }
-      ]
-    };
+		*/
+      }
+	};
+
+	this.getConsecutiveIndex = function(parentIndex, $index) {
+	    var total = 0;
+	    for(var i = 0; i < parentIndex; i += 1) {
+	      total += editor.exam.sections[i].questions.length;
+	    }
+	    return total + $index + 1;
+	  };
   });
-  
+
 /*
 		out += "\\newcommand{\\ACMUImatiere}{" + html2Latex(this.matiere, exam) + "}\n";
 		out += "\\newcommand{\\ACMUIsession}{" + html2Latex(this.session, exam) + "}\n";
@@ -56,16 +67,16 @@ this.toLatexBody = function(exam){
 			if(!this.sectionNumbered) out += '*';
 			out += "{" +  html2Latex(this.sectionContent, exam) +"}\n\n";
 		}
-		
+
 		out += html2Latex(this.content, exam) + "\n";
-		
+
         if(this.shuffle) out+="\melangegroupe{" + this.id + "}\n";
 		if(this.columns > 1) out+= "\\begin{multicols}{" + this.columns + "}\n";
         out += "\\restituegroupe{" + this.id + "}\n";
 		if(this.columns > 1) out+= "\\end{multicols}\n";
 		return out;
     };
-    
+
 	this.toLatexHead = function(groupId, exam){
 		var out = "\n";
 		out += "\\element{" + groupId + "}{\n";
@@ -79,8 +90,8 @@ this.toLatexBody = function(exam){
 		});
 		out += "    \\end{" + layout + "}\n";
 		out += "  \\end{" + type + "}\n";
-		out += "}\n";    
-    
+		out += "}\n";
+
 function Code(){
 	this.toLatex = function(){
 		var mode = app.Code.prototype.modeToLanguage[this.mode];
@@ -89,14 +100,14 @@ function Code(){
 		if(!this.numbers) out+="numbers=none,";
 		out += "language=" + mode + "]{src/" + this.id + "}";
 		return out;
-	};    
-  
+	};
+
 function Graphics(){
 	this.toLatex = function(){
 		var out = "\\includegraphics[" + this.options  + "]{src/" + this.id + "}";
 		if(this.border){
 			out = "\\fbox{" + out + "}";
-		}  
+		}
     this.options = 'width=0.7\\textwidth';
 */
 

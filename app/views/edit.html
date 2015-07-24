@@ -1,15 +1,17 @@
 <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left"  md-is-locked-open="'true'">
   <md-content>
-    <div ui-tree>
-      <ol ui-tree-nodes="" ng-model="editor.exam.sections">
-        <li ng-repeat="section in editor.exam.sections" ui-tree-node>
+<h3>{{editor.exam.course}} - {{editor.exam.session}}</h3>
+    <div ui-tree="editor.examMenuOptions">
+      <ol ui-tree-nodes="" ng-model="editor.exam.sections" data-type="section">
+        <li ng-repeat="section in editor.exam.sections" ng:init="parentIndex = $index" ui-tree-node>
           <div ui-tree-handle>
             {{section.title}}
           </div>
-          <ol ui-tree-nodes="" ng-model="section.questions">
+          <ol ui-tree-nodes="" ng-model="section.questions" data-type="question">
             <li ng-repeat="question in section.questions" ui-tree-node>
               <div ui-tree-handle>
-                Question {{$index + 1}}
+                Question {{editor.getConsecutiveIndex(parentIndex, $index)}}
+                <div>{{question.content | limitTo: 30}}...</div>
               </div>
             </li>
           </ol>
@@ -19,18 +21,26 @@
   </md-content>
 </md-sidenav>
 <md-content>
-  <h2>{{editor.section.title}}</h2>
-  <p>This is the editor view.</p>
+  <h2>{{editor.exam.course}} - {{editor.exam.session}}</h2>
+  <p>This is the editor view.
+    preview
+    option-> template list
+    custom template
+    preview files, edit files -> disable edit
+    upload custom project -> disable edit
+    print nb series
+    d/l zipped?
+  </p>
 </md-content>
 <!--
  css http://jimliu.github.io/angular-ui-tree/
   https://github.com/angular-ui-tree/angular-ui-tree
-  
+
 <div  ng-class="{'sorting-question': draggingQuestion, 'sorting-block': draggingBlock}" ui-sortable="sortableBlocksOptions" ng-model="exam.blocks">
   <div class="block" ng-repeat="block in exam.blocks.asArray()">
     <div class="handle" title="drag to reorder"><i class="icon-reorder"></i></div>
     <button class="block-remove btn" ng-click="exam.removeBlock(block)"><i class="icon-trash"></i></button>
-    
+
     <div class="group" ng-class="{'two-column': block.columns == 2}">
 		<div class="section {{block.sectionLevel}}" ng-class="{'section-counter': block.sectionContent && block.sectionNumbered}">
         <input ui-jq="autosizeInput" type="text" ng-model="block.sectionContent"/>
@@ -40,9 +50,9 @@
 		    <input type="checkbox" id="ids{{block.id}}" ng-model="block.shuffle"  class="hide"/><label title="shuffle questions" for="ids{{block.id}}" class="icon-large checkbox-icon section-shuffle"></label>
 		    <input type="checkbox" id="id{{block.id}}" ng-model="block.columns" ng-true-value="2" ng-false-value="1" class="hide"/><label title="column layout for this group" for="id{{block.id}}" class="icon-large checkbox-icon column-layout"></label>
 		</div>
-       
+
     <div rich-text-editor ng-model="block.content"></div>
-    
+
     <div class="questions" ui-multi-sortable ng-model="exam" model-subset="blocks.get({{$index}}).questions">
       <div class="question" ng-class="{'layout-horizontal': question.layout == 1}" ng-repeat="question in block.questions.asArray()">
 			   <button class="block-remove btn" ng-click="block.removeQuestion(question)"><i class="icon-trash"></i></button>
@@ -51,11 +61,11 @@
               <input type="checkbox" id="idl{{question.id}}" ng-model="question.layout" class="hide"/><label title="answer layout for this question horizontal|vertical" for="idl{{question.id}}" class="icon-large checkbox-icon question-layout"></label>
 			    </h3>
           <div>
-            <div rich-text-editor ng-model="question.content"></div>    
+            <div rich-text-editor ng-model="question.content"></div>
                 <div ng-repeat="answer in question.answers.asArray()" class="answer">
                   <input id="id{{answer.id}}" type="checkbox" ng-model="answer.correct"><label for="id{{answer.id}}" class="icon-large"></label> <div rich-text-editor ng-model="answer.content"></div> <button ng-click="question.removeAnswer(answer)" class="btn btn-link"><i class="icon-trash"></i></button>
                 </div>
-                
+
                 <div class="add-answer"><button ng-click="question.addAnswer()" class="btn"><i class="icon icon-plus"></i> answer</button></div>
           </div>
        </div>
@@ -63,6 +73,6 @@
       </div>
     </div>
   </div>
-</div>  
+</div>
 <div class="add-section"><button ng-click="exam.addBlock()" class="btn"><i class="icon icon-plus"></i> section</button></div>
 -->

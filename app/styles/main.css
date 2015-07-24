@@ -5,79 +5,99 @@
   padding: 0.2em 0;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   padding: 0;
 }
 
-/* Everything but the jumbotron gets side spacing for mobile first views */
-.header,
-.marketing,
-.footer {
-  padding-left: 15px;
-  padding-right: 15px;
+md-tooltip {
+  max-width: 300px;
 }
 
-/* Custom page header */
-.header {
-  border-bottom: 1px solid #e5e5e5;
-  margin-bottom: 10px;
-}
-/* Make the masthead heading the same height as the navigation */
-.header h3 {
-  margin-top: 0;
-  margin-bottom: 0;
-  line-height: 40px;
-  padding-bottom: 19px;
+md-tooltip .md-background {
+    border-radius: 4px;
+    padding-bottom: 8px;
 }
 
-/* Custom page footer */
-.footer {
-  padding-top: 19px;
-  color: #777;
-  border-top: 1px solid #e5e5e5;
+md-tooltip .md-content {
+  white-space: normal;
+  height: inherit;
 }
 
-.container-narrow > hr {
-  margin: 30px 0;
-}
-
-/* Main marketing message and sign up button */
-.jumbotron {
-  text-align: center;
-  border-bottom: 1px solid #e5e5e5;
-}
-.jumbotron .btn {
-  font-size: 21px;
-  padding: 14px 24px;
-}
-
-/* Supporting marketing content */
-.marketing {
-  margin: 40px 0;
-}
-.marketing p + h4 {
-  margin-top: 28px;
-}
-
-/* Responsive: Portrait tablets and up */
-@media screen and (min-width: 768px) {
-  .container {
-    max-width: 730px;
+@media screen and (min-width: 600px){
+  md-tooltip .md-content {
+    white-space: normal;
+    height: inherit;
   }
+}
 
-  /* Remove the padding we set earlier */
-  .header,
-  .marketing,
-  .footer {
-    padding-left: 0;
-    padding-right: 0;
-  }
-  /* Space out the masthead */
-  .header {
-    margin-bottom: 30px;
-  }
-  /* Remove the bottom border on the jumbotron for visual effect */
-  .jumbotron {
-    border-bottom: 0;
-  }
+md-input-container .mdi{
+  font-size: 24px;
+}
+
+.correct-0{
+  background-color: orange;
+}
+.correct-1{
+  background-color: green;
+}
+.correct-2{
+  background-color: yellow;
+}
+.correct-3{
+  background-color: red;
+}
+
+path{
+  cursor: pointer;
+}
+
+
+tr.active td{
+  background-color: orange;
+}
+
+.auto{
+  background-color: lightgreen;
+}
+
+.manual{
+  background-color: lightblue;
+}
+
+.s-threshold, .mse-threshold{
+  background-color: red;
+}
+
+.scan-pages table{
+  margin-right: 15px;
+  width: 100%;
+  /* firefox hack */
+  display: block;
+  max-height: 10px;
+}
+
+.scan-pages table td, .scan-pages table th{
+  white-space: nowrap;
+}
+
+.scan-preview{
+  background-color: lightgrey;
+}
+
+.scan-preview{
+  color: grey;
+}
+
+.scan-reset{
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+.text-right{
+  text-align: right;
 }

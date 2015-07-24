@@ -1,1 +1,68 @@
-<p>This is the about view.</p>
+<!--
+  upload
+filter
+get sensitivity set threshold
+edit on preview save db
+
+When one uses a separate answer sheet, letters (or digits, if one uses the option digits,
+One also has to tune the grey level threshold (defining the proportion of black dots in a box above which that box is considered to be checked)
+to a value of order 0.5.
+0.15 if ticked
+0.5 if filled
+-->
+<div layout="row" flex>
+  <div class="scan-pages" layout="column">
+    <div layout-padding>
+      <h3>Scanned papers</h3>
+
+      <p>Complete: {{scan.missing.complete}} <span ng-show="scan.missing.incomplete > 0">Incomplete: {{scan.missing.incomplete}}</span></p>
+      <p ng-show="scan.missing.length > 0">Missing pages:
+        <div ng-repeat="missing in scan.missing.missing">{{missing}}</div>
+      </p>
+      <p ng-show="scan.missing.failed.length > 0">Failed pages:
+        <div ng-repeat="failed in scan.missing.failed">{{failed.filename}}</div>
+      </p>
+      <md-input-container md-no-float>
+        <md-icon class="mdi-magnify"></md-icon>
+        <input ng-model="scan.filter" type="text" placeholder="Filter">
+      </md-input-container>
+    </div>
+    <md-content flex layout-padding md-scroll-y>
+        <table>
+          <thead>
+            <tr>
+              <th>Identifier
+                <md-icon class="mdi-help-circle">
+                  <md-tooltip>Student/Page/Copy green=auto blue=manual</md-tooltip></md-icon>
+              </th>
+              <th>Updated</th>
+              <th>MSD
+                <md-icon class="mdi-help-circle">
+                  <md-tooltip>The value MSD (mean square deviation) is an indication
+                    of the good framing of the marks (the four black dots surrounding each copy).
+                    When it is too great, the framing must be checked.</md-tooltip></md-icon>
+              </th>
+              <th>Sensitivity <md-icon class="mdi-help-circle">
+                  <md-tooltip>The value sensitivity is an indicator of proximity of the filling of
+                    the boxes with the threshold. If it is too great (from 8 to its max value 10),
+                    we must check whether the boxes recognized as checked are the good ones.</md-tooltip></md-icon>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="p in scan.pages | filter:{id:scan.filter}" ng-click="scan.loadPage(p)" ng-class="{active: scan.page.student == p.student && scan.page.page == p.page && scan.page.copy == p.copy}">
+              <td ng-class="{'manual': p.timestamp_manual > 0, 'auto': p.timestamp_auto > 0}">{{p.student}}/{{p.page}}<span ng-show="p.copy > 0">:{{p.copy}}</span></td>
+              <td>{{(p.timestamp_manual || p.timestamp_auto)*1000 | date:'yyyy-MM-dd HH:mm'}}</td>
+              <td class="text-right" ng-class="{'s-threshold': p.mse >=3}">{{p.tm > 0 && '(' || ''}}{{p.mse.toFixed(1)}}{{p.tm > 0 && ')' || ''}}</td>
+              <td class="text-right" ng-class="{'s-threshold': p.s >= 8}">{{p.s.toFixed(1)}}</td>
+            </tr>
+          </tbody>
+        </table>
+    </md-content>
+  </div>
+  <div ui-view="" class="scan-preview" flex layout="column" layout-padding>
+    <div flex layout="column"  layout-align="center center">
+      <h1>No page selected for preview</h1>
+    </div>
+  </div>
+</div>

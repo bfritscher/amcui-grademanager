@@ -1,7 +1,22 @@
+There must be at least one column named name or surname.
+
+%S
+is replaced by the student's total score.
+%M
+is replaced by the maximum total score.
+%s
+is replaced by the student's mark.
+%m
+is replaced by the maximum mark.
+%(ID)
+is replaced by the student's name.
+%(COL)
+is replaced by the value of column COL in the students list for the curent student.
+
 <div id="dropbox">
 	DROPZONE
 </div>
-	
+highlight impossible? missing? confirm reviewed
 <div>
   <md-content class="md-padding">
     <md-tabs md-dynamic-height>
@@ -19,7 +34,7 @@
                   <textarea ng-model="main.idx"></textarea>
                   <textarea ng-model="main.match"></textarea>
                   <textarea ng-model="main.display"></textarea>
-                  
+
                 </th>
           		</tr>
           	</thead>
@@ -35,9 +50,24 @@
           		</tr>
           	</tbody>
           </table>
-          <md-button class="md-raised md-warn" ng-click="main.removeFile(file)">Remove</md-button>           
+          <md-button class="md-raised md-warn" ng-click="main.removeFile(file)">Remove</md-button>
         </md-content>
       </md-tab>
     </md-tabs>
   </md-content>
+</div>
+
+<button ng-click="order=''">order q</button> <button ng-click="order='avg'">order mean</button>
+<div class="question" ng-repeat="q in questions | orderBy:order">
+  <h2 ng-bind="q.title"></h2>
+  <div>total: {{q.total}} mean: {{(q.avg*100).toFixed(2)}}%</div>
+  <div class="answer-dist">
+    <div ng-repeat="a in q.answers" ng-style="{width: a.nb/q.total*100 +'%'}" class="correct-{{a.correct}}">{{a.answer}}.{{a.nb}}.{{(a.nb/q.total*100).toFixed(2)}}%</div>
+  </div>
+</div>
+
+<img ng-src="http://192.168.59.103:8080/amcui/static.groovy?id=/cr/{{current.image}}"/>
+<img ng-src="http://192.168.59.103:8080/amcui/static.groovy?id=/cr/page-{{current.student}}-{{current.page}}-{{current.copy}}.jpg"/>
+<div ng-repeat="student in copies" ng-click="$parent.current = student">
+{{student.student}} {{student.copy}} {{student.auto}}
 </div>
