@@ -31,6 +31,7 @@
 		<md-list>
 			<md-subheader class="md-no-sticky">Projects</md-subheader>
 		    <md-list-item ng-click="home.openProject(item)" ng-repeat="item in home.projects">{{item}} <md-button>share</md-button></md-list-item>
+			<md-list-item ng-hide="home.projects.length > 0">No projects found!</md-list-item>
 		</md-list>
 	</div>
 </md-content>
