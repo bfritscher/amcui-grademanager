@@ -16,9 +16,9 @@ angular.module('grademanagerApp')
 	});
 
 	this.examMenuOptions = {
-		accept: function(sourceNode, destNodes, destIndex) {
+		accept: function(sourceNode, destNodes) {
         var data = sourceNode.$modelValue;
-		var srcType = undefined;
+		var srcType;
 		if(data.hasOwnProperty('questions')){
 			srcType = 'section';
 		}else{
@@ -45,6 +45,7 @@ angular.module('grademanagerApp')
       }
 	};
 
+	//TODO to one time compute or server side?
 	this.getConsecutiveIndex = function(parentIndex, $index) {
 	    var total = 0;
 	    for(var i = 0; i < parentIndex; i += 1) {

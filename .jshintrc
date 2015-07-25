@@ -13,6 +13,7 @@
   "globals": {
     "angular": false,
     "Papa": false,
-    "svgPanZoom": false
+    "svgPanZoom": false,
+    "io": false
   }
 }

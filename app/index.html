@@ -10,6 +10,7 @@
     <!-- bower:css -->
     <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
     <link rel="stylesheet" href="bower_components/angular-ui-tree/dist/angular-ui-tree.min.css" />
+    <link rel="stylesheet" href="bower_components/mdi/css/materialdesignicons.css" />
     <link rel="stylesheet" href="bower_components/mdi/css/materialdesignicons.min.css" />
     <!-- endbower -->
     <!-- endbuild -->
@@ -28,6 +29,17 @@
         <h3>
           <a class="navbar-brand" href="#/">GradeManager</a>
         </h3>
+        <span flex></span>
+        <md-menu ng-show="app.isAuthed()">
+          <md-button aria-label="Open phone interactions menu"  ng-click="$mdOpenMenu()" ng-bind="app.getUsername()"></md-button>
+          <md-menu-content>
+            <md-menu-item>
+              <md-button ng-click="app.logout()">
+                Logout
+              </md-button>
+            </md-menu-item>
+          </md-menu-content>
+        </md-menu>
       </div>
     </md-toolbar>
 
@@ -68,6 +80,7 @@
     <script src="bower_components/momentjs/moment.js"></script>
     <script src="bower_components/angular-ui-router/release/angular-ui-router.js"></script>
     <!-- endbower -->
+    <script src="bower_components/socket.io-client/socket.io.js"></script>
     <!-- endbuild -->
 
         <!-- build:js({.tmp,app}) scripts/scripts.js -->
@@ -80,6 +93,8 @@
         <script src="scripts/directives/panzoom.js"></script>
         <script src="scripts/controllers/scanpreview.js"></script>
         <script src="scripts/services/api.js"></script>
+        <script src="scripts/services/authinterceptor.js"></script>
+        <script src="scripts/services/auth.js"></script>
         <!-- endbuild -->
 </body>
 </html>

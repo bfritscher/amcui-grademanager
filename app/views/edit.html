@@ -23,7 +23,7 @@
 <md-content flex layout-padding>
   <h2>{{editor.exam.course}} - {{editor.exam.session}}</h2>
 
-  <div class="section" ng-repeat="section in editor.exam.sections">
+  <div class="section" ng-repeat="section in editor.exam.sections | filter: {'title': 'vues'}">
     <md-button class="md-warn" ng-click="editor.removeSection(section)"><md-icon class="mdi-delete"></md-icon></md-button>
     <md-toolbar>
       <div class="md-toolbar-tools">
@@ -45,8 +45,10 @@
       <!-- TODO columns?      ng-model="section.columns" -->
       <md-icon class="mdi-view-list"></md-icon>
       <md-icon class="mdi-view-module"></md-icon>
+      <md-icon class="mdi-settings"></md-icon>
+      <md-icon class="mdi-eye"></md-icon>
 		</div>
-
+<!-- TODO disable question?/section paginate-->
 
     <my-rich-text-editor ng-model="section.content"></my-rich-text-editor>
 

@@ -8,18 +8,32 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('AppCtrl', function ($scope, $state) {
+  .controller('AppCtrl', function ($scope, $state, $stateParams, auth) {
     var _this = this;
     this.tabIndex = 0;
     this.tabInit = false;
     this.hideTabs = true;
+
+    this.getUsername = function(){
+      return auth.getUsername();
+    };
+
+    this.isAuthed = function() {
+      return auth.isAuthed();
+    };
+
+    this.logout = function(){
+      auth.logout();
+    };
+
     this.go = function(state){
       if(_this.tabInit){
-        $state.go(state);
+        $state.go(state, {project: $stateParams.project});
       } else {
         _this.tabInit = true;
       }
     };
+
     $scope.$on('$stateChangeSuccess', function(){
       _this.hideTabs = $state.includes('home');
       if($state.includes('edit')){

@@ -8,10 +8,14 @@
  * Service in the grademanagerApp.
  */
 angular.module('grademanagerApp')
-  .service('API', function () {
-var apiURL = 'http://192.168.59.103:8080/amcui/';
-    this.pages = [];
-    this.page = {};
+  .service('API', function ($http) {
+    var self = this;
+    self.URL = 'http://192.168.59.103:9001';
+
+    self.getProjectList = function(){
+      return $http.get(self.URL + '/project/list');
+    };
+
     /*
     {
       "src":"%PROJET/scans/aBack0042.tif",
@@ -46,9 +50,5 @@ sub sensitivity_up {
 }
 
     */
-    this.zones = [];
-
-    var self = this;
-
 
   });

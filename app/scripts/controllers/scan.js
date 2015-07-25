@@ -8,7 +8,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('ScanCtrl', function ($http, $state) {
+  .controller('ScanCtrl', function ($http, $state, $stateParams, API) {
     var scan = this;
     scan.orderBy = 'id';
     scan.reverse = false;
@@ -20,15 +20,19 @@ angular.module('grademanagerApp')
       }
     };
 
-    $http.get('http://192.168.59.103:9001/capture')
+    this.loadPage = function(page){
+      scan.page = page;
+      page.project = $stateParams.project;
+      $state.go('scan.manual', page);
+    };
+
+    //TODO move to service?
+    $http.get(API.URL + '/project/' + $stateParams.project +'/capture')
     .success(function(data){
       scan.pages = data;
     });
-    this.loadPage = function(page){
-      scan.page = page;
-      $state.go('scan.manual', page);
-    };
-    $http.get('http://192.168.59.103:9001/missing')
+
+    $http.get(API.URL + '/project/' + $stateParams.project +'/missing')
     .success(function(data){
       scan.missing = data;
     });

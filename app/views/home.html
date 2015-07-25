@@ -1,5 +1,36 @@
-<p>
-	login?
-	project list
-	new project
-</p>
+<md-content layout-padding>
+	<form ng-submit="home.login()">
+	<md-card ng-hide="home.isAuthed()">
+		<md-card-content>
+			<md-input-container>
+				<label>Username</label>
+				<input ng-model="home.username" ng-required="true">
+			</md-input-container>
+			<md-input-container>
+				<label>Password</label>
+				<input ng-model="home.password" type="password" ng-required="true">
+			</md-input-container>
+			<ng-messages for="home.error" role="alert">
+			  <ng-message when="error">{{home.error.error}}</ng-message>
+			</ng-messages>
+		</md-card-content>
+		 <div class="md-actions" layout="row" layout-align="end center">
+	        <md-button class="md-primary" ng-click="home.login()">Login</md-button>
+			<md-button ng-click="home.login()">Create</md-button>
+	      </div>
+	</md-card>
+	</form>
+	<div ng-show="home.isAuthed()">
+		<form ng-submit="home.createProject()" layout="row">
+			<md-input-container>
+				<label>Project name</label>
+				<input ng-model="home.newProjectName" ng-required="true">
+			</md-input-container>
+			<md-button class="md-primary md-raised">Create Project</md-button>
+		</form>
+		<md-list>
+			<md-subheader class="md-no-sticky">Projects</md-subheader>
+		    <md-list-item ng-click="home.openProject(item)" ng-repeat="item in home.projects">{{item}} <md-button>share</md-button></md-list-item>
+		</md-list>
+	</div>
+</md-content>

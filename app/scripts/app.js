@@ -30,13 +30,13 @@ angular
         controllerAs: 'home'
       })
       .state('edit', {
-        url: '/edit',
+        url: '/:project/edit',
         templateUrl: 'views/edit.html',
         controller: 'EditCtrl',
         controllerAs: 'editor'
       })
       .state('scan', {
-        url: '/scan',
+        url: '/:project/scan',
         templateUrl: 'views/scan.html',
         controller: 'ScanCtrl',
         controllerAs: 'scan'
@@ -48,7 +48,7 @@ angular
         controllerAs: 'preview'
       })
       .state('grade', {
-        url: '/grade',
+        url: '/:project/grade',
         templateUrl: 'views/grade.html',
         controller: 'GradeCtrl',
         controllerAs: 'grade'
@@ -56,6 +56,9 @@ angular
   })
   .config(function($mdIconProvider) {
     $mdIconProvider.defaultFontSet( 'mdi' );
+  })
+  .config(function($httpProvider) {
+    $httpProvider.interceptors.push('authInterceptor');
   });
 
  //http://stackoverflow.com/questions/15895483/angular-ng-href-and-svg-xlink
@@ -71,24 +74,30 @@ angular.forEach([
             priority: 99,
             link: function (scope, element, attrs) {
                 attrs.$observe(ngAttrName, function (value) {
-                    if (!value) return;
+                    if (!value) {
+                        return;
+                    }
                     attrs.$set(attrName, value);
-                    if (IeHelperSrv.isIE) element.prop(attrName, value);
+                    if (IeHelperSrv.isIE) {
+                        element.prop(attrName, value);
+                    }
                 });
             }
         };
     });
 });
+
+var checkForIE = {
+    init: function () {
+        this.isIE = (navigator.userAgent.indexOf('MSIE') !== -1);
+    }
+};
+
 angular.module('IeHelper', []).factory('IeHelperSrv', function () {
 
     return {
         isIE: checkForIE.isIE,
-    }
+    };
 });
 
-var checkForIE = {
-    init: function () {
-        this.isIE = (navigator.userAgent.indexOf('MSIE') != -1);
-    }
-};
 checkForIE.init();
