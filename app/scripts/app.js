@@ -52,6 +52,12 @@ angular
         templateUrl: 'views/grade.html',
         controller: 'GradeCtrl',
         controllerAs: 'grade'
+      })
+      .state('options', {
+        url: '/:project/options',
+        templateUrl: 'views/options.html',
+        controller: 'OptionsCtrl',
+        controllerAs: 'ctrl'
       });
   })
   .config(function($mdIconProvider) {

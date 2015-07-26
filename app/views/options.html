@@ -1,0 +1,12 @@
+<md-content flex layout="column" class="no-background" layout-padding>
+	<h2>Collaborators</h2>
+	<md-chips ng-model="ctrl.options.users" placeholder="add another username" secondary-placeholder="+username"></md-chips>
+
+	<h2>Raw options</h2>
+	<md-input-container ng-repeat="(key, value) in ctrl.options.options">
+		<label>{{key}}</label>
+		<input ng-model="ctrl.options.options[key]" ng-if="key !='verdict' && key != 'email_text'">
+		<textarea ng-model="ctrl.options.options[key]" ng-if="key =='verdict' || key =='email_text'"></textarea>
+	</md-input-container>
+	<md-button class="md-warn md-raised" ng-click="ctrl.saveOptions()">Save</md-button>
+</md-content>

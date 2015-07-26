@@ -26,6 +26,9 @@
 				<label>Project name</label>
 				<input ng-model="home.newProjectName" ng-required="true">
 			</md-input-container>
+			<ng-messages for="home.error" role="alert">
+			  <ng-message when="error">{{home.error.error}}</ng-message>
+			</ng-messages>
 			<md-button class="md-primary md-raised">Create Project</md-button>
 		</form>
 		<md-list>

@@ -14,6 +14,10 @@ angular.module('grademanagerApp')
     this.tabInit = false;
     this.hideTabs = true;
 
+    this.project = function(){
+      return $stateParams.project;
+    };
+
     this.getUsername = function(){
       return auth.getUsername();
     };
@@ -24,10 +28,11 @@ angular.module('grademanagerApp')
 
     this.logout = function(){
       auth.logout();
+      _this.go('home');
     };
 
     this.go = function(state){
-      if(_this.tabInit){
+      if(_this.tabInit && !$state.includes(state)){
         $state.go(state, {project: $stateParams.project});
       } else {
         _this.tabInit = true;
@@ -44,6 +49,9 @@ angular.module('grademanagerApp')
       }
       if($state.includes('grade')){
         _this.tabIndex = 2;
+      }
+      if($state.includes('options')){
+        _this.tabIndex = 3;
       }
     });
   });

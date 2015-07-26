@@ -135,3 +135,7 @@ tr.active td{
   display: block;
   font-weight: normal;
 }
+
+.no-background{
+  background-color: transparent;
+}

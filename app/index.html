@@ -28,6 +28,7 @@
       <div class="md-toolbar-tools">
         <h3>
           <a class="navbar-brand" href="#/">GradeManager</a>
+          {{app.project()}}
         </h3>
         <span flex></span>
         <md-menu ng-show="app.isAuthed()">
@@ -47,6 +48,7 @@
       <md-tab label="Edit" md-on-select="app.go('edit')"></md-tab>
       <md-tab label="Scan" md-on-select="app.go('scan')"></md-tab>
       <md-tab label="Grade" md-on-select="app.go('grade')"></md-tab>
+      <md-tab label="Options" md-on-select="app.go('options')"></md-tab>
     </md-tabs>
     <div ui-view="" flex layout="row"></div>
 
@@ -85,16 +87,18 @@
 
         <!-- build:js({.tmp,app}) scripts/scripts.js -->
         <script src="scripts/app.js"></script>
+        <script src="scripts/controllers/app.js"></script>
+        <script src="scripts/controllers/home.js"></script>
         <script src="scripts/controllers/edit.js"></script>
         <script src="scripts/controllers/scan.js"></script>
-        <script src="scripts/controllers/grade.js"></script>
-        <script src="scripts/controllers/home.js"></script>
-        <script src="scripts/controllers/app.js"></script>
-        <script src="scripts/directives/panzoom.js"></script>
         <script src="scripts/controllers/scanpreview.js"></script>
+        <script src="scripts/controllers/grade.js"></script>
+        <script src="scripts/controllers/options.js"></script>
+        <script src="scripts/directives/panzoom.js"></script>
         <script src="scripts/services/api.js"></script>
         <script src="scripts/services/authinterceptor.js"></script>
         <script src="scripts/services/auth.js"></script>
+
         <!-- endbuild -->
 </body>
 </html>

@@ -20,7 +20,7 @@
     </div>
   </md-content>
 </md-sidenav>
-<md-content flex layout-padding>
+<md-content flex layout-padding  class="no-background">
   <h2>{{editor.exam.course}} - {{editor.exam.session}}</h2>
 
   <div class="section" ng-repeat="section in editor.exam.sections | filter: {'title': 'vues'}">

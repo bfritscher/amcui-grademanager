@@ -35,12 +35,24 @@ angular.module('grademanagerApp')
           home.error = {error: data};
           console.log('test', data, status);
         })
-        .success(getProjectList)
+        .success(getProjectList);
       };
 
       home.openProject = function(project){
         //TODO: state based on project status? or last open?
         $state.go('edit', {project: project});
+      };
+
+      home.createProject = function(){
+        home.error = '';
+        API.createProject(home.newProjectName)
+        .success(function(){
+          home.openProject(home.newProjectName);
+          home.newProjectName = '';
+        })
+        .error(function(data){
+          home.error = {error: data};
+        });
       };
 
 

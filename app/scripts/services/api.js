@@ -16,6 +16,25 @@ angular.module('grademanagerApp')
       return $http.get(self.URL + '/project/list');
     };
 
+    self.createProject = function(project){
+      return $http.post(self.URL + '/project/create', {project: project});
+    };
+
+    self.addUser = function(username, project){
+      return $http.post(self.URL + '/project/' + project + '/add', {username: username});
+    };
+
+    self.removeUser = function(username, project){
+      return $http.post(self.URL + '/project/' + project + '/remove', {username: username});
+    };
+
+    self.setZoneManual = function(project, zone){
+      return $http.post(self.URL + '/project/' + project + '/capture/setmanual', zone);
+    };
+
+    self.setPageAuto = function(project, page){
+      return $http.post(self.URL + '/project/' + project + '/capture/setauto', page);
+    };
     /*
     {
       "src":"%PROJET/scans/aBack0042.tif",

@@ -30,6 +30,13 @@ angular.module('grademanagerApp')
     $http.get(API.URL + '/project/' + $stateParams.project +'/capture')
     .success(function(data){
       scan.pages = data;
+      if($state.params.student && $state.params.page && $state.params.copy){
+        for(var i=0; i< data.length; i++){
+          if(data[i].id === $state.params.student + '/' + $state.params.page + ':' + $state.params.copy){
+            scan.page = data[i];
+          }
+        }
+      }
     });
 
     $http.get(API.URL + '/project/' + $stateParams.project +'/missing')
