@@ -23,6 +23,9 @@
 <md-content flex layout-padding  class="no-background">
   <h2>{{editor.exam.course}} - {{editor.exam.session}}</h2>
 
+<md-button class="md-raised" ng-click="editor.preview()">Preview</md-button>
+<img ng-src="{{editor.pageSrc(p)}}" ng-repeat="p in editor.preview.pages"/>
+
   <div class="section" ng-repeat="section in editor.exam.sections | filter: {'title': 'vues'}">
     <md-button class="md-warn" ng-click="editor.removeSection(section)"><md-icon class="mdi-delete"></md-icon></md-button>
     <md-toolbar>

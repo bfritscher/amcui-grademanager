@@ -8,12 +8,24 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('EditCtrl', function ($http) {
+  .controller('EditCtrl', function ($http, $stateParams, $sce, API, auth) {
 	var editor = this;
     $http.get('data/exam_test.json')
 	.success(function(data){
 		editor.exam = data;
 	});
+
+	//TODO: automate
+	this.preview = function(){
+		$http.post(API.URL + '/project/' + $stateParams.project + '/preview')
+		.success(function(data){
+			editor.preview = data;
+		});
+	};
+
+	this.pageSrc = function(page){
+    	return $sce.trustAsResourceUrl(API.URL + '/project/' + $stateParams.project + '/out/' + page + '?token=' + auth.getToken());
+    };
 
 	this.examMenuOptions = {
 		accept: function(sourceNode, destNodes) {
