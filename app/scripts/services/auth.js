@@ -8,7 +8,7 @@
  * Service in the grademanagerApp.
  */
 angular.module('grademanagerApp')
-  .service('auth', function ($window, API, $http) {
+  .service('auth', function ($window, API, $http, $state) {
     var self = this;
 
     self.parseJwt = function(token) {
@@ -31,6 +31,7 @@ angular.module('grademanagerApp')
         var params = self.parseJwt(token);
         return Math.round(new Date().getTime() / 1000) <= params.exp;
       } else {
+        $state.go('home');
         return false;
       }
     };

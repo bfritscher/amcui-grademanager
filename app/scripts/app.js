@@ -18,7 +18,8 @@ angular
     'ngMaterial',
     'ui.tree',
     'ui.router',
-    'IeHelper'
+    'IeHelper',
+    'ngFileUpload'
   ])
   .config(function ($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise('/');

@@ -13,6 +13,16 @@ to a value of order 0.5.
 <div layout="row" flex>
   <div class="scan-pages" layout="column">
     <div layout-padding>
+      <h3>Upload papers</h3>
+      <md-button ngf-drop ngf-select ng-model="scan.files" class="md-raised md-accent drop-box"
+          ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true">
+          Drop pdfs or images here or click to upload</md-button>
+      <div ngf-no-file-drop>File Drag/Drop is not supported for this browser</div>
+      <md-content class="upload-list">
+        <p ng-repeat="f in scan.uploads">{{f.name}}
+          <md-progress-linear md-mode="determinate" value="{{f.progress}}"></md-progress-linear>
+        </p>
+      </md-content>
       <h3>Scanned papers</h3>
 
       <p>Complete: {{scan.missing.complete}} <span ng-show="scan.missing.incomplete > 0">Incomplete: {{scan.missing.incomplete}}</span></p>

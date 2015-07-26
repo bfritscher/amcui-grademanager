@@ -8,10 +8,11 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('ScanCtrl', function ($http, $state, $stateParams, API) {
+  .controller('ScanCtrl', function ($scope, $http, $state, $stateParams, API, Upload) {
     var scan = this;
     scan.orderBy = 'id';
     scan.reverse = false;
+    scan.uploads = [];
     scan.sort = function(field){
       if (field === scan.orderBy){
         scan.reverse = ! scan.reverse;
@@ -25,6 +26,26 @@ angular.module('grademanagerApp')
       page.project = $stateParams.project;
       $state.go('scan.manual', page);
     };
+
+    $scope.$watch('scan.files', function () {
+        function upload(file){
+            scan.uploads.push(file);
+            Upload.upload({
+                url: API.URL + '/project/' + $stateParams.project + '/upload',
+                file: file
+            }).progress(function (evt) {
+                file.progress = 100.0 * evt.loaded / evt.total;
+            }).success(function () {
+
+            });
+        }
+        if (scan.files && scan.files.length) {
+            var files = scan.files.slice(0);
+            for (var i = 0; i < files.length; i++) {
+                upload(files[i]);
+            }
+        }
+    });
 
     //TODO move to service?
     $http.get(API.URL + '/project/' + $stateParams.project +'/capture')

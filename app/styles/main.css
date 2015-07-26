@@ -139,3 +139,11 @@ tr.active td{
 .no-background{
   background-color: transparent;
 }
+
+.upload-list {
+  max-height: 300px;
+}
+.md-button.md-accent.md-raised.dragover {
+    border: 3px dashed rgb(255,64,129);
+    background-color: lightgrey
+}
