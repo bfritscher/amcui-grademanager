@@ -43,7 +43,8 @@ angular.module('grademanagerApp')
             }).progress(function (evt) {
                 file.progress = 100.0 * evt.loaded / evt.total;
             }).success(function () {
-
+              //TODO: better way
+              loadData()
             });
         }
         if (scan.files && scan.files.length) {
@@ -54,21 +55,25 @@ angular.module('grademanagerApp')
         }
     });
 
-    //TODO move to service?
-    $http.get(API.URL + '/project/' + $stateParams.project +'/capture')
-    .success(function(data){
-      scan.pages = data;
-      if($state.params.student && $state.params.page && $state.params.copy){
-        for(var i=0; i< data.length; i++){
-          if(data[i].id === $state.params.student + '/' + $state.params.page + ':' + $state.params.copy){
-            scan.page = data[i];
+    function loadData(){
+      //TODO move to service?
+      $http.get(API.URL + '/project/' + $stateParams.project +'/capture')
+      .success(function(data){
+        scan.pages = data;
+        if($state.params.student && $state.params.page && $state.params.copy){
+          for(var i=0; i< data.length; i++){
+            if(data[i].id === $state.params.student + '/' + $state.params.page + ':' + $state.params.copy){
+              scan.page = data[i];
+            }
           }
         }
-      }
-    });
+      });
 
-    $http.get(API.URL + '/project/' + $stateParams.project +'/missing')
-    .success(function(data){
-      scan.missing = data;
-    });
+      $http.get(API.URL + '/project/' + $stateParams.project +'/missing')
+      .success(function(data){
+        scan.missing = data;
+      });
+    }
+    loadData();
+
   });
