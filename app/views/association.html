@@ -1,0 +1,39 @@
+<md-dialog aria-label="Manual association">
+  <form>
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>Manual Association</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="ctrl.closeDialog()">
+        <md-icon class="mdi-close" aria-label="Close dialog"></md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+  <md-dialog-content>
+    <div ng-show="ctrl.match">
+      <md-autocomplete
+        placeholder="Student name"
+        md-no-cache="true"
+        md-selected-item-change="ctrl.selectedItemChange(item)"
+        md-search-text="searchText"
+        md-items="item in ctrl.students.data.filter(ctrl.filterUnmatched) | filter: searchText" md-item-text="item.display">
+        <md-item-template>
+          <span md-highlight-text="searchText" md-highlight-flags="^i">{{item.name}}</span>
+        </md-item-template>
+        <md-not-found>
+          No matches found for "{{searchText}}".
+        </md-not-found>
+      </md-autocomplete>
+      <img ng-src="{{ctrl.nameSrc()}}">
+    </div>
+    <div ng-hide="ctrl.match">
+      Everything has a match.
+    </div>
+  </md-dialog-content>
+  <div class="md-actions" layout="row">
+    <span flex></span>
+    <md-button ng-click="ctrl.closeDialog()" class="md-primary">
+     close
+    </md-button>
+  </div>
+</md-dialog>

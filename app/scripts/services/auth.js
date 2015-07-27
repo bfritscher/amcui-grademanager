@@ -31,7 +31,9 @@ angular.module('grademanagerApp')
         var params = self.parseJwt(token);
         return Math.round(new Date().getTime() / 1000) <= params.exp;
       } else {
-        $state.go('home');
+        if(!$state.is('home')){
+          $state.go('home');
+        }
         return false;
       }
     };

@@ -1,3 +1,4 @@
+<!--
 There must be at least one column named name or surname.
 
 %S
@@ -13,27 +14,94 @@ is replaced by the student's name.
 %(COL)
 is replaced by the value of column COL in the students list for the curent student.
 
+highlight impossible? missing? confirm reviewed
+-->
+<md-content class="no-background" layout-padding flex>
 <div id="dropbox">
 	DROPZONE
 </div>
-highlight impossible? missing? confirm reviewed
+<textarea ng-change="grade.parsePasteData()" ng-model="grade.pasteData"></textarea>
 <div>
-  <md-content class="md-padding">
+  <md-content>
     <md-tabs md-dynamic-height>
-      <md-tab label="{{file.name.substring(0,20)}}" ng-repeat="file in main.files">
-        <md-content class="md-padding">
+      <md-tab label="Students">
+        <table class="grades">
+          	<thead>
+          		<tr>
+                <th></th>
+                <th ng-repeat="col in grade.students.fields track by $index">{{col}} <md-button aria-label="remove column" ng-click="grade.removeCol(col)" class="md-warn button-remove" ng-hide="col == 'id'"><md-icon class="mdi-close"></md-icon></md-button></th>
+                <th>NoteFinal</th>
+                <th>NoteCC</th>
+                <th>NoteExa <input ng-model="max"><input ng-model="formula"></th>
+                <th>Total</th>
+                <th ng-repeat="(qtitle, value) in grade.questions track by $index">{{qtitle}}<br/>(max:{{value.max}})</th>
+          		</tr>
+          	</thead>
+            <tbody>
+              <tr ng-repeat="u in grade.unmatched track by $index">
+                <td colspan="{{grade.students.fields.length + 1}}"><md-button aria-label="manual association" ng-click="grade.showAssociationDialog($event, u)">manual match</md-button></td>
+                <td></td>
+                <td></td>
+                <td>{{grade.grade(grade.unmatched[u.key].total, max, 1, 6, 'round', 0.1)}}</td>
+                <td class="text-right">{{grade.unmatched[u.key].total}}</td>
+                <td class="text-right score why-{{grade.whys[grade.unmatched[u.key].key + ':' + value.question]}}"
+                    ng-repeat="(qtitle, value) in grade.questions track by $index">
+                    <a ng-href="#/{{grade.project}}/scan/{{grade.unmatched[u.key].student}}/{{value.page}}:{{grade.unmatched[u.key].copy}}">
+                    {{grade.unmatched[u.key].questions[qtitle]}}</a></td>
+              </tr>
+              <tr ng-repeat="s in grade.students.data track by $index">
+                <td><md-button aria-label="remove student" ng-click="grade.removeStudent(s)" class="md-warn button-remove"><md-icon class="mdi-close"></md-icon></md-button></td>
+                <td ng-class="{'text-right': col=='id'}" ng-repeat="col in grade.students.fields track by $index">{{s[col]}}</td>
+                <td></td>
+                <td></td>
+                <td>{{grade.scores[s.id].total ? grade.grade(grade.scores[s.id].total, max, 1, 6, 'round', 0.1) : 0}}</td>
+                <td class="text-right">{{grade.scores[s.id].total}}</td>
+                <td class="text-right score why-{{grade.whys[grade.scores[s.id].key + ':' + value.question]}}"
+                  ng-repeat="(qtitle, value) in grade.questions track by $index">
+                  <a ng-href="#/{{grade.project}}/scan/{{grade.scores[s.id].student}}/{{value.page}}:{{grade.scores[s.id].copy}}">
+                  {{grade.scores[s.id].questions[qtitle]}}</a></td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th></th>
+                <th ng-class="{'text-right': col=='id'}" ng-repeat="col in grade.students.fields track by $index"></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th class="text-right">{{grade.avgTotal()}}</th>
+                <th class="text-right"
+                    ng-repeat="(qtitle, value) in grade.questions track by $index">
+                    {{grade.avgQuestion(qtitle) / value.max * 100 | number: 0}}%</th>
+              </tr>
+            </tfoot>
+        </table>
+      </md-tab>
+      <md-tab label="Stats">
+        <button ng-click="grade.statsOrder='title'">order q</button> <button ng-click="grade.statsOrder='avg'">order mean</button>
+        <div class="question" ng-repeat="q in grade.stats| orderBy:grade.statsOrder">
+          <h2 ng-bind="q.title"></h2>
+          <div>total: {{q.total}} mean: {{(q.avg*100).toFixed(2)}}%</div>
+          <div class="answer-dist">
+            <div ng-repeat="a in q.answers" ng-style="{width: a.nb/q.total*100 +'%'}" class="correct-{{a.correct}}">{{a.answer}}.{{a.nb}}.{{(a.nb/q.total*100).toFixed(2)}}%</div>
+          </div>
+        </div>
+
+      </md-tab>
+      <md-tab label="{{file.name.substring(0,20)}}" ng-repeat="file in grade.files">
+        <md-content>
           <table>
           	<thead>
           		<tr>
           			<th ng-repeat="key in file.meta.fields track by $index">
                   {{key}}
-                  <md-button class="" ng-click="main.calculate(file, $index)">calculate</md-button>
+                  <md-button class="" ng-click="grade.calculate(file, $index)">calculate</md-button>
                 </th>
                 <th>
-                  <textarea ng-model="main.source"></textarea>
-                  <textarea ng-model="main.idx"></textarea>
-                  <textarea ng-model="main.match"></textarea>
-                  <textarea ng-model="main.display"></textarea>
+                  <textarea ng-model="grade.source"></textarea>
+                  <textarea ng-model="grade.idx"></textarea>
+                  <textarea ng-model="grade.match"></textarea>
+                  <textarea ng-model="grade.display"></textarea>
 
                 </th>
           		</tr>
@@ -42,32 +110,19 @@ highlight impossible? missing? confirm reviewed
           		<tr ng-repeat="row in file.data">
           			<td ng-repeat="(key, value) in row">{{value}}
                   <span ng-if="file.meta.calculated[$index]">
-                    {{main[file.meta.calculated[$index].type](row, key, row[file.meta.calculated[$index].source], file.meta.calculated[$index].targetFile, file.meta.calculated[$index].match, file.meta.calculated[$index].display)}}
+                    {{grade[file.meta.calculated[$index].type](row, key, row[file.meta.calculated[$index].source], file.meta.calculated[$index].targetFile, file.meta.calculated[$index].match, file.meta.calculated[$index].display)}}
                   </span>
                 </td>
                 <td></td>
-                <td ng-if="row.Group">{{main.vLookup(row.Group, main.idx, 'groupe', 'note')}}</td>
+                <td ng-if="row.Group">{{grade.vLookup(row.Group, grade.idx, 'groupe', 'note')}}</td>
           		</tr>
           	</tbody>
           </table>
-          <md-button class="md-raised md-warn" ng-click="main.removeFile(file)">Remove</md-button>
+          <md-button class="md-raised md-warn" ng-click="grade.removeFile(file)">Remove</md-button>
         </md-content>
       </md-tab>
     </md-tabs>
   </md-content>
 </div>
 
-<button ng-click="order=''">order q</button> <button ng-click="order='avg'">order mean</button>
-<div class="question" ng-repeat="q in questions | orderBy:order">
-  <h2 ng-bind="q.title"></h2>
-  <div>total: {{q.total}} mean: {{(q.avg*100).toFixed(2)}}%</div>
-  <div class="answer-dist">
-    <div ng-repeat="a in q.answers" ng-style="{width: a.nb/q.total*100 +'%'}" class="correct-{{a.correct}}">{{a.answer}}.{{a.nb}}.{{(a.nb/q.total*100).toFixed(2)}}%</div>
-  </div>
-</div>
-
-<img ng-src="http://192.168.59.103:8080/amcui/static.groovy?id=/cr/{{current.image}}"/>
-<img ng-src="http://192.168.59.103:8080/amcui/static.groovy?id=/cr/page-{{current.student}}-{{current.page}}-{{current.copy}}.jpg"/>
-<div ng-repeat="student in copies" ng-click="$parent.current = student">
-{{student.student}} {{student.copy}} {{student.auto}}
-</div>
+</md-content>
