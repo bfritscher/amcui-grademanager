@@ -27,6 +27,13 @@ angular.module('grademanagerApp')
       $state.go('scan.manual', page);
     };
 
+    this.delete = function(page){
+      $http.post(API.URL + '/project/' + $stateParams.project + '/capture/delete', page)
+      .success(function(){
+        scan.pages.splice(scan.pages.indexOf(page), 1);
+      });
+    };
+
     $scope.$watch('scan.files', function () {
         function upload(file){
             scan.uploads.push(file);

@@ -24,6 +24,7 @@
   <h2>{{editor.exam.course}} - {{editor.exam.session}}</h2>
 
 <md-button class="md-raised" ng-click="editor.preview()">Preview</md-button>
+<md-button class="md-raised" ng-click="editor.print()">Print</md-button>
 <img ng-src="{{editor.pageSrc(p)}}" ng-repeat="p in editor.preview.pages"/>
 
   <div class="section" ng-repeat="section in editor.exam.sections | filter: {'title': 'vues'}">

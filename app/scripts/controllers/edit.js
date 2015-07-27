@@ -23,6 +23,17 @@ angular.module('grademanagerApp')
 		});
 	};
 
+	this.print = function(){
+		//TODO: ask for speparate answer sheet
+		$http.post(API.URL + '/project/' + $stateParams.project + '/print')
+		.success(function(){
+			//printed files ready!
+			//API.URL + '/project/' + $stateParams.project + '/zip?token=' + auth.getToken();
+			console.log('print files ready');
+		});
+
+	};
+
 	this.pageSrc = function(page){
     	return $sce.trustAsResourceUrl(API.URL + '/project/' + $stateParams.project + '/out/' + page + '?token=' + auth.getToken());
     };

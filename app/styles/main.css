@@ -143,7 +143,17 @@ tr.active td{
 .upload-list {
   max-height: 300px;
 }
+
+.scan-missing-list {
+  max-height: 200px;
+}
+
 .md-button.md-accent.md-raised.dragover {
     border: 3px dashed rgb(255,64,129);
     background-color: lightgrey
+}
+
+.scan-delete {
+  float: right;
+  font-size: 24px;
 }

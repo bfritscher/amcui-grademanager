@@ -26,9 +26,13 @@ to a value of order 0.5.
       <h3>Scanned papers</h3>
 
       <p>Complete: {{scan.missing.complete}} <span ng-show="scan.missing.incomplete > 0">Incomplete: {{scan.missing.incomplete}}</span></p>
-      <p ng-show="scan.missing.length > 0">Missing pages:
-        <div ng-repeat="missing in scan.missing.missing">{{missing}}</div>
-      </p>
+      <div ng-show="scan.missing.missing.length > 0">
+        Missing pages:
+      <md-content class="scan-missing-list">
+
+          <div ng-repeat="missing in scan.missing.missing">{{missing.student}}/{{missing.page}}<span ng-show="missing.copy > 0">:{{missing.copy}}</span></div>
+      </md-content>
+      </div>
       <p ng-show="scan.missing.failed.length > 0">Failed pages:
         <div ng-repeat="failed in scan.missing.failed">{{failed.filename}}</div>
       </p>
@@ -61,7 +65,7 @@ to a value of order 0.5.
           </thead>
           <tbody>
             <tr ng-repeat="p in scan.pages | filter:{id:scan.filter} | orderBy: (scan.reverse?'-':'') + scan.orderBy" ng-click="scan.loadPage(p)" ng-class="{active: scan.page.student == p.student && scan.page.page == p.page && scan.page.copy == p.copy}">
-              <td ng-class="{'manual': p.timestamp_manual > 0, 'auto': p.timestamp_auto > 0}">{{p.student}}/{{p.page}}<span ng-show="p.copy > 0">:{{p.copy}}</span></td>
+              <td ng-class="{'manual': p.timestamp_manual > 0, 'auto': p.timestamp_auto > 0}">{{p.student}}/{{p.page}}<span ng-show="p.copy > 0">:{{p.copy}}</span> <md-icon class="mdi-close scan-delete" ng-click="scan.delete(p)"></md-icon></td>
               <td>{{(p.timestamp_manual || p.timestamp_auto)*1000 | date:'yyyy-MM-dd HH:mm'}}</td>
               <td class="text-right" ng-class="{'s-threshold': p.mse >=3}">{{p.tm > 0 && '(' || ''}}{{p.mse.toFixed(1)}}{{p.tm > 0 && ')' || ''}}</td>
               <td class="text-right" ng-class="{'s-threshold': p.s >= 8}">{{p.s.toFixed(1)}}</td>
