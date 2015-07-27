@@ -44,7 +44,7 @@ angular.module('grademanagerApp')
                 file.progress = 100.0 * evt.loaded / evt.total;
             }).success(function () {
               //TODO: better way
-              loadData()
+              loadData();
             });
         }
         if (scan.files && scan.files.length) {
