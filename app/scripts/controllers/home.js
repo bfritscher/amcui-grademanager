@@ -7,8 +7,9 @@
  * # HomeCtrl
  * Controller of the grademanagerApp
  */
+
 angular.module('grademanagerApp')
-  .controller('HomeCtrl', function ($state, auth, API) {
+  .controller('HomeCtrl', function ($scope, $state, auth, API) {
 
       var home = this;
 
@@ -60,24 +61,4 @@ angular.module('grademanagerApp')
         getProjectList();
       }
 
-
-
-
-      var socket = io.connect('http://192.168.59.103:9001');
-      socket.on('connect', function () {
-        socket.on('authenticated', function () {
-          //do other things
-        });
-        socket.emit('authenticate', {token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNDM3ODI2MjUzfQ.tg8Vw_n-g3yo_5QuAFk6fEFUly2NZNZCnqDqf81vVXE'}); //send the jwt
-      });
-      socket.on('unauthorized', function(data){
-        console.log(data);
-      });
-      socket.on("error", function(error) {
-        console.log(error);
-        if (error.type === "UnauthorizedError" || error.code === "invalid_token") {
-          // redirect user to login page perhaps?
-          console.log("User's token has expired");
-        }
-      });
   });

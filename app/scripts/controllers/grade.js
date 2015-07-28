@@ -135,7 +135,7 @@ angular.module('grademanagerApp')
         .success(function(log){
           console.log(log);
           score.annotateDisabled = false;
-          var found = log.logRegroupe.match(/(cr\/.*?\.pdf)/)
+          var found = log.logRegroupe.match(/(cr\/.*?\.pdf)/);
           if ( found ){
             $window.open(API.URL + '/project/' + $stateParams.project + '/debug/' + found[1] + '?token=' + auth.getToken(), '_blank');
           }
@@ -183,11 +183,11 @@ angular.module('grademanagerApp')
         var total = 0;
         var count = 0;
         for (var key in grade.scores){
-          count++,
+          count++;
           total = total + getter(grade.scores[key]);
         }
         for (key in grade.unmatched){
-          count++,
+          count++;
           total = total + getter(grade.unmatched[key]);
         }
         return (total / count).toFixed(2);

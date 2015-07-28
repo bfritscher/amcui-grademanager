@@ -8,12 +8,66 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('EditCtrl', function ($http, $stateParams, $sce, API, auth) {
+  .controller('EditCtrl', function ($scope, $http, $stateParams, $sce, API, auth) {
 	var editor = this;
-    $http.get('data/exam_test.json')
-	.success(function(data){
-		editor.exam = data;
+
+	/* Socket collab data */
+
+	var DiffSyncClient = diffsync.Client;
+	var socket = io.connect('http://192.168.59.103:9001?token='+ localStorage.getItem('jwtToken'));
+	var client = new DiffSyncClient(socket, $stateParams.project);
+
+	client.on('connected', function(){
+	    // the initial data has been loaded,
+	    // you can initialize your application
+		console.log('Socket connected');
+		editor.exam = client.getData();
+		$scope.$watch('editor.exam', function(){
+			console.log('sync');
+			client.sync();
+		}, true);
+		$scope.$apply();
+/*
+		$http.get('data/exam_test.json')
+		.success(function(data){
+			angular.extend(editor.exam, data);
+			$scope.$apply();
+			client.sync();
+		});
+*/
 	});
+
+	client.on('synced', function(){
+    // an update from the server has been applied
+    // you can perform the updates in your application now
+    	console.log('synced');
+    	$scope.$apply();
+  	});
+
+	client.on('error', function(err){
+    // an update from the server has been applied
+    // you can perform the updates in your application now
+    	console.log('error', err);
+  	});
+
+	client.initialize();
+
+	/*
+      socket.on('msg', function(data){
+          console.log('msg', data);
+      });
+
+      socket.on('unauthorized', function(data){
+        console.log(data);
+      });
+      socket.on("error", function(error) {
+        console.log(error);
+        if (error.type === "UnauthorizedError" || error.code === "invalid_token") {
+          // redirect user to login page perhaps?
+          console.log("User's token has expired");
+        }
+      });
+	*/
 
 	//TODO: automate
 	this.preview = function(){
