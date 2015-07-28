@@ -64,7 +64,7 @@ to a value of order 0.5.
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="p in scan.pages | filter:{id:scan.filter} | orderBy: (scan.reverse?'-':'') + scan.orderBy" ng-click="scan.loadPage(p)" ng-class="::{active: scan.page.student == p.student && scan.page.page == p.page && scan.page.copy == p.copy}">
+            <tr ng-repeat="p in scan.pages | filter:{id:scan.filter} | orderBy: (scan.reverse?'-':'') + scan.orderBy" ng-click="scan.loadPage(p)" ng-class="{active: scan.page.student == p.student && scan.page.page == p.page && scan.page.copy == p.copy}">
               <td ng-class="::{'manual': p.timestamp_manual > 0, 'auto': p.timestamp_auto > 0}">{{::p.student}}/{{::p.page}}<span ng-show="::p.copy > 0">:{{::p.copy}}</span> <md-icon class="mdi-close scan-delete" ng-click="scan.delete(p)"></md-icon></td>
               <td>{{::(p.timestamp_manual || p.timestamp_auto)*1000 | date:'yyyy-MM-dd HH:mm'}}</td>
               <td class="text-right" ng-class="::{'s-threshold': p.mse >=3}">{{::p.tm > 0 && '(' || ''}}{{::p.mse.toFixed(1)}}{{::p.tm > 0 && ')' || ''}}</td>

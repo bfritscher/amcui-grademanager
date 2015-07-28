@@ -193,3 +193,67 @@ tr.active td{
 .grades td {
   border-bottom: 1px solid rgba(0, 0, 0, 0.5);
 }
+
+.mdi {
+  font-size: 24px;
+}
+
+.section-menu .active{
+  border: 2px solid lightcoral;
+}
+
+.section-options {
+  background-color: #ddd;
+}
+.section-options md-select {
+  padding: 4px;
+}
+
+.two-columns{
+
+   -webkit-column-count: 2;
+  -moz-column-count: 2;
+  column-count: 2;
+ -webkit-column-gap: 40px;
+    -moz-column-gap: 40px;
+    column-gap: 40px;
+
+}
+
+.question .invalid, .question-menu .invalid{
+  color: #fbb450;
+}
+
+.question{
+  margin-top: 1em;
+}
+
+.question-add{
+  margin-top: 2em;
+}
+
+.answer md-icon{
+  transition: all linear 0.3s;
+  font-size: 20px;
+  line-height: 24px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.answer input[type=checkbox]{
+  display: none;
+}
+
+.answer md-icon.mdi-close{
+  background-color: red;
+  color: white;
+  font-weight: bold;
+  border-radius: 12px;
+}
+
+.answer md-icon.mdi-check{
+  background-color: green;
+  color: white;
+  font-weight: bold;
+  border-radius: 4px;
+}

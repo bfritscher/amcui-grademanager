@@ -7,9 +7,14 @@
  * # EditorCtrl
  * Controller of the grademanagerApp
  */
+ var test;
 angular.module('grademanagerApp')
-  .controller('EditCtrl', function ($scope, $http, $stateParams, $sce, API, auth) {
+  .controller('EditCtrl', function ($scope, $http, $mdSidenav, $stateParams, $sce, $timeout, API, auth) {
 	var editor = this;
+
+	editor.leftNav = function (){
+		return $mdSidenav('left');
+	};
 
 	/* Socket collab data */
 
@@ -22,7 +27,15 @@ angular.module('grademanagerApp')
 	    // you can initialize your application
 		console.log('Socket connected');
 		editor.exam = client.getData();
+		if(editor.exam.sections && editor.exam.sections.length > 0){
+			editor.section = editor.exam.sections[0];
+		} else {
+			editor.section = newSection();
+			editor.exam.sections = [editor.section];
+		}
+
 		$scope.$watch('editor.exam', function(){
+			computeHierarchyNumbers();
 			console.log('sync');
 			client.sync();
 		}, true);
@@ -68,6 +81,78 @@ angular.module('grademanagerApp')
         }
       });
 	*/
+	editor.previousSection = function(){
+		if(editor.exam && editor.exam.sections){
+			var index = editor.exam.sections.indexOf(editor.section);
+			if(index > 0){
+				return editor.exam.sections[index-1];
+			}
+		}
+	};
+
+/* TODO add ids */
+	function newSection(){
+		return {
+			title: 'Add Section',
+			content: '',
+			level: 0,
+			isNumbered: true,
+			isSectionTitleVisibleOnAMC: true,
+			shuffle: false,
+			columns: 1,
+			questions: []
+		};
+	}
+
+	editor.nextSection = function(create){
+		if(editor.exam && editor.exam.sections){
+			var index = editor.exam.sections.indexOf(editor.section);
+			if(index < editor.exam.sections.length-1){
+				return editor.exam.sections[index+1];
+			} else {
+				var section = newSection();
+				if (create){
+					$timeout(function(){
+						editor.exam.sections.push(section);
+					});
+				}
+				return section;
+			}
+		}
+	};
+
+	editor.removeSection = function(section){
+		var newSection = editor.previousSection();
+		if(!newSection) {
+			newSection = editor.nextSection(true);
+		}
+		editor.exam.sections.splice(editor.exam.sections.indexOf(section), 1);
+		editor.section = newSection;
+	};
+
+	editor.addQuestion = function(section){
+		section.questions.push({
+			content: '',
+			type: 'SINGLE',
+			layout: 'VERTICAL',
+			answers: []
+		});
+	};
+
+	editor.removeQuestion = function(section, question){
+		section.questions.splice(section.questions.indexOf(question), 1);
+	};
+
+	editor.addAnswer = function(question){
+		question.answers.push({
+			content: 'answer text',
+			correct: false
+		});
+	};
+
+	editor.removeAnswer = function(question, answer){
+		question.answers.splice(question.answers.indexOf(answer), 1);
+	};
 
 	//TODO: automate
 	this.preview = function(){
@@ -122,18 +207,50 @@ angular.module('grademanagerApp')
       }
 	};
 
-	//TODO to one time compute or server side?
-	this.getConsecutiveIndex = function(parentIndex, $index) {
-	    var total = 0;
-	    for(var i = 0; i < parentIndex; i += 1) {
-	      total += editor.exam.sections[i].questions.length;
-	    }
-	    return total + $index + 1;
-	  };
 
-	this.removeSection = function(section){
-		editor.exam.sections.splice(editor.exam.sections.indexOf(section), 1);
+	function computeHierarchyNumbers(){
+		var questionCount = 1;
+		var sections = [0, 0, 0];
+		for(var s=0; s < editor.exam.sections.length; s++ ) {
+			var section = editor.exam.sections[s];
+			if(section.isNumbered){
+				var label = '';
+				for(var i = 0; i < 3; i++){
+					if(parseInt(section.level) === i){
+						sections[i]++;
+					}
+					if( i > 0){
+						label += '.';
+					}
+					label += sections[i];
+					if(parseInt(section.level) === i){
+						//reset numbering below
+						for(var j=i+1; j < 3; j++){
+							sections[j] = 0;
+						}
+						section.number = label;
+						break;
+					}
+				}
+			} else {
+				section.number = '';
+			}
+			for(var q=0; q < section.questions.length; q++){
+				var question = section.questions[q];
+				question.number = questionCount;
+				questionCount++;
+				//validate question
+				question.isValid =  question.type === "SINGLE" ? question.answers.reduce(function(a, b){
+						return a + b.correct;
+					}, 0) === 1 : true;
+			}
+		}
+	}
+
+	test = {
+		computeHierarchyNumbers: computeHierarchyNumbers
 	};
+
 
   });
 
