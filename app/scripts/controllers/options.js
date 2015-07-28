@@ -16,6 +16,7 @@ angular.module('grademanagerApp')
     };
 
     ctrl.downloadURL = API.URL + '/project/' + $stateParams.project + '/zip?token=' + auth.getToken();
+    ctrl.downloadODSURL = API.URL + '/project/' + $stateParams.project + '/ods?token=' + auth.getToken();
 
     $http.get(API.URL + '/project/' + $stateParams.project + '/options')
     .success(function(data){

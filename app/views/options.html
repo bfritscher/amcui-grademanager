@@ -1,10 +1,12 @@
 <md-content flex layout="column" class="no-background" layout-padding>
-	<h2>Project</h2>
-	<p>
-		<md-button class="md-raised md-primary" ng-href="{{ctrl.downloadURL}}">Download project</md-button>
-	</p>
 	<h2>Collaborators</h2>
 	<md-chips ng-model="ctrl.options.users" placeholder="add another username" secondary-placeholder="+username"></md-chips>
+
+	<h2>Raw exports</h2>
+	<p>
+		<md-button class="md-raised md-primary" ng-href="{{ctrl.downloadURL}}">Download project</md-button>
+		<md-button class="md-raised md-primary" ng-href="{{ctrl.downloadODSURL}}">Download native ODS</md-button>
+	</p>
 
 	<h2>Raw options</h2>
 	<md-input-container ng-repeat="(key, value) in ctrl.options.options">
