@@ -8,7 +8,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('AppCtrl', function ($scope, $state, $stateParams, auth) {
+  .controller('AppCtrl', function ($scope, $state, $stateParams, $timeout, auth, API) {
     var _this = this;
     this.tabIndex = 0;
     this.tabInit = false;
@@ -23,7 +23,13 @@ angular.module('grademanagerApp')
     };
 
     this.isAuthed = function() {
-      return auth.isAuthed();
+      var authed = auth.isAuthed();
+      if(!authed && !$state.is('home')){
+        $timeout(function(){
+          $state.go('home');
+        });
+      }
+      return authed;
     };
 
     this.logout = function(){
@@ -37,6 +43,10 @@ angular.module('grademanagerApp')
       } else {
         _this.tabInit = true;
       }
+    };
+
+    this.linkTo = function(file){
+      return API.URL + '/project/' + $stateParams.project + '/debug/' + file + '?token=' + auth.getToken();
     };
 
     $scope.$on('$stateChangeSuccess', function(){

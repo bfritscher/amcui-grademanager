@@ -150,7 +150,7 @@ angular.module('grademanagerApp')
     //handle value save?
     grade.grade = function(rawValue, total, minGrade, maxGrade, roundingFormula, roundingUnit){
       return Math.max(minGrade, Math.min(maxGrade,
-        Math[roundingFormula]( ((rawValue / total * (maxGrade - minGrade)) + minGrade) / roundingUnit ) * roundingUnit )).toPrecision(3);
+        Math[roundingFormula]( ((rawValue / total * (maxGrade - minGrade)) + minGrade) / roundingUnit ) * roundingUnit ));
     };
 
     grade.avg = function(getter){
@@ -177,6 +177,62 @@ angular.module('grademanagerApp')
       return grade.avg(function(o){
         return o.questions[col];
       });
+    };
+
+    grade.test = {
+      getter: function(id){
+        if(grade.scores.hasOwnProperty(id)){
+          return grade.scores[id].total;
+        }
+      },
+      minGrade: 1,
+      maxGrade: 6,
+      roundingFormula: 'round',
+      roundingUnit: 0.1
+    };
+
+
+    grade.dataTable = function(calculatedField){
+      //max, avg, pass, remed, fail
+      var table = [[],[],[],[],[]];
+      if (grade.students.data.length <= 0) {
+        return table;
+      }
+      for (var max = calculatedField.variable - 5; max <= 5 + parseInt(calculatedField.variable); max++){
+        var iteration = {
+          count: 0,
+          total: 0,
+          pass: 0,
+          remed: 0,
+          fail: 0
+        };
+        for(var i=0; i < grade.students.data.length; i++){
+          var value = calculatedField.formula.getter(grade.students.data[i].id);
+          if ( !isNaN(value) ) {
+            var g = grade.grade(value, max,
+                    calculatedField.formula.minGrade,
+                    calculatedField.formula.maxGrade,
+                    calculatedField.formula.roundingFormula,
+                    calculatedField.formula.roundingUnit);
+            //TODO: make configurable?
+            if (g >= 4){
+              iteration.pass++;
+            } else if (g >= 3.5){
+              iteration.remed++;
+            } else {
+              iteration.fail++;
+            }
+            iteration.total += g;
+            iteration.count++;
+          }
+        }
+        table[0].push( max );
+        table[1].push( iteration.total / iteration.count );
+        table[2].push( iteration.pass / iteration.count * 100 );
+        table[3].push( iteration.remed / iteration.count * 100 );
+        table[4].push( iteration.fail / iteration.count * 100 );
+      }
+      grade.table = table;
     };
 
     /* TEST */
