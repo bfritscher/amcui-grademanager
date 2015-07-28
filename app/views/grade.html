@@ -74,7 +74,10 @@ highlight impossible? missing? confirm reviewed
                     {{grade.unmatched[u.key].questions[qtitle]}}</a></td>
               </tr>
               <tr ng-repeat="s in grade.students.data track by $index">
-                <td><md-button aria-label="remove student" ng-click="grade.removeStudent(s)" class="md-warn button-remove"><md-icon class="mdi-close"></md-icon></md-button></td>
+                <td class="no-wrap">
+                  <md-button aria-label="remove student" ng-click="grade.removeStudent(s)" class="md-warn button-remove"><md-icon class="mdi-close"></md-icon></md-button>
+                  <md-button ng-disabled="grade.scores[s.id].annotateDisabled" ng-show="grade.scores[s.id]" aria-label="view annotated" ng-click="grade.annotateScore(grade.scores[s.id])" class="md-accent button-remove"><md-icon class="mdi-eye"></md-icon></md-button>
+                </td>
                 <td ng-class="{'text-right': col=='id'}" ng-repeat="col in grade.students.fields track by $index">{{s[col]}}</td>
                 <td></td>
                 <td></td>
@@ -88,7 +91,7 @@ highlight impossible? missing? confirm reviewed
             </tbody>
             <tfoot>
               <tr>
-                <th></th>
+                <th><md-button ng-disabled="grade.annotateAllDisabled" class="md-raised md-accent" ng-click="grade.annotateAll()">Annotate All</md-button></th>
                 <th ng-class="{'text-right': col=='id'}" ng-repeat="col in grade.students.fields track by $index"></th>
                 <th></th>
                 <th></th>

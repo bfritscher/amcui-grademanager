@@ -8,7 +8,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('GradeCtrl', function ($scope, $http, $stateParams, API, auth, $mdDialog) {
+  .controller('GradeCtrl', function ($scope, $http, $stateParams, API, auth, $mdDialog, $window) {
 
     var grade = this;
 
@@ -125,6 +125,32 @@ angular.module('grademanagerApp')
             grade.students.fields.splice(grade.students.fields.indexOf(col), 1);
         }
 
+    };
+
+    grade.annotateScore = function(score){
+        score.annotateDisabled = true;
+        $http.post(API.URL + '/project/' + $stateParams.project + '/annotate', {
+          ids: [score.copy ? score.student + ':' + score.copy : score.student]
+        })
+        .success(function(log){
+          console.log(log);
+          score.annotateDisabled = false;
+          var found = log.logRegroupe.match(/(cr\/.*?\.pdf)/)
+          if ( found ){
+            $window.open(API.URL + '/project/' + $stateParams.project + '/debug/' + found[1] + '?token=' + auth.getToken(), '_blank');
+          }
+        });
+    };
+
+    grade.annotateAllDisabled = false;
+    grade.annotateAll = function(){
+        grade.annotateAllDisabled = true;
+        $http.post(API.URL + '/project/' + $stateParams.project + '/annotate')
+        .success(function(log){
+          console.log(log);
+          $window.open(API.URL + '/project/' + $stateParams.project + '/zip/annotate?token=' + auth.getToken(), '_blank');
+          grade.annotateAllDisabled = false;
+        });
     };
 
     grade.showAssociationDialog = function($event, row){

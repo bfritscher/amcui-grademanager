@@ -108,6 +108,10 @@ tr.active td{
   text-align: right;
 }
 
+.no-wrap{
+  white-space: nowrap;
+}
+
 .sort-asc::after{
   content: '▲'
 }
