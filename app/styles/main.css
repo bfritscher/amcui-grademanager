@@ -257,3 +257,11 @@ tr.active td{
   font-weight: bold;
   border-radius: 4px;
 }
+
+.editor .hide{
+  display: none;
+}
+
+.editor textarea {
+  display: none;
+}
