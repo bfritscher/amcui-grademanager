@@ -17,6 +17,7 @@
     "io": false,
     "diffsync": false,
     "wysihtml5": false,
-    "wysihtml5ParserRules": false
+    "wysihtml5ParserRules": false,
+    "GUID": false
   }
 }

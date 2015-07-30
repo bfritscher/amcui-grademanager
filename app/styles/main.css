@@ -258,10 +258,35 @@ tr.active td{
   border-radius: 4px;
 }
 
-.editor .hide{
+.myrichtexteditor .hide{
   display: none;
 }
 
-.editor textarea {
-  display: none;
+.myrichtexteditor xmp{
+    font-family: monospace;
+    white-space: pre;
+    color: red;
+    font-size: 16px;
+    display: inline;
+}
+
+.myrichtexteditor p {
+  margin: 0.3em 0;
+  padding: 0;
+}
+
+.myrichtexteditor pre{
+    margin: 0;
+    display: inline;
+}
+
+.myrichtexteditor img{
+	width: 70%;
+}
+.myrichtexteditor .border{
+    border: 1px solid black;
+}
+
+.myrichtexteditor textarea {
+  width: 100%;
 }

@@ -1,18 +1,19 @@
-span.latex{
+latex {
     font-family: monospace;
     white-space: pre;
     color: red;
     font-size: 16px;
 }
 
-pre{
+pre {
     margin:0;
     display: inline;
 }
 
-img{
+img {
 	width: 70%;
 }
-.border{
+code {
     border: 1px solid black;
+    padding: 4px;
 }

@@ -7,7 +7,6 @@
  * # EditorCtrl
  * Controller of the grademanagerApp
  */
- var test;
 angular.module('grademanagerApp')
   .controller('EditCtrl', function ($scope, $http, $mdSidenav, $stateParams, $sce, $timeout, API, auth) {
 	var editor = this;
@@ -19,7 +18,7 @@ angular.module('grademanagerApp')
 	/* Socket collab data */
 
 	var DiffSyncClient = diffsync.Client;
-	var socket = io.connect('http://192.168.59.103:9001?token='+ localStorage.getItem('jwtToken'));
+	var socket = io.connect(API.URL + '?token='+ localStorage.getItem('jwtToken'));
 	var client = new DiffSyncClient(socket, $stateParams.project);
 
 	client.on('connected', function(){
@@ -27,9 +26,12 @@ angular.module('grademanagerApp')
 	    // you can initialize your application
 		console.log('Socket connected');
 		editor.exam = client.getData();
-		if(editor.exam.sections && editor.exam.sections.length > 0){
+		if(editor.exam && editor.exam.sections && editor.exam.sections.length > 0){
 			editor.section = editor.exam.sections[0];
 		} else {
+			if(!editor.exam) {
+				editor.exam = {};
+			}
 			editor.section = newSection();
 			editor.exam.sections = [editor.section];
 		}
@@ -93,8 +95,9 @@ angular.module('grademanagerApp')
 /* TODO add ids */
 	function newSection(){
 		return {
+			id: 's' + GUID(),
 			title: 'Add Section',
-			content: '',
+			content: ' ',
 			level: 0,
 			isNumbered: true,
 			isSectionTitleVisibleOnAMC: true,
@@ -132,7 +135,8 @@ angular.module('grademanagerApp')
 
 	editor.addQuestion = function(section){
 		section.questions.push({
-			content: '',
+			id: 'q' + GUID(),
+			content: ' ',
 			type: 'SINGLE',
 			layout: 'VERTICAL',
 			answers: []
@@ -145,6 +149,7 @@ angular.module('grademanagerApp')
 
 	editor.addAnswer = function(question){
 		question.answers.push({
+			id: 'a' + GUID(),
 			content: 'answer text',
 			correct: false
 		});
@@ -156,7 +161,7 @@ angular.module('grademanagerApp')
 
 	//TODO: automate
 	this.preview = function(){
-		$http.post(API.URL + '/project/' + $stateParams.project + '/preview')
+		$http.post(API.URL + '/project/' + $stateParams.project + '/preview', editor.toLatex())
 		.success(function(data){
 			editor.preview = data;
 		});
@@ -247,67 +252,209 @@ angular.module('grademanagerApp')
 		}
 	}
 
-	test = {
-		computeHierarchyNumbers: computeHierarchyNumbers
-	};
 
-
-  });
-
-/*
-		out += "\\newcommand{\\ACMUImatiere}{" + html2Latex(this.matiere, exam) + "}\n";
-		out += "\\newcommand{\\ACMUIsession}{" + html2Latex(this.session, exam) + "}\n";
-		out += "\\newcommand{\\ACMUIteacher}{" + html2Latex(this.teacher, exam) + "}\n\n";
-this.toLatexBody = function(exam){
-        var out = "";
-		if(this.sectionContent != ""){
-			out += "\n\\";
-			if(this.sectionIsAmc) out += 'AMC';
-			out += this.sectionLevel;
-			if(!this.sectionNumbered) out += '*';
-			out += "{" +  html2Latex(this.sectionContent, exam) +"}\n\n";
-		}
-
-		out += html2Latex(this.content, exam) + "\n";
-
-        if(this.shuffle) out+="\melangegroupe{" + this.id + "}\n";
-		if(this.columns > 1) out+= "\\begin{multicols}{" + this.columns + "}\n";
-        out += "\\restituegroupe{" + this.id + "}\n";
-		if(this.columns > 1) out+= "\\end{multicols}\n";
-		return out;
+function escapeLatex(text){
+	text = text.replace(/&nbsp;/g, ' ');
+	// escape latex code
+    var escapeChars = {
+        "&lt;":"<",
+        "&gt;":">",
+        "\\\\": "\\textbackslash",
+        "&": "\\&",
+        "%": "\\%",
+        "\\$": "\\$",
+        "\\#": "\\#",
+        "_": "\\_",
+        "\\{": "\\{",
+        "\\}": "\\}",
+        "~": "\\textasciitilde",
+        "\\^": "\\textasciicircum"
     };
+	for(var char in escapeChars){
+        var regex = new RegExp(char,"g");
+        text = text.replace(regex, escapeChars[char]);
+    }
 
-	this.toLatexHead = function(groupId, exam){
-		var out = "\n";
-		out += "\\element{" + groupId + "}{\n";
-		var type = this.type == app.Question.prototype.SINGLE ? "question" : "questionmult";
-		out += "  \\begin{" + type + "}{Q" + (exam.questionCounter++) + "}\n";
-		out += "  \n" +  html2Latex(this.content, exam) + "\n";
-		var layout = this.layout == app.Question.prototype.VERTICAL ? "reponses" : "reponseshoriz";
-		out += "    \\begin{" + layout + "}\n"
-		this.answers.asArray().forEach(function(answer){
-			out += answer.toLatexHead(exam);
-		});
-		out += "    \\end{" + layout + "}\n";
-		out += "  \\end{" + type + "}\n";
-		out += "}\n";
+	return text;
+}
 
-function Code(){
-	this.toLatex = function(){
-		var mode = app.Code.prototype.modeToLanguage[this.mode];
+/* TODO handle code and img and their options */
+function codeNode2Latex(node){
+	console.log(node);
+	return 'CODE\\_NOT\\_FOUND';
+	/*
+	var mode = app.Code.prototype.modeToLanguage[this.mode];
 		var out = "\\lstinputlisting[";
 		if(this.border) out+="frame=single,";
 		if(!this.numbers) out+="numbers=none,";
 		out += "language=" + mode + "]{src/" + this.id + "}";
 		return out;
-	};
+	*/
+}
 
-function Graphics(){
-	this.toLatex = function(){
-		var out = "\\includegraphics[" + this.options  + "]{src/" + this.id + "}";
+function imgNode2Latex(node){
+	//c.getAttribute('id')
+	console.log(node);
+	return 'IMG\\_NOT\\_FOUND';
+	/*
+	var out = "\\includegraphics[" + this.options  + "]{src/" + this.id + "}";
 		if(this.border){
 			out = "\\fbox{" + out + "}";
 		}
     this.options = 'width=0.7\\textwidth';
-*/
+	*/
+}
+
+function html2Latex(content){
+	var div = document.createElement('div');
+	div.innerHTML = content;
+	function handleNode(node){
+		if (node.hasChildNodes()) {
+			var childs = node.childNodes;
+			var out = '';
+			for(var i=0; i < childs.length; i++){
+				var child = childs[i];
+				console.log(child.nodeName);
+				switch (child.nodeName) {
+					case '#text':
+						out += escapeLatex(child.textContent);
+						break;
+
+					case 'XMP':
+						out += ' ' + child.textContent + ' '; //check if too much is left out of textContent
+						break;
+
+					case 'B':
+						out += '\\textbf{' + handleNode(child) + '}';
+						break;
+
+					case 'I':
+						out += '\\emph{' + handleNode(child) + '}';
+						break;
+
+					case 'PRE':
+						out += '\\texttt{' + handleNode(child) + '}';
+						break;
+
+					case 'IMG':
+						out += imgNode2Latex(child);
+						break;
+
+					case 'CODE':
+						out += codeNode2Latex(child);
+						break;
+
+					case 'P':
+						out += handleNode(child) + '\n\n';
+						break;
+
+					default:
+						break;
+				}
+			}
+			return out;
+		} else {
+			return node.textContent;
+		}
+	}
+	return handleNode(div);
+}
+
+/* TODO handle points */
+
+function answerToLatex(answer, head){
+	head.push('      \\' + (answer.correct ? 'bonne' : 'mauvaise') + '{' + html2Latex(answer.content) + '}');
+}
+
+function choiceQuestionToLatex(question, type, head){
+	var layout = question.layout === 'VERTICAL' ? 'reponses' : 'reponseshoriz';
+	head.push('  \\begin{' + type + '}{Q' + ('00' + question.number).slice(-2) + '}');
+    head.push('\n  ' + html2Latex(question.content));
+	head.push('\n    \\begin{' + layout + '}');
+    question.answers.forEach(function(answer){
+		answerToLatex(answer, head);
+    });
+    head.push('    \\end{' + layout + '}');
+   	head.push('  \\end{' + type + '}');
+}
+
+function questionToLatex(section, question, head){
+	head.push('\\element{' + section.id + '}{');
+	switch (question.type) {
+		case 'SINGLE':
+			choiceQuestionToLatex(question, 'question', head);
+			break;
+
+		case 'MULTIPLE':
+			choiceQuestionToLatex(question, 'questionmult', head);
+			break;
+
+		/* TODO handle other types */
+	}
+	head.push('}');
+}
+
+function sectionToLatex(section, head, body){
+	//head make questions
+	section.questions.forEach(function(question){
+		questionToLatex(section, question, head);
+	});
+
+	//body  build title
+	if(section.title !== ''){
+		var title = '\n\\';
+		if (section.isSectionTitleVisibleOnAMC) {
+			title += 'AMC';
+		}
+		title += new Array(parseInt(section.level) + 1).join('sub') + 'section';
+        if (!section.isNumbered) {
+			title += '*';
+		}
+		title += '{' +  html2Latex(section.title) + '}\n';
+		body.push(title);
+	}
+
+	body.push(html2Latex(section.content));
+
+	if(section.questions.length > 0){
+		if (section.shuffle) {
+			body.push('\melangegroupe{' + section.id + '}');
+		}
+		var wrap = function(callback){
+			callback();
+		};
+		if (section.columns > 1) {
+			wrap = function(callback){
+				body.push('\\begin{multicols}{' + section.columns + '}');
+				callback();
+				body.push('\\end{multicols})');
+			};
+		}
+	    wrap(function(){
+			body.push('\\restituegroupe{' + section.id + '}');
+		});
+	}
+}
+
+	editor.toLatex = function(){
+		var head = [];
+		var body = [];
+		if(editor.exam && editor.exam.sections){
+			head.push('\\newcommand{\\ACMUImatiere}{' + html2Latex(editor.exam.course || '') + '}');
+        	head.push('\\newcommand{\\ACMUIsession}{' + html2Latex(editor.exam.session || '') + '}');
+        	head.push('\\newcommand{\\ACMUIteacher}{' + html2Latex(editor.exam.teacher || '') + '}\n');
+
+			editor.exam.sections.forEach(function(section){
+				sectionToLatex(section, head, body);
+			});
+		}
+
+		return {
+			questions_definition: head.join('\n'),
+			questions_layout: body.join('\n')
+		};
+	};
+
+  });
+
 

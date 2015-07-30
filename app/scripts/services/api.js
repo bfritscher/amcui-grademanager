@@ -10,7 +10,7 @@
 angular.module('grademanagerApp')
   .service('API', function ($http) {
     var self = this;
-    self.URL = 'http://192.168.59.103:9001';
+    self.URL = 'http://192.168.56.102:9001';
 
     self.getProjectList = function(){
       return $http.get(self.URL + '/project/list');

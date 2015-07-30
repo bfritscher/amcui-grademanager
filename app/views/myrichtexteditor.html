@@ -1,4 +1,4 @@
-<div class="editor">
+<div class="myrichtexteditor" layout-padding>
     <div class="toolbar hide">
         <a data-wysihtml5-command="bold" title="CTRL+B">bold</a>
         <a data-wysihtml5-command="italic" title="CTRL+I">italic</a>
@@ -8,6 +8,6 @@
         <a data-wysihtml5-command="insertCode" data-wysihtml5-command-value='<div class="code"></div>'>code</a>
         <a data-wysihtml5-action="change_view">switch view</a>
     </div>
-    <textarea ng-model="content"></textarea>
+    <textarea ng-model="content" ng-model-options="{ updateOn: 'blur'}" class="hide"></textarea>
 	<div class="preview"></div>
 </div>

@@ -7,16 +7,24 @@
  * # myRichTextEditor
  */
 
+/* jshint ignore:start */
+function GUID(){
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+    });
+}
+/* jshint ignore:end */
+
  //patch wysihtml5 with additional commands
 (function(wysihtml5) {
-  var REG_EXP = /latex/g;
   wysihtml5.commands.latex = {
     exec: function(composer, command) {
-      return wysihtml5.commands.formatInline.exec(composer, command, "span", "latex", REG_EXP);
+      return wysihtml5.commands.formatInline.exec(composer, command, "xmp");
     },
 
     state: function(composer, command) {
-      return wysihtml5.commands.formatInline.state(composer, command, "span", "latex", REG_EXP);
+      return wysihtml5.commands.formatInline.state(composer, command, "xmp");
     }
   };
   wysihtml5.commands.ttfont = {
@@ -30,7 +38,7 @@
   };
 	wysihtml5.commands.insertCode = {
 	  exec: function(composer, command, html) {
-  		html = '<span id="code'+ GUID() +'".*?></span>';
+  		html = '<code id="code'+ GUID() +'".*?>code</code>';
   		command = 'insertHTML';
   		if (composer.commands.support(command)) {
   		  composer.doc.execCommand(command, false, html);
@@ -45,17 +53,17 @@
 })(wysihtml5);
 
 angular.module('grademanagerApp')
-  .directive('myRichTextEditor', function () {
+  .directive('myRichTextEditor', function ($sce) {
      return {
       restrict: 'E',
       replace: true,
       require: '?ngModel',
       transclude: true,
-      scope: {
-          content: '=ngModel'
-      },
       templateUrl: 'views/myrichtexteditor.html',
-      link: function (scope, element) {
+      scope:{
+        'content': '=ngModel'
+      },
+      link: function (scope, element, attrs, ngModel) {
         var toolbar = element.children()[0];
         var textarea = element.children()[1];
         var preview = element.children()[2];
@@ -69,6 +77,7 @@ angular.module('grademanagerApp')
                 parserRules: wysihtml5ParserRules,
                 parser: wysihtml5.dom.parse,
                 contentEditableMode: true,
+                useLineBreaks: false,
                 stylesheets: ['styles/wysihtml5_custom.css']
             });
 
@@ -83,7 +92,8 @@ angular.module('grademanagerApp')
             // Sync view -> model
             editor.on('change', function(){
               scope.$apply(function(){
-                  scope.content = editor.getValue(true);
+                  console.log('change');
+                  ngModel.$setViewValue(editor.getValue(true));
               });
             });
 
@@ -99,12 +109,32 @@ angular.module('grademanagerApp')
                 //$timeout(decorate);
             });
 
+            toolbar.classList.remove('hide');
+            textarea.classList.remove('hide');
+
             //remove preview since we now have the editor
             element[0].removeChild(preview);
+            preview = null;
+            editor.setValue($sce.getTrustedHtml(ngModel.$viewValue || ''));
+            editor.focus();
+
         }
 
+        // Sync model -> view
+        ngModel.$render = function () {
+            var newValue = $sce.getTrustedHtml(ngModel.$viewValue || '');
+            console.log('content change');
+             if (preview) {
+               console.log('preview');
+               preview.innerHTML = newValue;
+             }
+             if (editor) {
+               editor.setValue(newValue);
+              //$timeout(decorate);
+             }
+        };
+
         //only initEditor if needed
-        preview.innerHTML = scope.content;
         preview.addEventListener('click', initEditor, false);
 
       }

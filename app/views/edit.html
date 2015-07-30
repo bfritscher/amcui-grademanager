@@ -18,7 +18,7 @@
               <li class="question-menu" ng-repeat="question in section.questions" ui-tree-node>
                 <div ui-tree-handle>
                   <strong><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}}</strong>
-                  <em>{{question.content | limitTo: 30}}...</em>
+                  <em>{{question.content | htmlToPlaintext | limitTo: 30}}...</em>
                 </div>
               </li>
             </ol>
@@ -34,7 +34,7 @@
         <md-button aria-label="toggle menu" class="md-icon-button" ng-hide="editor.leftNav().isLockedOpen()" ng-click="editor.leftNav().open();">
           <md-icon class="mdi-menu"></md-icon>
         </md-button>
-        <h2><input ng-model="editor.exam.course"> - <input ng-model="editor.exam.session"></h2>
+        <h2><input ng-model="editor.exam.course" placeholder="course"> - <input ng-model="editor.exam.session" placeholder="session"></h2>
     	  <span flex></span>
         <md-button aria-label="preview" class="md-raised" ng-click="editor.preview()">Preview</md-button>
         <md-button aria-label="print" class="md-raised" ng-click="editor.print()">Print</md-button>
@@ -58,8 +58,8 @@
         <md-select placeholder="Level" ng-model="editor.section.level">
           <md-option ng-repeat="(key, value) in {'Level 1': 0, 'Level 2': 1, 'Level 3': 2}" value="{{value}}">{{key}}</md-option>
         </md-select>
-        <md-checkbox ng-model="editor.section.isNumbered">Show number</md-checkbox>
-        <md-checkbox ng-model="editor.section.isSectionTitleVisibleOnAMC">Visible in answer sheet</md-checkbox>
+        <md-checkbox ng-model="editor.section.isNumbered" ng-disabled="editor.section.isSectionTitleVisibleOnAMC">Show number</md-checkbox>
+        <md-checkbox ng-model="editor.section.isSectionTitleVisibleOnAMC" ng-change="editor.section.isSectionTitleVisibleOnAMC ? editor.section.isNumbered=true : ''">Visible in answer sheet</md-checkbox>
         <md-checkbox ng-model="editor.section.shuffle">Shuffle questions</md-checkbox>
         <md-select placeholder="Columns" ng-model="editor.section.columns">
           <md-option ng-repeat="(key, value) in {'One column': 1, 'Two columns': 2}" value="{{value}}">{{key}}</md-option>
@@ -90,8 +90,7 @@
                 <div ng-repeat="answer in question.answers" class="answer" layout="row">
                     <label><input type="checkbox" ng-model="answer.correct"><md-icon ng-class="{'mdi-close': !answer.correct, 'mdi-check': answer.correct}"></md-icon></label>
 
-                    <my-rich-text-editor ng-model="answer.content"></my-rich-text-editor>
-                    <span flex></span>
+                    <my-rich-text-editor ng-model="answer.content" flex></my-rich-text-editor>
                     <md-button aria-label="delete answer" class="md-warn" ng-click="editor.removeAnswer(question, answer)"><md-icon class="mdi-delete"></md-icon></md-button>
                 </div>
               </div>
@@ -104,7 +103,10 @@
         <md-button aria-label="add new question" class="md-raised md-primary" ng-click="editor.addQuestion(editor.section)">Add Question</md-button>
       </div>
 
-
+<xmp>
+{{editor.toLatex()}}
+</xmp>
+<textarea ng-model="editor.preview.log"></textarea>
 <md-icon class="mdi-message"></md-icon>
 <md-icon class="mdi-message-text"></md-icon>
 <md-icon class="mdi-forum"></md-icon>
