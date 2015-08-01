@@ -280,9 +280,6 @@ tr.active td{
     display: inline;
 }
 
-.myrichtexteditor img{
-	width: 70%;
-}
 .myrichtexteditor .border{
     border: 1px solid black;
 }

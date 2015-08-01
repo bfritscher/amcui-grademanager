@@ -2,20 +2,20 @@
   <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left"  md-is-locked-open="$mdMedia('gt-lg')">
     <md-toolbar class="md-accent md-whiteframe-z2" layout="row">
       <div class="md-toolbar-tools">
-        <h3>{{editor.exam.course}} - {{editor.exam.session}}</h3>
+        <h3>{{editor.examService.exam.course}} - {{editor.examService.exam.session}}</h3>
       </div>
     </md-toolbar>
     <md-content layout-padding>
       <div ui-tree="editor.examMenuOptions">
-        <ol ui-tree-nodes="" ng-model="editor.exam.sections" data-type="section">
-          <li class="section-menu" ng-repeat="section in editor.exam.sections track by $index" ng:init="parentIndex = $index" ui-tree-node>
+        <ol ui-tree-nodes="" ng-model="editor.examService.exam.sections" data-type="section">
+          <li class="section-menu" ng-repeat="section in editor.examService.exam.sections track by section.id" ng:init="parentIndex = $index" ui-tree-node>
             <div ui-tree-handle layout="row" ng-class="{'active': section == editor.section}">
               <p>{{section.number}} {{section.title}}</p>
               <span flex></span>
               <md-button aria-label="select section" data-nodrag ng-click="editor.section = section" class="md-icon-button"><md-icon class="mdi-eye"></md-icon></md-button>
             </div>
             <ol ui-tree-nodes="" ng-model="section.questions" data-type="question">
-              <li class="question-menu" ng-repeat="question in section.questions" ui-tree-node>
+              <li class="question-menu" ng-repeat="question in section.questions track by question.id" ui-tree-node>
                 <div ui-tree-handle>
                   <strong><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}}</strong>
                   <em>{{question.content | htmlToPlaintext | limitTo: 30}}...</em>
@@ -34,7 +34,7 @@
         <md-button aria-label="toggle menu" class="md-icon-button" ng-hide="editor.leftNav().isLockedOpen()" ng-click="editor.leftNav().open();">
           <md-icon class="mdi-menu"></md-icon>
         </md-button>
-        <h2><input ng-model="editor.exam.course" placeholder="course"> - <input ng-model="editor.exam.session" placeholder="session"></h2>
+        <h2><input ng-model="editor.examService.exam.course" placeholder="course"> - <input ng-model="editor.examService.exam.session" placeholder="session"></h2>
     	  <span flex></span>
         <md-button aria-label="preview" class="md-raised" ng-click="editor.preview()">Preview</md-button>
         <md-button aria-label="print" class="md-raised" ng-click="editor.print()">Print</md-button>
@@ -68,12 +68,12 @@
       <my-rich-text-editor ng-model="editor.section.content"></my-rich-text-editor>
 
       <div ng-class="{'two-columns': editor.section.columns == 2}">
-          <div class="question md-whiteframe-z1" ng-repeat="question in editor.section.questions">
+          <div class="question md-whiteframe-z1" ng-repeat="question in editor.section.questions track by question.id">
               <div layout="row" layout-padding>
                 <h3><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>
                  Question {{question.number}}</h3>
                  <span flex></span>
-                <md-button aria-label="delete question" class="md-warn" ng-click="editor.removeQuestion(editor.section, question)"><md-icon class="mdi-delete"></md-icon></md-button>
+                <md-button aria-label="delete question" class="md-warn" ng-click="editor.examService.removeQuestion(editor.section, question)"><md-icon class="mdi-delete"></md-icon></md-button>
               </div>
               <div layout="row"  class="section-options md-whiteframe-z1">
                 <md-select placeholder="Type" ng-model="question.type">
@@ -87,24 +87,24 @@
               <my-rich-text-editor ng-model="question.content"></my-rich-text-editor>
 
               <div layout="{{question.layout == 'HORIZONTAL' ? 'row' : 'column'}}"  layout-padding>
-                <div ng-repeat="answer in question.answers" class="answer" layout="row">
+                <div ng-repeat="answer in question.answers track by answer.id" class="answer" layout="row">
                     <label><input type="checkbox" ng-model="answer.correct"><md-icon ng-class="{'mdi-close': !answer.correct, 'mdi-check': answer.correct}"></md-icon></label>
 
                     <my-rich-text-editor ng-model="answer.content" flex></my-rich-text-editor>
-                    <md-button aria-label="delete answer" class="md-warn" ng-click="editor.removeAnswer(question, answer)"><md-icon class="mdi-delete"></md-icon></md-button>
+                    <md-button aria-label="delete answer" class="md-warn" ng-click="editor.examService.removeAnswer(question, answer)"><md-icon class="mdi-delete"></md-icon></md-button>
                 </div>
               </div>
               <div class="section-options md-whiteframe-z1">
-                <md-button aria-label="add new answer" class="md-raised md-primary" ng-click="editor.addAnswer(question)">Add Answer</md-button>
+                <md-button aria-label="add new answer" class="md-raised md-primary" ng-click="editor.examService.addAnswer(question)">Add Answer</md-button>
               </div>
           </div>
       </div>
       <div class="section-options md-whiteframe-z1 question-add">
-        <md-button aria-label="add new question" class="md-raised md-primary" ng-click="editor.addQuestion(editor.section)">Add Question</md-button>
+        <md-button aria-label="add new question" class="md-raised md-primary" ng-click="editor.examService.addQuestion(editor.section)">Add Question</md-button>
       </div>
 
 <textarea style="width:100%;height:300px">
-{{editor.toLatex()}}
+{{editor.examService.toLatex()}}
 </textarea>
 <textarea ng-model="editor.preview.log"></textarea>
 <md-icon class="mdi-message"></md-icon>

@@ -41,7 +41,9 @@ var wysihtml5ParserRules = {
   tags: {
     b:      {},
     i:      {},
-    //br:     {},
+    hr:     {},
+    ul:     {},
+    li:     {},
     p:      {},
     pre:    {},
     code:   {

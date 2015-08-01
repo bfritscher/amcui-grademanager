@@ -53,7 +53,7 @@ function GUID(){
 })(wysihtml5);
 
 angular.module('grademanagerApp')
-  .directive('myRichTextEditor', function ($timeout, $stateParams, API, auth) {
+  .directive('myRichTextEditor', function ($timeout, exam) {
       
       var myParse = function(elementOrHtml_current, config){
         // replace empty tags
@@ -88,13 +88,15 @@ angular.module('grademanagerApp')
             }
             var imgs = element.getElementsByTagName('img');
             for(var i=0; i < imgs.length; i++){
-              var imgElement= imgs[i];
-              var id = imgElement.getAttribute('id');
-              if (id) {
-                imgElement.setAttribute('src', API.URL  + '/project/' + $stateParams.project + '/debug/src/graphics/' + id + '_thumb.jpg?token='+ auth.getToken());
-              }
+                var imgElement= imgs[i];
+                var img = exam.getGraphics(imgElement.getAttribute('id'));
+                if (img) {
+                    imgElement.setAttribute('src', exam.graphicsPreviewURL(img.id));
+                    imgElement.classList.toggle('border', img.border);
+                    imgElement.style.width = img.width * 100 + '%';
+                }
             }
-          }
+        }
 
         function initEditor(){
             editor = new wysihtml5.Editor(textarea, {
