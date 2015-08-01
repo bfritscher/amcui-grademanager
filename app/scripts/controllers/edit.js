@@ -97,7 +97,7 @@ angular.module('grademanagerApp')
 		return {
 			id: 's' + GUID(),
 			title: 'Add Section',
-			content: ' ',
+			content: '<p></p>',
 			level: 0,
 			isNumbered: true,
 			isSectionTitleVisibleOnAMC: true,
@@ -136,7 +136,7 @@ angular.module('grademanagerApp')
 	editor.addQuestion = function(section){
 		section.questions.push({
 			id: 'q' + GUID(),
-			content: ' ',
+			content: '<p></p>',
 			type: 'SINGLE',
 			layout: 'VERTICAL',
 			answers: []
@@ -150,7 +150,7 @@ angular.module('grademanagerApp')
 	editor.addAnswer = function(question){
 		question.answers.push({
 			id: 'a' + GUID(),
-			content: 'answer text',
+			content: '<p>answer text</p>',
 			correct: false
 		});
 	};
@@ -293,16 +293,18 @@ function codeNode2Latex(node){
 }
 
 function imgNode2Latex(node){
-	//c.getAttribute('id')
-	console.log(node);
-	return 'IMG\\_NOT\\_FOUND';
-	/*
-	var out = "\\includegraphics[" + this.options  + "]{src/" + this.id + "}";
-		if(this.border){
+	var id = node.getAttribute('id');
+	if(id && editor.exam.graphics && editor.exam.graphics.hasOwnProperty(id)){
+		var img = editor.exam.graphics[id];
+		var options = 'width=0.7\\textwidth';
+		var out = "\\includegraphics[" + options  + "]{src/graphics/" + id + "}";
+		if(img.border){
 			out = "\\fbox{" + out + "}";
 		}
-    this.options = 'width=0.7\\textwidth';
-	*/
+		return out;
+	}
+	
+	return 'IMG\\_NOT\\_FOUND';
 }
 
 function html2Latex(content){
@@ -314,7 +316,6 @@ function html2Latex(content){
 			var out = '';
 			for(var i=0; i < childs.length; i++){
 				var child = childs[i];
-				console.log(child.nodeName);
 				switch (child.nodeName) {
 					case '#text':
 						out += escapeLatex(child.textContent);

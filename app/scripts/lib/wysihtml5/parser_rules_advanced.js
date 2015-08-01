@@ -53,8 +53,7 @@ var wysihtml5ParserRules = {
     xmp:    {},
     img:    {
       "check_attributes": {
-          "id": "any",
-          "src":"any"
+          "id": "any"
       }
     }
   }

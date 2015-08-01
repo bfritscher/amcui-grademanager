@@ -53,7 +53,17 @@ function GUID(){
 })(wysihtml5);
 
 angular.module('grademanagerApp')
-  .directive('myRichTextEditor', function ($sce) {
+  .directive('myRichTextEditor', function ($timeout, $stateParams, API, auth) {
+      
+      var myParse = function(elementOrHtml_current, config){
+        // replace empty tags
+        elementOrHtml_current = elementOrHtml_current.replace(/<b><\/b>/, '');
+        elementOrHtml_current = elementOrHtml_current.replace(/<i><\/i>/, '');
+        elementOrHtml_current = elementOrHtml_current.replace(/<pre><\/pre>/, '');
+        elementOrHtml_current = elementOrHtml_current.replace(/<xmp><\/xmp>/, '');
+        return wysihtml5.dom.parse(elementOrHtml_current, config);
+      };
+    
      return {
       restrict: 'E',
       replace: true,
@@ -69,17 +79,33 @@ angular.module('grademanagerApp')
         var preview = element.children()[2];
 
         var editor;
+        
+        function decorate(){
+            console.log('decorate');
+            var element = preview;
+            if(editor){
+              element= editor.composer.editableArea;
+            }
+            var imgs = element.getElementsByTagName('img');
+            for(var i=0; i < imgs.length; i++){
+              var imgElement= imgs[i];
+              var id = imgElement.getAttribute('id');
+              if (id) {
+                imgElement.setAttribute('src', API.URL  + '/project/' + $stateParams.project + '/debug/src/graphics/' + id + '_thumb.jpg?token='+ auth.getToken());
+              }
+            }
+          }
 
         function initEditor(){
             editor = new wysihtml5.Editor(textarea, {
                 autoLink: false,
                 toolbar: toolbar,
                 parserRules: wysihtml5ParserRules,
-                parser: wysihtml5.dom.parse,
+                parser: myParse,
                 contentEditableMode: true,
                 useLineBreaks: false,
                 stylesheets: ['styles/wysihtml5_custom.css']
-            });
+            }); 
 
             editor.on('focus', function() {
                 toolbar.classList.remove('hide');
@@ -98,15 +124,15 @@ angular.module('grademanagerApp')
             });
 
             editor.on('paste', function(){
-                //$timeout(decorate);
+                $timeout(decorate);
             });
 
             editor.on('aftercommand:composer', function(){
-                //$timeout(decorate);
+                $timeout(decorate);
             });
 
             editor.on('change_view', function(){
-                //$timeout(decorate);
+                $timeout(decorate);
             });
 
             toolbar.classList.remove('hide');
@@ -115,23 +141,24 @@ angular.module('grademanagerApp')
             //remove preview since we now have the editor
             element[0].removeChild(preview);
             preview = null;
-            editor.setValue($sce.getTrustedHtml(ngModel.$viewValue || ''));
-            editor.focus();
-
+            editor.setValue(ngModel.$viewValue || '');
+            $timeout(function(){
+              editor.focus();
+            });
         }
 
         // Sync model -> view
         ngModel.$render = function () {
-            var newValue = $sce.getTrustedHtml(ngModel.$viewValue || '');
+            var newValue = ngModel.$viewValue || '';
             console.log('content change');
              if (preview) {
                console.log('preview');
                preview.innerHTML = newValue;
              }
              if (editor) {
-               editor.setValue(newValue);
-              //$timeout(decorate);
+                editor.setValue(newValue);
              }
+             $timeout(decorate);
         };
 
         //only initEditor if needed
