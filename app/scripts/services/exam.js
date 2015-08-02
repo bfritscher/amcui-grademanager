@@ -87,6 +87,19 @@ angular.module('grademanagerApp')
         question.answers.splice(question.answers.indexOf(answer), 1);
     };
     
+    editor.addGraphics = function(){
+        //TODO upload
+        if(!editor.exam.graphics){
+            editor.exam.graphics = {};
+        }
+        var id = 'g' + GUID();
+        editor.exam.graphics[id] = {
+            id: id,
+            border: false,
+            width: 0.7
+        };
+    };
+    
     editor.computeHierarchyNumbers= function computeHierarchyNumbers(){
         var questionCount = 1;
         var sections = [0, 0, 0];
@@ -131,12 +144,8 @@ angular.module('grademanagerApp')
     };
     
     editor.getGraphics = function (id) {
-        if(id){
-            return {
-                id: id,
-                border: true,
-                width: 0.5
-            };
+        if(editor.exam && editor.exam.graphics && editor.exam.graphics.hasOwnProperty(id)){
+            return editor.exam.graphics[id];
         }
     };
 

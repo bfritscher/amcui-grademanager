@@ -71,12 +71,14 @@ angular.module('grademanagerApp')
       transclude: true,
       templateUrl: 'views/myrichtexteditor.html',
       scope:{
-        'content': '=ngModel'
+        'content': '=ngModel',
+        'allGraphics': '=graphics'
       },
       link: function (scope, element, attrs, ngModel) {
         var toolbar = element.children()[0];
         var textarea = element.children()[1];
         var preview = element.children()[2];
+        var graphicsToolbar = element.children()[3];
 
         var editor;
         
@@ -97,7 +99,7 @@ angular.module('grademanagerApp')
                 }
             }
         }
-
+        
         function initEditor(){
             editor = new wysihtml5.Editor(textarea, {
                 autoLink: false,
@@ -107,7 +109,28 @@ angular.module('grademanagerApp')
                 contentEditableMode: true,
                 useLineBreaks: false,
                 stylesheets: ['styles/wysihtml5_custom.css']
-            }); 
+            });
+            
+            //TODO dialog;
+            scope.addGraphics = exam.addGraphics;
+            
+            scope.closeGraphicsToolbar = function(){
+              graphicsToolbar.classList.add('hide');
+            };
+            
+            $timeout(function(){
+                editor.composer.editableArea.addEventListener('click', function(event){
+                    if (event.target.tagName === 'IMG'){
+                        var imgElement = event.target;
+                        graphicsToolbar.classList.remove('hide');
+                        graphicsToolbar.style.top = imgElement.offsetTop + 'px';
+                        graphicsToolbar.style.left = imgElement.offsetLeft + 'px';
+                        graphicsToolbar.style.width = imgElement.offsetWidth + 'px';
+                        scope.graphics = exam.getGraphics(imgElement.getAttribute('id'));
+                        scope.$apply();
+                    }
+                });
+            });
 
             editor.on('focus', function() {
                 toolbar.classList.remove('hide');
@@ -115,6 +138,7 @@ angular.module('grademanagerApp')
 
             editor.on('blur', function() {
                 toolbar.classList.add('hide');
+                graphicsToolbar.classList.add('hide');
             });
 
             // Sync view -> model
@@ -149,6 +173,13 @@ angular.module('grademanagerApp')
             });
         }
 
+        scope.$watch('allGraphics', function(oldValue, newValue){
+          console.log(oldValue, newValue, scope.allGraphics, scope.graphics);
+          //TODO only update if changed.
+          //TODO only watch graphics which we own.
+          $timeout(decorate);
+        }, true);
+        
         // Sync model -> view
         ngModel.$render = function () {
             var newValue = ngModel.$viewValue || '';
@@ -162,6 +193,8 @@ angular.module('grademanagerApp')
              }
              $timeout(decorate);
         };
+        
+        
 
         //only initEditor if needed
         preview.addEventListener('click', initEditor, false);

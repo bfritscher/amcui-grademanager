@@ -232,7 +232,7 @@ tr.active td{
   margin-top: 2em;
 }
 
-.answer md-icon{
+.answer-toggle md-icon{
   transition: all linear 0.3s;
   font-size: 20px;
   line-height: 24px;
@@ -240,24 +240,27 @@ tr.active td{
   cursor: pointer;
 }
 
-.answer input[type=checkbox]{
+.answer-toggle input[type=checkbox]{
   display: none;
 }
 
-.answer md-icon.mdi-close{
+.answer-toggle md-icon.mdi-close{
   background-color: red;
   color: white;
   font-weight: bold;
   border-radius: 12px;
 }
 
-.answer md-icon.mdi-check{
+.answer-toggle md-icon.mdi-check{
   background-color: green;
   color: white;
   font-weight: bold;
   border-radius: 4px;
 }
 
+.myrichtexteditor{
+  position: relative;
+}
 .myrichtexteditor .hide{
   display: none;
 }
@@ -286,4 +289,10 @@ tr.active td{
 
 .myrichtexteditor textarea {
   width: 100%;
+}
+
+.myrichtexteditor .graphics-toolbar{
+  position: absolute;
+  background-color: rgba(240,20,20,0.8);
+  min-width: 350px;
 }

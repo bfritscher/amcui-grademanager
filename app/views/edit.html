@@ -65,7 +65,7 @@
           <md-option ng-repeat="(key, value) in {'One column': 1, 'Two columns': 2}" value="{{value}}">{{key}}</md-option>
         </md-select>
       </div>
-      <my-rich-text-editor ng-model="editor.section.content"></my-rich-text-editor>
+      <my-rich-text-editor ng-model="editor.section.content" graphics="editor.examService.exam.graphics"></my-rich-text-editor>
 
       <div ng-class="{'two-columns': editor.section.columns == 2}">
           <div class="question md-whiteframe-z1" ng-repeat="question in editor.section.questions track by question.id">
@@ -84,13 +84,13 @@
                 </md-select>
               </div>
 
-              <my-rich-text-editor ng-model="question.content"></my-rich-text-editor>
+              <my-rich-text-editor ng-model="question.content" graphics="editor.examService.exam.graphics"></my-rich-text-editor>
 
               <div layout="{{question.layout == 'HORIZONTAL' ? 'row' : 'column'}}"  layout-padding>
                 <div ng-repeat="answer in question.answers track by answer.id" class="answer" layout="row">
-                    <label><input type="checkbox" ng-model="answer.correct"><md-icon ng-class="{'mdi-close': !answer.correct, 'mdi-check': answer.correct}"></md-icon></label>
+                    <label class="answer-toggle"><input type="checkbox" ng-model="answer.correct"><md-icon ng-class="{'mdi-close': !answer.correct, 'mdi-check': answer.correct}"></md-icon></label>
 
-                    <my-rich-text-editor ng-model="answer.content" flex></my-rich-text-editor>
+                    <my-rich-text-editor ng-model="answer.content" graphics="editor.examService.exam.graphics" flex></my-rich-text-editor>
                     <md-button aria-label="delete answer" class="md-warn" ng-click="editor.examService.removeAnswer(question, answer)"><md-icon class="mdi-delete"></md-icon></md-button>
                 </div>
               </div>

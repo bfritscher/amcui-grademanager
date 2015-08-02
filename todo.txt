@@ -1,0 +1,33 @@
+websocket compile
+lock page on some task activities
+single activity executed
+debounce compile
+logs view
+latex log view
+pdf preview
+fix user image highlight
+image manager dialog
+insert image
+upload image
+thumb of image
+delete image
+open questions
+points settings
+confirm delete or undo?
+import csv/ copy paste with lookup
+calculate fields storage? cached values for csv?
+!!project options in variables loaded from file and db (threshold, annotation layout)$
+option editor
+auto calculate mark on grade page if changes?
+!!project status , lock edit if print
+!!handle source.tex templates
+
+code editing
+center text?
+
+
+add calage.xy + source to print zip
+(data table over linked column formula?)
+
+(version project, save print)
+(import projects)
