@@ -1,4 +1,4 @@
-<md-dialog aria-label="Manual association">
+<md-dialog aria-label="Manual association" class="edit-preview">
   <md-toolbar>
     <div class="md-toolbar-tools">
       <h2>Manual Association</h2>
@@ -9,9 +9,10 @@
     </div>
   </md-toolbar>
   <md-dialog-content flex layout="column">
-    <my-pdf-viewer pdf="{{ctrl.previewSrc()}}" flex></my-pdf-viewer>
+    <my-pdf-viewer pdf="{{ctrl.previewSrc()}}" viewer="pdfViewer" flex></my-pdf-viewer>
   </md-dialog-content>
   <div class="md-actions" layout="row">
+    {{pdfViewer.currentPageNumber}} / {{pdfViewer.pagesCount}}
     <span flex></span>
     <md-button ng-click="ctrl.closeDialog()" class="md-primary">
      close

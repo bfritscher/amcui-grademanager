@@ -297,6 +297,17 @@ tr.active td{
   min-width: 350px;
 }
 
+my-pdf-viewer{
+  overflow:auto;
+  padding: 1em 2em 1em 1em;
+}
+
+.edit-preview md-dialog-content{
+  padding: 0;
+  background-color: grey;
+  min-width: 500px;
+}
+
 /* fix pdf.js viewer css */
 .pdfViewer .page {
   box-sizing: content-box;

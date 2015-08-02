@@ -12,7 +12,8 @@ angular.module('grademanagerApp')
       template: '<div class="pdfViewer"></div>',
       restrict: 'E',
       scope:{
-        src: '@pdf'
+        src: '@pdf',
+        viewer: '='
       },
       link: function postLink(scope, element) {
           PDFJS.disableStream = true;
@@ -21,9 +22,16 @@ angular.module('grademanagerApp')
             container: container
           });
 
+          scope.viewer = pdfViewer;
+
           container.addEventListener('pagesinit', function () {
             // we can use pdfViewer now, e.g. let's change default scale.
+            pdfViewer.currentScaleValue  = 'page-width';
+          });
 
+          container.addEventListener('scroll', function () {
+            // we can use pdfViewer now, e.g. let's change default scale.
+            scope.$apply();
           });
 
           scope.$watch('src', function(newValue){
