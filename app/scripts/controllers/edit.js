@@ -8,7 +8,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('EditCtrl', function ($scope, $http, $mdSidenav, $stateParams, $sce, $timeout, API, auth, exam) {
+  .controller('EditCtrl', function ($scope, $http, $mdSidenav, $mdDialog, $stateParams, $sce, $timeout, API, auth, exam) {
 	var editor = this;
 	editor.examService = exam;
 	//TODO automate
@@ -31,7 +31,7 @@ angular.module('grademanagerApp')
 	        client.sync();
 	    }, true);
 	});
-	
+
 	editor.leftNav = function (){
 		return $mdSidenav('left');
 	};
@@ -44,7 +44,7 @@ angular.module('grademanagerApp')
 			}
 		}
 	};
-	
+
 	editor.nextSection = function(create){
 		if(editor.examService.exam && editor.examService.exam.sections){
 			var index = editor.examService.exam.sections.indexOf(editor.section);
@@ -71,7 +71,7 @@ angular.module('grademanagerApp')
 		editor.section = newSection;
 	};
 
-	
+
 
 	//TODO: automate
 	this.preview = function(){
@@ -91,10 +91,6 @@ angular.module('grademanagerApp')
 		});
 
 	};
-
-	this.pageSrc = function(page){
-    	return $sce.trustAsResourceUrl(API.URL + '/project/' + $stateParams.project + '/static/out/' + page + '?token=' + auth.getToken());
-    };
 
 	this.examMenuOptions = {
 		accept: function(sourceNode, destNodes) {
@@ -125,7 +121,17 @@ angular.module('grademanagerApp')
 		*/
       }
 	};
-	
+
+	 $mdDialog.show({
+        clickOutsideToClose: true,
+        templateUrl: 'views/edit.preview.html',
+        //targetEvent: $event,
+        controller: 'EditPreviewCtrl',
+        controllerAs: 'ctrl',
+        locals: {
+        }
+      });
+
   });
 
 

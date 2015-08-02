@@ -18,6 +18,7 @@
     "diffsync": false,
     "wysihtml5": false,
     "wysihtml5ParserRules": false,
-    "GUID": false
+    "GUID": false,
+    "PDFJS": false
   }
 }

@@ -1,0 +1,20 @@
+<md-dialog aria-label="Manual association">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>Manual Association</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="ctrl.closeDialog()">
+        <md-icon class="mdi-close" aria-label="Close dialog"></md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+  <md-dialog-content flex layout="column">
+    <my-pdf-viewer pdf="{{ctrl.previewSrc()}}" flex></my-pdf-viewer>
+  </md-dialog-content>
+  <div class="md-actions" layout="row">
+    <span flex></span>
+    <md-button ng-click="ctrl.closeDialog()" class="md-primary">
+     close
+    </md-button>
+  </div>
+</md-dialog>

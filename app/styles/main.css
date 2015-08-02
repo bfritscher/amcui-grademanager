@@ -296,3 +296,16 @@ tr.active td{
   background-color: rgba(240,20,20,0.8);
   min-width: 350px;
 }
+
+/* fix pdf.js viewer css */
+.pdfViewer .page {
+  box-sizing: content-box;
+}
+
+.pdfViewer.removePageBorders .page {
+  box-sizing: content-box;
+}
+
+.textLayer .highlight {
+  box-sizing: content-box;
+}

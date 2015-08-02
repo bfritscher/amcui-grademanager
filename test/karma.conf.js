@@ -40,6 +40,7 @@ module.exports = function(config) {
       'bower_components/google-diff-match-patch/diff_match_patch.js',
       'bower_components/pdfjs-dist/build/pdf.js',
       'bower_components/pdfjs-dist/build/pdf.worker.js',
+      'bower_components/codemirror/lib/codemirror.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       "app/scripts/**/*.js",

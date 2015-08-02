@@ -12,7 +12,9 @@
     <link rel="stylesheet" href="bower_components/angular-ui-tree/dist/angular-ui-tree.min.css" />
     <link rel="stylesheet" href="bower_components/mdi/css/materialdesignicons.css" />
     <link rel="stylesheet" href="bower_components/mdi/css/materialdesignicons.min.css" />
+    <link rel="stylesheet" href="bower_components/codemirror/lib/codemirror.css" />
     <!-- endbower -->
+    <link rel="stylesheet" href="bower_components/pdfjs-dist/web/pdf_viewer.css" />
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
     <link rel="stylesheet" href="styles/main.css">
@@ -85,7 +87,11 @@
     <script src="bower_components/google-diff-match-patch/diff_match_patch.js"></script>
     <script src="bower_components/pdfjs-dist/build/pdf.js"></script>
     <script src="bower_components/pdfjs-dist/build/pdf.worker.js"></script>
+    <script src="bower_components/codemirror/lib/codemirror.js"></script>
     <!-- endbower -->
+    <script src="bower_components/codemirror/mode/stex/stex.js"></script>
+    <script src="bower_components/pdfjs-dist/web/compatibility.js"></script>
+    <script src="bower_components/pdfjs-dist/web/pdf_viewer.js"></script>
     <script src="bower_components/socket.io-client/socket.io.js"></script>
     <!-- endbuild -->
 
@@ -108,6 +114,8 @@
         <script src="scripts/directives/myrichtexteditor.js"></script>
         <script src="scripts/filters/htmltoplaintext.js"></script>
         <script src="scripts/services/exam.js"></script>
+        <script src="scripts/directives/mypdfviewer.js"></script>
+        <script src="scripts/controllers/editpreview.js"></script>
         <!-- endbuild -->
 </body>
 </html>
