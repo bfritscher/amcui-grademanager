@@ -93,7 +93,7 @@ angular.module('grademanagerApp')
 	};
 
 	this.pageSrc = function(page){
-    	return $sce.trustAsResourceUrl(API.URL + '/project/' + $stateParams.project + '/out/' + page + '?token=' + auth.getToken());
+    	return $sce.trustAsResourceUrl(API.URL + '/project/' + $stateParams.project + '/static/out/' + page + '?token=' + auth.getToken());
     };
 
 	this.examMenuOptions = {

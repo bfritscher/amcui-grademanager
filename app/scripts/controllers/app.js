@@ -46,7 +46,7 @@ angular.module('grademanagerApp')
     };
 
     this.linkTo = function(file){
-      return API.URL + '/project/' + $stateParams.project + '/debug/' + file + '?token=' + auth.getToken();
+      return API.URL + '/project/' + $stateParams.project + '/static/' + file + '?token=' + auth.getToken();
     };
 
     $scope.$on('$stateChangeSuccess', function(){

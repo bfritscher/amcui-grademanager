@@ -140,7 +140,7 @@ angular.module('grademanagerApp')
     };
     
     editor.graphicsPreviewURL = function(id) {
-        return API.PROJECT_URL + '/debug/src/graphics/' + id + '_thumb.jpg?token='+ auth.getToken();
+        return API.PROJECT_URL + '/static/src/graphics/' + id + '_thumb.jpg?token='+ auth.getToken();
     };
     
     editor.getGraphics = function (id) {

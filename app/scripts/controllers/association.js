@@ -20,7 +20,7 @@ angular.module('grademanagerApp')
 
     ctrl.nameSrc = function(){
       if (ctrl.match && ctrl.match.image){
-        return $sce.trustAsResourceUrl(API.URL + '/project/' + $stateParams.project + '/static/' + ctrl.match.image + '?token=' + auth.getToken());
+        return $sce.trustAsResourceUrl(API.URL + '/project/' + $stateParams.project + '/static/cr/' + ctrl.match.image + '?token=' + auth.getToken());
       }
     };
 

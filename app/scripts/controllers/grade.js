@@ -137,7 +137,7 @@ angular.module('grademanagerApp')
           score.annotateDisabled = false;
           var found = log.logRegroupe.match(/(cr\/.*?\.pdf)/);
           if ( found ){
-            $window.open(API.URL + '/project/' + $stateParams.project + '/debug/' + found[1] + '?token=' + auth.getToken(), '_blank');
+            $window.open(API.URL + '/project/' + $stateParams.project + '/static/' + found[1] + '?token=' + auth.getToken(), '_blank');
           }
         });
     };
