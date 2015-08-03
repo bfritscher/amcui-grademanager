@@ -17,6 +17,8 @@ angular.module('grademanagerApp')
       options: {}
     };
     self.connected = {};
+    self.logs = {};
+    self.sortedLogs = [];
 
     self.getProjectList = function(){
       return $http.get(self.URL + '/project/list');
@@ -39,20 +41,84 @@ angular.module('grademanagerApp')
         });
 
         self.socket.on('user:online', function(data){
-            console.log('msg', data);
             self.connected = data;
             $rootScope.$apply();
         });
 
         self.socket.on('user:connected', function(data){
-            console.log('msg', data);
             self.connected[data.id] = data;
             $rootScope.$apply();
         });
 
         self.socket.on('user:disconnected', function(data){
-            console.log('msg', data);
             delete self.connected[data.id];
+            $rootScope.$apply();
+        });
+
+        self.socket.on('log', function(log){
+            if (log.action === 'start') {
+                self.logs[log.msg] = {
+                    command: log.command,
+                    msg: log.msg,
+                    params: log.params,
+                    log: '',
+                    err: '',
+                    progress: 0,
+                    start: new Date()
+                };
+                self.sortedLogs.unshift(self.logs[log.msg]);
+            }
+
+            if (log.action === 'log') {
+                var regex = /===<.*?>=\+(.*)/g;
+                var match = regex.exec(log.data);
+                if (match){
+                    self.logs[log.msg].progress += parseFloat(match[1]);
+                } else {
+                    self.logs[log.msg].log += log.data + '\n';
+                    if (log.command === 'prepare') {
+                        self.logs[log.msg].progress+=0.001;
+                    }
+                }
+            }
+
+            if (log.action === 'err') {
+                self.logs[log.msg].err += log.data;
+            }
+
+            if (log.action === 'end') {
+                self.logs[log.msg].code = log.code;
+                self.logs[log.msg].progress = 1;
+                self.logs[log.msg].end = new Date();
+                if (log.code > 0){
+                    //TODOUNLOCK screen
+                    //display error
+                }
+            }
+
+            $rootScope.$apply();
+        });
+
+        var printTimer;
+        self.socket.on('print', function(event){
+            if (event.action === 'start') {
+                //TODO lock screen
+                self.sortedLogs = [];
+                printTimer = new Date();
+            }
+            if (event.action === 'end') {
+                self.sortedLogs.unshift({
+                    start: printTimer,
+                    end: new Date(),
+                    command: 'print',
+                    msg: 'printing done',
+                    log: event.pdfs,
+                    progress: 1
+                });
+                //TODO unlock screen
+                //link to zip
+
+            }
             $rootScope.$apply();
         });
 
@@ -69,6 +135,15 @@ angular.module('grademanagerApp')
       });
     };
 
+    self.preview = function(data){
+        return $http.post(self.URL + '/project/' + self.project + '/preview', data);
+    };
+
+    self.print = function(data){
+        return $http.post(self.URL + '/project/' + self.project + '/print', data);
+    };
+
+
     self.addUser = function(username, project){
       return $http.post(self.URL + '/project/' + project + '/add', {username: username});
     };
@@ -84,5 +159,6 @@ angular.module('grademanagerApp')
     self.setPageAuto = function(project, page){
       return $http.post(self.URL + '/project/' + project + '/capture/setauto', page);
     };
+
 
   });

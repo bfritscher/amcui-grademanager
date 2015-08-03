@@ -340,9 +340,25 @@ my-pdf-viewer{
   border-bottom: 1px solid #eee;
 }
 
-
 .user-online{
   margin: 0 0.5em;
+}
+
+.latex-errors{
+  background-color: #fff;
+}
+
+.latex-errors .err{
+  color: red;
+}
+
+.latex-errors .warn{
+  color: orange;
+
+}
+
+.latex-errors .full{
+  color: teal;
 }
 
 .CodeMirror {

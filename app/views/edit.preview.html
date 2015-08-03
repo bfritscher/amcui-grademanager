@@ -9,10 +9,22 @@
     </div>
   </md-toolbar>
   <md-dialog-content flex layout="column">
-    <my-pdf-viewer pdf="{{ctrl.previewSrc()}}" viewer="pdfViewer" flex></my-pdf-viewer>
+    <my-pdf-viewer ng-hide="isLogVisible" ng-if="ctrl.api.logs.preview.code == 0" pdf="{{ctrl.previewSrc()}}" viewer="ctrl.pdfViewer" flex></my-pdf-viewer>
+    <div class="latex-errors" ng-show="isLogVisible || ctrl.api.logs.preview.code != 0">
+        <div layout-padding>
+          <h3>Error</h3>
+          <div class="err" ng-repeat="err in ctrl.getErr() | unique">{{err}}</div>
+          <h3>Warning</h3>
+          <div class="warn" ng-repeat="err in ctrl.getWarn() | unique">{{err}}</div>
+          <h3>Over/Underfull</h3>
+          <div class="full" ng-repeat="err in ctrl.getFull() | unique">{{err}}</div>
+        </div>
+        <ui-codemirror ui-codemirror-opts="ctrl.logOptions" ng-model="ctrl.api.logs.preview.log"></ui-codemirror>
+    </div>
   </md-dialog-content>
   <div class="md-actions" layout="row">
-    {{pdfViewer.currentPageNumber}} / {{pdfViewer.pagesCount}}
+    <span ng-if="ctrl.api.logs.preview.code == 0">{{ctrl.pdfViewer.currentPageNumber}} / {{ctrl.pdfViewer.pagesCount}}</span>
+    <md-button ng-click="isLogVisible = !isLogVisible">log</md-button>
     <span flex></span>
     <md-button ng-click="ctrl.closeDialog()" class="md-primary">
      close

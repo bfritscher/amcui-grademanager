@@ -12,6 +12,20 @@ angular.module('grademanagerApp')
     var editor = this;
     var DiffSyncClient = diffsync.Client;
 
+    editor.preview = function(){
+        var data = editor.toLatex();
+		data.source = editor.exam.source;
+        API.preview(data);
+    };
+
+    editor.print = function(){
+        //TODO: ask for speparate answer sheet??
+////API.URL + '/project/' + $stateParams.project + '/zip?token=' + auth.getToken();
+        var data = editor.toLatex();
+		data.source = editor.exam.source;
+        API.print(data);
+	};
+
     editor.load = function(callback) {
         var client = new DiffSyncClient(API.socket, API.project);
         client.on('connected', function(){

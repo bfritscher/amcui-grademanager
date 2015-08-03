@@ -31,12 +31,7 @@ angular.module('grademanagerApp')
 	        client.sync();
 			//request preview debounce
 			/*
-			var data = exam.toLatex();
-		data.source = exam.exam.source;
-		$http.post(API.URL + '/project/' + $stateParams.project + '/preview', data)
-		.success(function(data){
-			editor.preview = data;
-		});
+			v
 		*/
 	    }, true);
 	});
@@ -101,27 +96,21 @@ angular.module('grademanagerApp')
 	};
 
 	editor.showPreviewDialog = function($event){
+		/*
+		var data = exam.toLatex();
+		data.source = exam.exam.source;
+		$http.post(API.URL + '/project/' + $stateParams.project + '/preview', data)
+		.success(function(data){
+			editor.preview = data;
+		});*/
+
 		$mdDialog.show({
 	        clickOutsideToClose: true,
 	        templateUrl: 'views/edit.preview.html',
 	        targetEvent: $event,
 	        controller: 'EditPreviewCtrl',
-	        controllerAs: 'ctrl',
-	        locals: {
-	        }
+	        controllerAs: 'ctrl'
 	      });
-	};
-
-
-	editor.print = function(){
-		//TODO: ask for speparate answer sheet
-		$http.post(API.URL + '/project/' + $stateParams.project + '/print')
-		.success(function(){
-			//printed files ready!
-			//API.URL + '/project/' + $stateParams.project + '/zip?token=' + auth.getToken();
-			console.log('print files ready');
-		});
-
 	};
 
 	editor.examMenuOptions = {
