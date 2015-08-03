@@ -35,7 +35,8 @@ angular
         url: '/:project/edit',
         templateUrl: 'views/edit.html',
         controller: 'EditCtrl',
-        controllerAs: 'editor'
+        controllerAs: 'editor',
+        reloadOnSearch: false
       })
       .state('scan', {
         url: '/:project/scan',
@@ -64,6 +65,11 @@ angular
   })
   .config(function($mdIconProvider) {
     $mdIconProvider.defaultFontSet( 'mdi' );
+  })
+  .config(function($mdThemingProvider) {
+    $mdThemingProvider.theme('default')
+        .primaryPalette('blue')
+        .accentPalette('grey');
   })
   .config(function($httpProvider) {
     $httpProvider.interceptors.push('authInterceptor');

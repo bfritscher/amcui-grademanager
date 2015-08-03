@@ -8,16 +8,37 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('EditCtrl', function ($scope, $http, $mdSidenav, $mdDialog, $stateParams, $sce, $timeout, API, auth, exam) {
+  .controller('EditCtrl', function ($scope, $http, $mdSidenav, $mdDialog, $location, $stateParams, $sce, $timeout, API, auth, exam) {
 	var editor = this;
 	editor.examService = exam;
 	//TODO automate
 	API.loadProject($stateParams.project);
 
+
+	 $scope.$watch(function(){
+		 return $location.search().section;
+		 }, function(newIndex) {
+		if(editor.examService.exam && editor.examService.exam.sections) {
+			var index = editor.examService.exam.sections.indexOf(editor.section);
+			if(index > -1 && newIndex > -1 && newIndex !== index){
+				editor.section =  editor.examService.exam.sections[newIndex];
+			}
+		}
+	  });
+
+	  $scope.$watch('editor.section', function(section){
+		  if(editor.examService.exam && editor.examService.exam.sections) {
+			  var index = editor.examService.exam.sections.indexOf(section);
+			  if(index > -1 && $location.search().section !== index){
+				  $location.search({section: index});
+			  }
+		  }
+	  });
+
 	/* Socket collab data */
 	exam.load(function(client){
 		if (editor.examService.exam && editor.examService.exam.sections && editor.examService.exam.sections.length > 0){
-             editor.section = editor.examService.exam.sections[0];
+             editor.section = editor.examService.exam.sections[$location.search().section || 0];
         } else {
 		     if(!editor.exam) {
                   editor.examService.exam = {};
@@ -34,6 +55,9 @@ angular.module('grademanagerApp')
 			v
 		*/
 	    }, true);
+		$scope.$on("$destroy", function() {
+			client.removeAllListeners();
+		});
 	});
 
 	editor.leftNav = function (){
@@ -45,7 +69,7 @@ angular.module('grademanagerApp')
 	};
 
 	editor.previousSection = function(){
-		if(editor.examService.exam && editor.examService.sections){
+		if(editor.examService.exam && editor.examService.exam.sections){
 			var index = editor.examService.exam.sections.indexOf(editor.section);
 			if(index > 0){
 				return editor.examService.exam.sections[index-1];

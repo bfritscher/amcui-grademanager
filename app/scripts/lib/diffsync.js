@@ -3689,7 +3689,8 @@ Client = function(socket, room, diffOptions){
 };
 
 // inherit from EventEmitter
-Client.prototype = new EventEmitter();
+//Client.prototype = new EventEmitter();
+Client.prototype = EventEmitter.prototype;
 
 /**
  * Get the data

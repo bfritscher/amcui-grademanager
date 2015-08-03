@@ -209,6 +209,14 @@ tr.active td{
   padding: 4px;
 }
 
+.section-header md-input-container{
+  padding: 0;
+}
+
+.section-header h3{
+  margin: 0;
+}
+
 .two-columns{
 
    -webkit-column-count: 2;
@@ -359,6 +367,10 @@ my-pdf-viewer{
 
 .latex-errors .full{
   color: teal;
+}
+
+.md-toolbar-tools md-input-container{
+  padding: 0;
 }
 
 .CodeMirror {

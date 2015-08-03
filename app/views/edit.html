@@ -29,12 +29,23 @@
   </md-sidenav>
 
   <div flex class="no-background" layout="column">
-    <md-toolbar class="md-accent md-whiteframe-z1" layout="row">
-      <div class="md-toolbar-tools">
+    <md-toolbar class="md-accent md-whiteframe-z1">
+      <div class="md-toolbar-tools" layout="row">
         <md-button aria-label="toggle menu" class="md-icon-button" ng-hide="editor.leftNav().isLockedOpen()" ng-click="editor.leftNav().open()">
           <md-icon class="mdi-menu"></md-icon>
         </md-button>
-        <h2><input ng-model="editor.examService.exam.course" placeholder="course"> - <input ng-model="editor.examService.exam.session" placeholder="session"></h2>
+        <md-input-container>
+          <label>course</label>
+          <input ng-model="editor.examService.exam.course">
+        </md-input-container>
+        <md-input-container>
+          <label>session</label>
+          <input ng-model="editor.examService.exam.session">
+        </md-input-container>
+        <md-input-container>
+          <label>teacher</label>
+          <input ng-model="editor.examService.exam.teacher">
+        </md-input-container>
     	  <span flex></span>
         <md-button aria-label="preview" class="md-raised" ng-click="editor.showPreviewDialog($event)">Preview</md-button>
         <md-button aria-label="LaTeX options" class="" ng-click="editor.isLatexOptionVisible = !editor.isLatexOptionVisible">LaTeX options</md-button>
@@ -58,21 +69,27 @@
   <!-- TODO: points -->
 
     <md-content class="section" layout-padding ng-hide="editor.isLatexOptionVisible">
+
       <div ng-repeat="log in app.api.sortedLogs" class="log">
           <h4>{{log.msg}}</h4>
           <md-progress-linear md-mode="determinate" value="{{log.progress * 100}}"></md-progress-linear>
           <p>{{log.start| date: 'HH:mm:ss'}} <span ng-if="log.end">: {{(log.end.getTime() - log.start.getTime())/1000 | number: 0}}s</span></p>
           <pre ng-if="log.command != 'prepare'">{{log.log}}</pre>
       </div>
-  		<div layout="row" class="md-whiteframe-z1">
+
+  		<div layout="row" class="section-header md-whiteframe-z1" layout-align="space-around end">
         <md-button aria-label="previous" class="md-primary md-raised" ng-show="editor.previousSection()" ng-click="editor.section = editor.previousSection()" ng-bind="editor.previousSection().title"></md-button>
         <span flex></span>
-        <h3>{{editor.section.number}}
-        <input type="text" ng-model="editor.section.title"/></h3>
+        <h3>{{editor.section.number}}</h3>
+        <md-input-container>
+          <label>Section title</label>
+            <input type="text" ng-model="editor.section.title"/>
+          </md-input-container>
         <md-button aria-label="delete section" class="md-warn" ng-click="editor.removeSection(editor.section)"><md-icon class="mdi-delete"></md-icon></md-button>
         <span flex></span>
         <md-button aria-label="next or new" class="md-primary md-raised" ng-click="editor.section = editor.nextSection(true)" ng-bind="editor.nextSection().title"></md-button>
   		</div>
+
       <div layout="row" class="section-options md-whiteframe-z2">
         <md-select placeholder="Level" ng-model="editor.section.level">
           <md-option ng-repeat="(key, value) in {'Level 1': 0, 'Level 2': 1, 'Level 3': 2}" value="{{value}}">{{key}}</md-option>
