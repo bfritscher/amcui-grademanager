@@ -41,6 +41,7 @@ module.exports = function(config) {
       'bower_components/pdfjs-dist/build/pdf.js',
       'bower_components/pdfjs-dist/build/pdf.worker.js',
       'bower_components/codemirror/lib/codemirror.js',
+      'bower_components/angular-ui-codemirror/ui-codemirror.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       "app/scripts/**/*.js",

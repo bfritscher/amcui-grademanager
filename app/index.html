@@ -52,7 +52,7 @@
       <md-tab label="Grade" md-on-select="app.go('grade')"></md-tab>
       <md-tab label="Options" md-on-select="app.go('options')"></md-tab>
     </md-tabs>
-    <div ui-view="" flex layout="row"></div>
+    <div ui-view="" flex layout="row" id="main-view"></div>
 
 
 
@@ -88,6 +88,7 @@
     <script src="bower_components/pdfjs-dist/build/pdf.js"></script>
     <script src="bower_components/pdfjs-dist/build/pdf.worker.js"></script>
     <script src="bower_components/codemirror/lib/codemirror.js"></script>
+    <script src="bower_components/angular-ui-codemirror/ui-codemirror.js"></script>
     <!-- endbower -->
     <script src="bower_components/codemirror/mode/stex/stex.js"></script>
     <script src="bower_components/pdfjs-dist/web/compatibility.js"></script>

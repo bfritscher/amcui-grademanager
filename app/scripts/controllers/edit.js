@@ -36,6 +36,10 @@ angular.module('grademanagerApp')
 		return $mdSidenav('left');
 	};
 
+	editor.rightNav = function (){
+		return $mdSidenav('right');
+	};
+
 	editor.previousSection = function(){
 		if(editor.examService.exam && editor.examService.sections){
 			var index = editor.examService.exam.sections.indexOf(editor.section);
@@ -71,11 +75,27 @@ angular.module('grademanagerApp')
 		editor.section = newSection;
 	};
 
+	editor.latexSourceOptions = {
+		mode: 'stex',
+		lineNumbers: true,
+		readOnly: true,
+		lineWrapping: true,
+		viewportMargin: Infinity
+	};
+
+	editor.latexPreviewOptions = {
+		mode: 'stex',
+		lineNumbers: true,
+		lineWrapping: true,
+		viewportMargin: Infinity
+	};
 
 
 	//TODO: automate
 	this.preview = function(){
-		$http.post(API.URL + '/project/' + $stateParams.project + '/preview', exam.toLatex())
+		var data = exam.toLatex();
+		data.source = exam.exam.source;
+		$http.post(API.URL + '/project/' + $stateParams.project + '/preview', data)
 		.success(function(data){
 			editor.preview = data;
 		});
@@ -122,6 +142,8 @@ angular.module('grademanagerApp')
       }
 	};
 
+
+/*
 	 $mdDialog.show({
         clickOutsideToClose: true,
         templateUrl: 'views/edit.preview.html',
@@ -131,7 +153,7 @@ angular.module('grademanagerApp')
         locals: {
         }
       });
-
+*/
   });
 
 

@@ -31,17 +31,29 @@
   <div flex class="no-background" layout="column">
     <md-toolbar class="md-accent md-whiteframe-z1" layout="row">
       <div class="md-toolbar-tools">
-        <md-button aria-label="toggle menu" class="md-icon-button" ng-hide="editor.leftNav().isLockedOpen()" ng-click="editor.leftNav().open();">
+        <md-button aria-label="toggle menu" class="md-icon-button" ng-hide="editor.leftNav().isLockedOpen()" ng-click="editor.leftNav().open()">
           <md-icon class="mdi-menu"></md-icon>
         </md-button>
         <h2><input ng-model="editor.examService.exam.course" placeholder="course"> - <input ng-model="editor.examService.exam.session" placeholder="session"></h2>
     	  <span flex></span>
         <md-button aria-label="preview" class="md-raised" ng-click="editor.preview()">Preview</md-button>
-        <md-button aria-label="Latex" class="" ng-click="editor.preview()">LaTeX options</md-button>
+        <md-button aria-label="Latex" class="" ng-click="editor.isLatexOptionVisible = !editor.isLatexOptionVisible">LaTeX options</md-button>
         <md-button aria-label="print" class="md-raised md-warn" ng-click="editor.print()">Print</md-button>
       </div>
     </md-toolbar>
-  <!-- <img ng-src="{{editor.pageSrc(p)}}" ng-repeat="p in editor.preview.pages"/> -->
+
+
+    <md-tabs flex id="latex-options" ng-if="editor.isLatexOptionVisible">
+      <md-tab label="source.tex">
+        <ui-codemirror ui-codemirror-opts="editor.latexSourceOptions" ng-model="editor.examService.exam.source"></ui-codemirror>
+      </md-tab>
+      <md-tab label="questions_definition.tex">
+        <ui-codemirror ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_definition"></ui-codemirror>
+      </md-tab>
+      <md-tab label="questions_layout.tex">
+        <ui-codemirror ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_layout"></ui-codemirror>
+      </md-tab>
+    </md-tabs>
 
   <!-- TODO: points -->
 
@@ -103,10 +115,6 @@
       <div class="section-options md-whiteframe-z1 question-add">
         <md-button aria-label="add new question" class="md-raised md-primary" ng-click="editor.examService.addQuestion(editor.section)">Add Question</md-button>
       </div>
-
-<textarea style="width:100%;height:300px">
-{{editor.examService.toLatex()}}
-</textarea>
 
 <textarea ng-model="editor.preview.log"></textarea>
 <md-icon class="mdi-message"></md-icon>

@@ -260,6 +260,10 @@ tr.active td{
 
 .myrichtexteditor{
   position: relative;
+  border: 1px solid #eee;
+}
+.myrichtexteditor .preview{
+  min-height: 2em;
 }
 .myrichtexteditor .hide{
   display: none;
@@ -308,6 +312,20 @@ my-pdf-viewer{
   min-width: 500px;
 }
 
+#main-view{
+  position: relative;
+}
+
+#latex-options{
+  border-bottom: 1px solid #eee;
+}
+
+
+.CodeMirror {
+  border: 1px solid #eee;
+  height: auto;
+}
+
 /* fix pdf.js viewer css */
 .pdfViewer .page {
   box-sizing: content-box;
@@ -320,3 +338,4 @@ my-pdf-viewer{
 .textLayer .highlight {
   box-sizing: content-box;
 }
+

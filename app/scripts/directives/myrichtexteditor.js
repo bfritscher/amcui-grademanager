@@ -54,7 +54,7 @@ function GUID(){
 
 angular.module('grademanagerApp')
   .directive('myRichTextEditor', function ($timeout, exam) {
-      
+
       var myParse = function(elementOrHtml_current, config){
         // replace empty tags
         elementOrHtml_current = elementOrHtml_current.replace(/<b><\/b>/, '');
@@ -63,7 +63,7 @@ angular.module('grademanagerApp')
         elementOrHtml_current = elementOrHtml_current.replace(/<xmp><\/xmp>/, '');
         return wysihtml5.dom.parse(elementOrHtml_current, config);
       };
-    
+
      return {
       restrict: 'E',
       replace: true,
@@ -81,7 +81,7 @@ angular.module('grademanagerApp')
         var graphicsToolbar = element.children()[3];
 
         var editor;
-        
+
         function decorate(){
             console.log('decorate');
             var element = preview;
@@ -96,10 +96,12 @@ angular.module('grademanagerApp')
                     imgElement.setAttribute('src', exam.graphicsPreviewURL(img.id));
                     imgElement.classList.toggle('border', img.border);
                     imgElement.style.width = img.width * 100 + '%';
+                } else {
+                  imgElement.setAttribute('src', exam.graphicsPreviewURL(''));
                 }
             }
         }
-        
+
         function initEditor(){
             editor = new wysihtml5.Editor(textarea, {
                 autoLink: false,
@@ -110,14 +112,14 @@ angular.module('grademanagerApp')
                 useLineBreaks: false,
                 stylesheets: ['styles/wysihtml5_custom.css']
             });
-            
+
             //TODO dialog;
             scope.addGraphics = exam.addGraphics;
-            
+
             scope.closeGraphicsToolbar = function(){
               graphicsToolbar.classList.add('hide');
             };
-            
+
             $timeout(function(){
                 editor.composer.editableArea.addEventListener('click', function(event){
                     if (event.target.tagName === 'IMG'){
@@ -179,7 +181,7 @@ angular.module('grademanagerApp')
           //TODO only watch graphics which we own.
           $timeout(decorate);
         }, true);
-        
+
         // Sync model -> view
         ngModel.$render = function () {
             var newValue = ngModel.$viewValue || '';
@@ -193,8 +195,8 @@ angular.module('grademanagerApp')
              }
              $timeout(decorate);
         };
-        
-        
+
+
 
         //only initEditor if needed
         preview.addEventListener('click', initEditor, false);

@@ -19,7 +19,8 @@ angular
     'ui.tree',
     'ui.router',
     'IeHelper',
-    'ngFileUpload'
+    'ngFileUpload',
+    'ui.codemirror'
   ])
   .config(function ($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise('/');
