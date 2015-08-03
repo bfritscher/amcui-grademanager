@@ -41,7 +41,13 @@ angular.module('grademanagerApp')
 
       home.openProject = function(project){
         //TODO: state based on project status? or last open?
-        $state.go('edit', {project: project});
+        if (project.status && project.status.printed){
+          $state.go( 'scan', {project: project.project});
+        } else {
+          $state.go( 'edit', {project: project.project});
+        }
+
+
       };
 
       home.createProject = function(){

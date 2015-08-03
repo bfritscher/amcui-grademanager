@@ -1,0 +1,24 @@
+<md-dialog aria-label="Task Progress" class="progress-dialog" flex="60">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>Task Progress</h2>
+    </div>
+  </md-toolbar>
+  <md-dialog-content md-scroll-y>
+      <div layout="row" layout-align="center center">
+        <md-button class="md-raised md-primary" ng-if="ctrl.api.options.status.printed" ng-href="{{ctrl.api.getDownloadZipURL()}}">Download Zip with all PDFs</md-button>
+      </div>
+      <div ng-repeat="log in ctrl.api.sortedLogs" class="log">
+          <h4>{{log.msg}}</h4>
+          <md-progress-linear md-mode="determinate" value="{{log.progress * 100}}"></md-progress-linear>
+          <p>{{log.start| date: 'HH:mm:ss'}} <span ng-if="log.end">: {{(log.end.getTime() - log.start.getTime())/1000 | number: 0}}s</span></p>
+          <pre ng-if="log.command != 'prepare'">{{log.log}}</pre>
+      </div>
+  </md-dialog-content>
+  <div class="md-actions" layout="row">
+    <span flex></span>
+    <md-button ng-disabled="ctrl.api.options.status.locked!=0" ng-click="ctrl.closeDialog()" class="md-primary">
+     close
+    </md-button>
+  </div>
+</md-dialog>

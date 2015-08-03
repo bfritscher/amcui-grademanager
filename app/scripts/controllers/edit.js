@@ -11,6 +11,7 @@ angular.module('grademanagerApp')
   .controller('EditCtrl', function ($scope, $http, $mdSidenav, $mdDialog, $location, $stateParams, $sce, $timeout, API, auth, exam) {
 	var editor = this;
 	editor.examService = exam;
+
 	//TODO automate
 	API.loadProject($stateParams.project);
 

@@ -1,14 +1,14 @@
 <div class="myrichtexteditor" layout-padding>
-    <div class="toolbar hide">
-        <a data-wysihtml5-command="bold" title="CTRL+B">bold</a>
-        <a data-wysihtml5-command="italic" title="CTRL+I">italic</a>
-        <a data-wysihtml5-command="ttfont">TT</a>
+    <div class="toolbar hide" layout="row" layout-align="start center">
+        <a data-wysihtml5-command="bold" title="CTRL+B"><md-icon class="mdi-format-bold"></md-icon></a>
+        <a data-wysihtml5-command="italic" title="CTRL+I"><md-icon class="mdi-format-italic"></md-icon></a>
+        <a data-wysihtml5-command="ttfont"><md-icon class="mdi-format-text"></md-icon></a>
         <a data-wysihtml5-command="latex">LaTeX</a>
-        <a data-wysihtml5-command="insertUnorderedList">List</a>
-        <a ng-mousedown="$event.preventDefault();showGraphicsManager($event)" href="javascript:;" >img</a>
-        <a data-wysihtml5-command="insertCode" data-wysihtml5-command-value='<div class="code"></div>'>code</a>
-        <a data-wysihtml5-command="insertHTML" data-wysihtml5-command-value="<hr/>">newPage</a>
-        <a data-wysihtml5-action="change_view">switch view</a>
+        <a data-wysihtml5-command="insertUnorderedList"><md-icon class="mdi-format-list-bulleted"></md-icon></a>
+        <a ng-mousedown="$event.preventDefault();showGraphicsManager($event)" href="javascript:;"><md-icon class="mdi-file-image-box"></md-icon></a>
+        <a data-wysihtml5-command="insertCode" data-wysihtml5-command-value='<div class="code"></div>'><md-icon class="mdi-file-xml"></a>
+        <a data-wysihtml5-command="insertHTML" data-wysihtml5-command-value="<hr/>">page break</a>
+        <a data-wysihtml5-action="change_view">switch view</md-icon></a>
     </div>
     <textarea ng-model="content" ng-model-options="{ updateOn: 'blur'}" class="hide"></textarea>
 	<div class="preview"></div>

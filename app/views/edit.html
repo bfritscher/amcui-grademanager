@@ -28,9 +28,16 @@
     </md-content>
   </md-sidenav>
 
+
+
   <div flex class="no-background" layout="column">
-    <md-toolbar class="md-accent md-whiteframe-z1">
-      <div class="md-toolbar-tools" layout="row">
+      <div ng-if="app.api.options.status.printed" class="printed-bar" layout-padding>
+      This project has been printed on {{app.api.options.status.printed | date: 'yyyy-MM-dd HH:mm'}}.
+      <md-button class="md-raised md-primary"  ng-href="{{app.api.getDownloadZipURL()}}">Download Zip with all PDFs</md-button>
+    </div>
+
+    <div class="section-options md-whiteframe-z1" layout-padding>
+      <div class="" layout="row" layout-wrap layout-align="center start" layout-sm="column">
         <md-button aria-label="toggle menu" class="md-icon-button" ng-hide="editor.leftNav().isLockedOpen()" ng-click="editor.leftNav().open()">
           <md-icon class="mdi-menu"></md-icon>
         </md-button>
@@ -47,11 +54,13 @@
           <input ng-model="editor.examService.exam.teacher">
         </md-input-container>
     	  <span flex></span>
-        <md-button aria-label="preview" class="md-raised" ng-click="editor.showPreviewDialog($event)">Preview</md-button>
-        <md-button aria-label="LaTeX options" class="" ng-click="editor.isLatexOptionVisible = !editor.isLatexOptionVisible">LaTeX options</md-button>
-        <md-button aria-label="print" class="md-raised md-warn" ng-click="editor.examService.print()">Print</md-button>
+        <div>
+          <md-button aria-label="preview" ng-click="editor.showPreviewDialog($event)">Preview</md-button>
+          <md-button aria-label="LaTeX options" class="md-primary" ng-click="editor.isLatexOptionVisible = !editor.isLatexOptionVisible">LaTeX options</md-button>
+          <md-button aria-label="print" class="md-warn" ng-click="editor.examService.print()">Print</md-button>
+        </div>
       </div>
-    </md-toolbar>
+    </div>
 
 
     <md-tabs flex id="latex-options" ng-if="editor.isLatexOptionVisible">
@@ -68,78 +77,89 @@
 
   <!-- TODO: points -->
 
-    <md-content class="section" layout-padding ng-hide="editor.isLatexOptionVisible">
+  <md-content class="section" layout-padding ng-hide="editor.isLatexOptionVisible">
+  <div class="md-whiteframe-z1">
+      <div class="md-whiteframe-z1">
+    		<div layout="row" class="section-header" layout-align="space-around end">
+          <md-button aria-label="previous" class="md-primary" ng-show="editor.previousSection()" ng-click="editor.section = editor.previousSection()" ng-bind="editor.previousSection().title"></md-button>
+          <span flex></span>
+          <h3>{{editor.section.number}}</h3>
+          <md-input-container>
+            <label>Section title</label>
+              <input type="text" ng-model="editor.section.title"/>
+            </md-input-container>
+          <span flex></span>
+          <md-button aria-label="next or new" class="md-primary" ng-click="editor.section = editor.nextSection(true)" ng-bind="editor.nextSection().title"></md-button>
+    		</div>
 
-      <div ng-repeat="log in app.api.sortedLogs" class="log">
-          <h4>{{log.msg}}</h4>
-          <md-progress-linear md-mode="determinate" value="{{log.progress * 100}}"></md-progress-linear>
-          <p>{{log.start| date: 'HH:mm:ss'}} <span ng-if="log.end">: {{(log.end.getTime() - log.start.getTime())/1000 | number: 0}}s</span></p>
-          <pre ng-if="log.command != 'prepare'">{{log.log}}</pre>
-      </div>
-
-  		<div layout="row" class="section-header md-whiteframe-z1" layout-align="space-around end">
-        <md-button aria-label="previous" class="md-primary md-raised" ng-show="editor.previousSection()" ng-click="editor.section = editor.previousSection()" ng-bind="editor.previousSection().title"></md-button>
-        <span flex></span>
-        <h3>{{editor.section.number}}</h3>
-        <md-input-container>
-          <label>Section title</label>
-            <input type="text" ng-model="editor.section.title"/>
-          </md-input-container>
-        <md-button aria-label="delete section" class="md-warn" ng-click="editor.removeSection(editor.section)"><md-icon class="mdi-delete"></md-icon></md-button>
-        <span flex></span>
-        <md-button aria-label="next or new" class="md-primary md-raised" ng-click="editor.section = editor.nextSection(true)" ng-bind="editor.nextSection().title"></md-button>
-  		</div>
-
-      <div layout="row" class="section-options md-whiteframe-z2">
-        <md-select placeholder="Level" ng-model="editor.section.level">
-          <md-option ng-repeat="(key, value) in {'Level 1': 0, 'Level 2': 1, 'Level 3': 2}" value="{{value}}">{{key}}</md-option>
-        </md-select>
-        <md-checkbox ng-model="editor.section.isNumbered" ng-disabled="editor.section.isSectionTitleVisibleOnAMC">Show number</md-checkbox>
-        <md-checkbox ng-model="editor.section.isSectionTitleVisibleOnAMC" ng-change="editor.section.isSectionTitleVisibleOnAMC ? editor.section.isNumbered=true : ''">Visible in answer sheet</md-checkbox>
-        <md-checkbox ng-model="editor.section.shuffle">Shuffle questions</md-checkbox>
-        <md-select placeholder="Columns" ng-model="editor.section.columns">
-          <md-option ng-repeat="(key, value) in {'One column': 1, 'Two columns': 2}" value="{{value}}">{{key}}</md-option>
-        </md-select>
+        <div layout="row" class="section-options">
+          <md-select  class="md-primary" placeholder="Level" ng-model="editor.section.level">
+            <md-option ng-repeat="(key, value) in {'Level 1': 0, 'Level 2': 1, 'Level 3': 2}" value="{{value}}">{{key}}</md-option>
+          </md-select>
+          <md-checkbox class="md-primary" ng-model="editor.section.isNumbered" ng-disabled="editor.section.isSectionTitleVisibleOnAMC">Show number</md-checkbox>
+          <md-checkbox class="md-primary" ng-model="editor.section.isSectionTitleVisibleOnAMC" ng-change="editor.section.isSectionTitleVisibleOnAMC ? editor.section.isNumbered=true : ''">Visible in answer sheet</md-checkbox>
+          <md-checkbox class="md-primary" ng-model="editor.section.shuffle">Shuffle questions</md-checkbox>
+          <md-select  class="md-primary" placeholder="Columns" ng-model="editor.section.columns">
+            <md-option ng-repeat="(key, value) in {'One column': 1, 'Two columns': 2}" value="{{value}}">{{key}}</md-option>
+          </md-select>
+          <span flex></span>
+          <md-button aria-label="delete section" class="md-warn" ng-click="editor.removeSection(editor.section)"><md-icon class="mdi-delete"></md-icon></md-button>
+        </div>
       </div>
       <my-rich-text-editor ng-model="editor.section.content" graphics="editor.examService.exam.graphics"></my-rich-text-editor>
+  </div>
 
       <div ng-class="{'two-columns': editor.section.columns == 2}">
           <div class="question md-whiteframe-z1" ng-repeat="question in editor.section.questions track by question.id">
-              <div layout="row" layout-padding>
-                <h3><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>
-                 Question {{question.number}}</h3>
-                 <span flex></span>
-                <md-button aria-label="delete question" class="md-warn" ng-click="editor.examService.removeQuestion(editor.section, question)"><md-icon class="mdi-delete"></md-icon></md-button>
-              </div>
-              <div layout="row"  class="section-options md-whiteframe-z1">
-                <md-select placeholder="Type" ng-model="question.type">
-                  <md-option ng-repeat="(key, value) in {'SINGLE': 'SINGLE', 'MULTIPLE': 'MULTIPLE', 'OPEN': 'OPEN', 'NUMBERCHOICE': 'NUMBERCHOICE'}" value="{{value}}">{{key}}</md-option>
-                </md-select>
-                <md-select placeholder="Layout" ng-model="question.layout">
-                  <md-option ng-repeat="(key, value) in {'VERTICAL': 'VERTICAL', 'HORIZONTAL': 'HORIZONTAL'}" value="{{value}}">{{key}}</md-option>
-                </md-select>
+              <div>
+                <div class="question-header" layout="row" layout-padding>
+                  <h3><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>
+                   Question {{question.number}}</h3>
+                </div>
+                <div layout="row"  class="section-options md-whiteframe-z1">
+                  <md-select placeholder="Type" ng-model="question.type">
+                    <md-option ng-repeat="(key, value) in {'SINGLE': 'SINGLE', 'MULTIPLE': 'MULTIPLE', 'OPEN': 'OPEN', 'NUMBERCHOICE': 'NUMBERCHOICE'}" value="{{value}}">{{key}}</md-option>
+                  </md-select>
+                  <md-select placeholder="Layout" ng-model="question.layout">
+                    <md-option ng-repeat="(key, value) in {'VERTICAL': 'VERTICAL', 'HORIZONTAL': 'HORIZONTAL'}" value="{{value}}">{{key}}</md-option>
+                  </md-select>
+                  <span flex></span>
+                  <md-button aria-label="delete question" class="md-warn" ng-click="editor.examService.removeQuestion(editor.section, question)"><md-icon class="mdi-delete"></md-icon></md-button>
+                </div>
               </div>
 
               <my-rich-text-editor ng-model="question.content" graphics="editor.examService.exam.graphics"></my-rich-text-editor>
 
               <div layout="{{question.layout == 'HORIZONTAL' ? 'row' : 'column'}}"  layout-padding>
                 <div ng-repeat="answer in question.answers track by answer.id" class="answer" layout="row">
-                    <label class="answer-toggle"><input type="checkbox" ng-model="answer.correct"><md-icon ng-class="{'mdi-close': !answer.correct, 'mdi-check': answer.correct}"></md-icon></label>
-
+                    <label layout-padding class="answer-toggle"><input type="checkbox" ng-model="answer.correct"><md-icon ng-class="{'mdi-close': !answer.correct, 'mdi-check': answer.correct}"></md-icon></label>
                     <my-rich-text-editor ng-model="answer.content" graphics="editor.examService.exam.graphics" flex></my-rich-text-editor>
                     <md-button aria-label="delete answer" class="md-warn" ng-click="editor.examService.removeAnswer(question, answer)"><md-icon class="mdi-delete"></md-icon></md-button>
                 </div>
               </div>
-              <div class="section-options md-whiteframe-z1">
-                <md-button aria-label="add new answer" class="md-raised md-primary" ng-click="editor.examService.addAnswer(question)">Add Answer</md-button>
+              <div class="section-options answer-add">
+                <md-button aria-label="add new answer" class="md-primary" ng-click="editor.examService.addAnswer(question)">Add Answer</md-button>
               </div>
           </div>
       </div>
-      <div class="section-options md-whiteframe-z1 question-add">
-        <md-button aria-label="add new question" class="md-raised md-primary" ng-click="editor.examService.addQuestion(editor.section)">Add Question</md-button>
-      </div>
 
-<textarea ng-model="editor.preview.log"></textarea>
+      <div class="section-options md-whiteframe-z1 question-add">
+        <md-button aria-label="add new question" class="md-primary" ng-click="editor.examService.addQuestion(editor.section)">Add Question</md-button>
+      </div>
+    </md-content>
+  </div>
+</div>
+<!--
+    preview
+    option-> template list
+    custom template
+    preview files, edit files -> disable edit
+    upload custom project -> disable edit
+    print nb series
+    d/l zipped?
+  -->
+
+  <!--
 <md-icon class="mdi-message"></md-icon>
 <md-icon class="mdi-message-text"></md-icon>
 <md-icon class="mdi-forum"></md-icon>
@@ -158,20 +178,6 @@
 <md-icon class="mdi-plus"></md-icon>
 <md-icon class="mdi-upload"></md-icon>
 <md-icon class="mdi-download"></md-icon>
-<md-icon class="mdi-file-image-box"></md-icon>
-<md-icon class="mdi-file-xml"></md-icon>
-<md-icon class="mdi-format-italic"></md-icon>
-<md-icon class="mdi-format-bold"></md-icon>
+<md-icon class="mdi-code-tags"></md-icon>
 <md-icon class="mdi-printer"></md-icon>
-    </md-content>
-  </div>
-</div>
-<!--
-    preview
-    option-> template list
-    custom template
-    preview files, edit files -> disable edit
-    upload custom project -> disable edit
-    print nb series
-    d/l zipped?
-  -->
+-->

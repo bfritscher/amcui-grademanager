@@ -87,11 +87,8 @@ tr.active td{
 }
 
 .scan-preview{
-  background-color: lightgrey;
-}
-
-.scan-preview{
-  color: grey;
+  color: rgb(158, 158, 158);
+  background-color: rgb(238,238,238);
 }
 
 .scan-reset{
@@ -158,7 +155,7 @@ tr.active td{
 
 .md-button.md-accent.md-raised.dragover {
     border: 3px dashed rgb(255,64,129);
-    background-color: lightgrey
+    background-color: rgb(238,238,238);
 }
 
 .scan-delete {
@@ -203,7 +200,7 @@ tr.active td{
 }
 
 .section-options {
-  background-color: #ddd;
+  background-color: rgb(238,238,238);
 }
 .section-options md-select {
   padding: 4px;
@@ -213,8 +210,24 @@ tr.active td{
   padding: 0;
 }
 
+.section-header md-input-container .md-input{
+  font-weight: bold;
+  font-size: 22px;
+}
+
 .section-header h3{
   margin: 0;
+  padding-bottom: 3px;
+  padding-right: 8px;
+  font-size: 22px;
+}
+
+.question-header h3{
+  margin: 0;
+}
+
+.question-header .md-button{
+
 }
 
 .two-columns{
@@ -233,11 +246,23 @@ tr.active td{
 }
 
 .question{
-  margin-top: 1em;
+  margin-top: 2em;
 }
 
 .question-add{
   margin-top: 2em;
+  margin-bottom: 4em;
+}
+
+.answer{
+  margin-bottom: 1em;
+}
+
+.answer-add{
+}
+
+.answer-toggle{
+  width: 50px;
 }
 
 .answer-toggle md-icon{
@@ -266,8 +291,12 @@ tr.active td{
   border-radius: 4px;
 }
 
-.wysihtml5-command-active {
-  font-weight: bold;
+.wysihtml5-command-active .mdi {
+  border: 1px solid #000;
+}
+
+.myrichtexteditor {
+  border: 1px solid #eee;
 }
 
 .myrichtexteditor .preview{
@@ -309,6 +338,19 @@ tr.active td{
   min-width: 350px;
 }
 
+.myrichtexteditor .toolbar a {
+  padding: 0 4px;
+  color: rgba(0, 0, 0, 0.87);
+  text-decoration: none;
+}
+.myrichtexteditor .toolbar .mdi{
+  width: 32px;
+  height: 32px;
+  font-size: 32px;
+  line-height: 32px;
+
+}
+
 my-pdf-viewer{
   overflow:auto;
   padding: 1em 2em 1em 1em;
@@ -316,7 +358,7 @@ my-pdf-viewer{
 
 .edit-preview md-dialog-content{
   padding: 0;
-  background-color: grey;
+  background-color: rgb(238,238,238);
   min-width: 500px;
 }
 
@@ -338,6 +380,13 @@ my-pdf-viewer{
 
 .graphics-preview-header h3{
   margin: 0;
+}
+
+.printed-bar{
+  background-color: rgb(244,67,54);
+  color: #fff;
+  min-height: 64px;
+  height: 64px;
 }
 
 #main-view{

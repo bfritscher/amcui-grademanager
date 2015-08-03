@@ -30,7 +30,7 @@
       <div class="md-toolbar-tools">
         <h3>
           <a class="navbar-brand" href="#/">GradeManager</a>
-          {{app.project()}}
+          <span ng-bind="app.project()"></span>
         </h3>
         <span flex></span>
         <md-menu ng-show="app.isAuthed()">
@@ -46,14 +46,14 @@
       </div>
     </md-toolbar>
 
-    <div class="md-whiteframe-z1" layout="row" layout-align="center center">
+    <div class="md-whiteframe-z1" layout="row" layout-align="end center">
         <md-tabs ng-hide="app.hideTabs" md-selected="app.tabIndex" flex>
             <md-tab label="Edit" md-on-select="app.go('edit')"></md-tab>
             <md-tab label="Scan" md-on-select="app.go('scan')"></md-tab>
             <md-tab label="Grade" md-on-select="app.go('grade')"></md-tab>
             <md-tab label="Options" md-on-select="app.go('options')"></md-tab>
         </md-tabs>
-        <div layout="row">
+        <div layout="row" ng-hide="app.hideTabs">
           <div class="user-online" ng-repeat="(id, user) in app.api.connected">
             <img ng-src="https://robohash.org/{{user.username}}?size=44x44">
             <md-tooltip>{{user.username}}</md-tooltip>
@@ -128,6 +128,7 @@
         <script src="scripts/directives/stringtonumber.js"></script>
         <script src="scripts/controllers/graphicsmanager.js"></script>
         <script src="scripts/filters/unique.js"></script>
+        <script src="scripts/controllers/progressdialog.js"></script>
         <!-- endbuild -->
 </body>
 </html>

@@ -17,10 +17,9 @@ angular.module('grademanagerApp')
 		data.source = editor.exam.source;
         API.preview(data);
     };
-
+    
     editor.print = function(){
         //TODO: ask for speparate answer sheet??
-////API.URL + '/project/' + $stateParams.project + '/zip?token=' + auth.getToken();
         var data = editor.toLatex();
 		data.source = editor.exam.source;
         API.print(data);
