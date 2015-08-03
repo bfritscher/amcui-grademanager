@@ -258,6 +258,10 @@ tr.active td{
   border-radius: 4px;
 }
 
+.wysihtml5-command-active {
+  font-weight: bold;
+}
+
 .myrichtexteditor .preview{
   min-height: 2em;
 }
