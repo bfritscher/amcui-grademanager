@@ -8,7 +8,7 @@
  * Service in the grademanagerApp.
  */
 angular.module('grademanagerApp')
-  .service('API', function ($http, $window) {
+  .service('API', function ($http, $window, $rootScope) {
     var self = this;
     self.URL = 'http://192.168.56.101:9001';
     self.project = false;
@@ -16,6 +16,7 @@ angular.module('grademanagerApp')
       users: [],
       options: {}
     };
+    self.connected = {};
 
     self.getProjectList = function(){
       return $http.get(self.URL + '/project/list');
@@ -32,23 +33,31 @@ angular.module('grademanagerApp')
         self.socket = io.connect(self.URL + '?token='+ $window.localStorage.getItem('jwtToken'));
 
         self.loadOptions();
-      }
-    /*
-      socket.on('msg', function(data){
-          console.log('msg', data);
-      });
 
-      socket.on('unauthorized', function(data){
-        console.log(data);
-      });
-      socket.on("error", function(error) {
-        console.log(error);
-        if (error.type === "UnauthorizedError" || error.code === "invalid_token") {
-          // redirect user to login page perhaps?
-          console.log("User's token has expired");
-        }
-      });
-    */
+        self.socket.on('error', function(error) {
+            console.log('socket error:', error);
+        });
+
+        self.socket.on('user:online', function(data){
+            console.log('msg', data);
+            self.connected = data;
+            $rootScope.$apply();
+        });
+
+        self.socket.on('user:connected', function(data){
+            console.log('msg', data);
+            self.connected[data.id] = data;
+            $rootScope.$apply();
+        });
+
+        self.socket.on('user:disconnected', function(data){
+            console.log('msg', data);
+            delete self.connected[data.id];
+            $rootScope.$apply();
+        });
+
+        self.socket.emit('listen', self.project);
+      }
     };
 
     self.loadOptions = function(){

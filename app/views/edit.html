@@ -36,8 +36,8 @@
         </md-button>
         <h2><input ng-model="editor.examService.exam.course" placeholder="course"> - <input ng-model="editor.examService.exam.session" placeholder="session"></h2>
     	  <span flex></span>
-        <md-button aria-label="preview" class="md-raised" ng-click="editor.preview()">Preview</md-button>
-        <md-button aria-label="Latex" class="" ng-click="editor.isLatexOptionVisible = !editor.isLatexOptionVisible">LaTeX options</md-button>
+        <md-button aria-label="preview" class="md-raised" ng-click="editor.showPreviewDialog($event)">Preview</md-button>
+        <md-button aria-label="LaTeX options" class="" ng-click="editor.isLatexOptionVisible = !editor.isLatexOptionVisible">LaTeX options</md-button>
         <md-button aria-label="print" class="md-raised md-warn" ng-click="editor.print()">Print</md-button>
       </div>
     </md-toolbar>

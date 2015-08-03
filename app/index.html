@@ -46,12 +46,20 @@
       </div>
     </md-toolbar>
 
-     <md-tabs class="md-whiteframe-z1" ng-hide="app.hideTabs" md-selected="app.tabIndex">
-      <md-tab label="Edit" md-on-select="app.go('edit')"></md-tab>
-      <md-tab label="Scan" md-on-select="app.go('scan')"></md-tab>
-      <md-tab label="Grade" md-on-select="app.go('grade')"></md-tab>
-      <md-tab label="Options" md-on-select="app.go('options')"></md-tab>
-    </md-tabs>
+    <div class="md-whiteframe-z1" layout="row" layout-align="center center">
+        <md-tabs ng-hide="app.hideTabs" md-selected="app.tabIndex" flex>
+            <md-tab label="Edit" md-on-select="app.go('edit')"></md-tab>
+            <md-tab label="Scan" md-on-select="app.go('scan')"></md-tab>
+            <md-tab label="Grade" md-on-select="app.go('grade')"></md-tab>
+            <md-tab label="Options" md-on-select="app.go('options')"></md-tab>
+        </md-tabs>
+        <div layout="row">
+          <div class="user-online" ng-repeat="(id, user) in app.api.connected">
+            <img ng-src="https://robohash.org/{{user.username}}?size=44x44">
+            <md-tooltip>{{user.username}}</md-tooltip>
+          </div>
+        </div>
+    </div>
     <div ui-view="" flex layout="row" id="main-view"></div>
 
 

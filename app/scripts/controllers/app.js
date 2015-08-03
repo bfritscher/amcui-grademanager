@@ -13,6 +13,7 @@ angular.module('grademanagerApp')
     this.tabIndex = 0;
     this.tabInit = false;
     this.hideTabs = true;
+    this.api = API;
 
     this.project = function(){
       return $stateParams.project;

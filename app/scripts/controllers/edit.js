@@ -29,6 +29,15 @@ angular.module('grademanagerApp')
 	        editor.examService.computeHierarchyNumbers();
 	        console.log('sync');
 	        client.sync();
+			//request preview debounce
+			/*
+			var data = exam.toLatex();
+		data.source = exam.exam.source;
+		$http.post(API.URL + '/project/' + $stateParams.project + '/preview', data)
+		.success(function(data){
+			editor.preview = data;
+		});
+		*/
 	    }, true);
 	});
 
@@ -91,18 +100,20 @@ angular.module('grademanagerApp')
 		readOnly: true
 	};
 
-
-	//TODO: automate
-	this.preview = function(){
-		var data = exam.toLatex();
-		data.source = exam.exam.source;
-		$http.post(API.URL + '/project/' + $stateParams.project + '/preview', data)
-		.success(function(data){
-			editor.preview = data;
-		});
+	editor.showPreviewDialog = function($event){
+		$mdDialog.show({
+	        clickOutsideToClose: true,
+	        templateUrl: 'views/edit.preview.html',
+	        targetEvent: $event,
+	        controller: 'EditPreviewCtrl',
+	        controllerAs: 'ctrl',
+	        locals: {
+	        }
+	      });
 	};
 
-	this.print = function(){
+
+	editor.print = function(){
 		//TODO: ask for speparate answer sheet
 		$http.post(API.URL + '/project/' + $stateParams.project + '/print')
 		.success(function(){
@@ -113,7 +124,7 @@ angular.module('grademanagerApp')
 
 	};
 
-	this.examMenuOptions = {
+	editor.examMenuOptions = {
 		accept: function(sourceNode, destNodes) {
         var data = sourceNode.$modelValue;
 		var srcType;
@@ -142,19 +153,6 @@ angular.module('grademanagerApp')
 		*/
       }
 	};
-
-
-/*
-	 $mdDialog.show({
-        clickOutsideToClose: true,
-        templateUrl: 'views/edit.preview.html',
-        //targetEvent: $event,
-        controller: 'EditPreviewCtrl',
-        controllerAs: 'ctrl',
-        locals: {
-        }
-      });
-*/
   });
 
 

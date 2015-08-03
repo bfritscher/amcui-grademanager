@@ -341,6 +341,10 @@ my-pdf-viewer{
 }
 
 
+.user-online{
+  margin: 0 0.5em;
+}
+
 .CodeMirror {
   border: 1px solid #eee;
   height: auto;
