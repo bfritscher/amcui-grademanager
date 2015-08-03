@@ -9,11 +9,32 @@
 		<md-button class="md-raised md-primary" ng-href="{{ctrl.downloadCSVURL}}">Download students.csv</md-button>
 	</p>
 
-	<h2>Raw options</h2>
-	<md-input-container ng-repeat="(key, value) in ctrl.options.options">
-		<label>{{::key}}</label>
-		<input ng-model="ctrl.options.options[key]" ng-if="::key !='verdict' && key != 'email_text'">
-		<textarea ng-model="ctrl.options.options[key]" ng-if="::key =='verdict' || key =='email_text'"></textarea>
+	<h2>Options</h2>
+	<md-input-container>
+		<label>Nb of copies</label>
+		<input ng-model="ctrl.options.options.nombre_copies" string-to-number type="number">
 	</md-input-container>
-	<md-button class="md-warn md-raised" ng-click="ctrl.saveOptions()">Save</md-button>
+	<p>
+		Threshold: {{ctrl.options.options.seuil * 100 | number: 0}}% black filled
+		<md-slider md-discrete string-to-number ng-model="ctrl.options.options.seuil" min="0" max="1" step="0.05" aria-label="threshold"></md-slider>
+		When one uses a separate answer sheet, letters or digits use at least 0.5.
+	</p>
+	<md-input-container>
+		<label>Annotation</label>
+		<textarea ng-model="ctrl.options.options.verdict"></textarea>
+	</md-input-container>
+
+	<md-switch ng-model="showAllOptions" aria-label="show all options">
+   		Display all options
+  	</md-switch>
+	<div ng-if="showAllOptions">
+		<md-input-container ng-repeat="(key, value) in ctrl.options.options">
+			<label>{{::key}}</label>
+			<input ng-model="ctrl.options.options[key]" ng-if="::key !='verdict' && key != 'email_text'">
+			<textarea ng-model="ctrl.options.options[key]" ng-if="::key =='verdict' || key =='email_text'"></textarea>
+		</md-input-container>
+	</div>
+	<p>
+		<md-button class="md-warn md-raised" ng-click="ctrl.saveOptions()">Save Options</md-button>
+	</p>
 </md-content>

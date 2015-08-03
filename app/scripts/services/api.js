@@ -12,6 +12,10 @@ angular.module('grademanagerApp')
     var self = this;
     self.URL = 'http://192.168.56.101:9001';
     self.project = false;
+    self.options = {
+      users: [],
+      options: {}
+    };
 
     self.getProjectList = function(){
       return $http.get(self.URL + '/project/list');
@@ -20,11 +24,15 @@ angular.module('grademanagerApp')
     self.createProject = function(project){
       return $http.post(self.URL + '/project/create', {project: project});
     };
-    
+
     self.loadProject = function(project){
-      self.project = project;
-      self.PROJECT_URL = self.URL + '/project/' + self.project;
-      self.socket = io.connect(self.URL + '?token='+ $window.localStorage.getItem('jwtToken'));
+      if (self.project !== project) {
+        self.project = project;
+        self.PROJECT_URL = self.URL + '/project/' + self.project;
+        self.socket = io.connect(self.URL + '?token='+ $window.localStorage.getItem('jwtToken'));
+
+        self.loadOptions();
+      }
     /*
       socket.on('msg', function(data){
           console.log('msg', data);
@@ -41,6 +49,15 @@ angular.module('grademanagerApp')
         }
       });
     */
+    };
+
+    self.loadOptions = function(){
+      $http.get(self.URL + '/project/' + self.project + '/options')
+      .success(function(data){
+        self.options.users = data.users;
+        self.options.users.sort();
+        self.options.options = data.options;
+      });
     };
 
     self.addUser = function(username, project){

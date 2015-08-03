@@ -11,6 +11,8 @@ angular.module('grademanagerApp')
   .controller('GradeCtrl', function ($scope, $http, $stateParams, API, auth, $mdDialog, $window) {
 
     var grade = this;
+    
+    API.loadProject($stateParams.project);
 
     grade.project = $stateParams.project;
 

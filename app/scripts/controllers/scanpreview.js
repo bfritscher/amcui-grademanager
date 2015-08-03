@@ -26,9 +26,6 @@ angular.module('grademanagerApp')
       }
     };
 
-    //TODO: get from project config db??
-    preview.threshold = 0.5;
-
     preview.ticked = function(zone){
       if(zone.manual >=0){
         return zone.manual === 1;
@@ -36,7 +33,7 @@ angular.module('grademanagerApp')
       if(zone.total <= 0){
         return false;
       }
-      return zone.black >= preview.threshold * zone.total;
+      return zone.black >= API.options.options.seuil * zone.total;
     };
 
     preview.toggle = function(zone){
@@ -45,7 +42,7 @@ angular.module('grademanagerApp')
       } else if(zone.manual === 1){
         zone.manual = 0;
       } else {
-        zone.manual = zone.black >= preview.threshold * zone.total ? 0 : 1;
+        zone.manual = zone.black >= API.options.options.seuil * zone.total ? 0 : 1;
       }
       API.setZoneManual($stateParams.project, {
         student: $stateParams.student,
