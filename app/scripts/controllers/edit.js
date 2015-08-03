@@ -78,16 +78,17 @@ angular.module('grademanagerApp')
 	editor.latexSourceOptions = {
 		mode: 'stex',
 		lineNumbers: true,
-		readOnly: true,
 		lineWrapping: true,
-		viewportMargin: Infinity
+		viewportMargin: Infinity,
+		readOnly: false
 	};
 
 	editor.latexPreviewOptions = {
 		mode: 'stex',
 		lineNumbers: true,
 		lineWrapping: true,
-		viewportMargin: Infinity
+		viewportMargin: Infinity,
+		readOnly: true
 	};
 
 

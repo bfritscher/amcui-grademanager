@@ -1,0 +1,42 @@
+<md-dialog aria-label="Graphics Manager" class="graphics-manager">
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2>Graphics Manager</h2>
+            <span flex></span>
+            <md-button class="md-icon-button" ng-click="ctrl.closeDialog()">
+                <md-icon class="mdi-close" aria-label="Close dialog"></md-icon>
+            </md-button>
+        </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+        <md-button ngf-drop ngf-select ng-model="ctrl.files" class="md-raised md-accent drop-box"
+              ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true">
+              Drop pdfs or images here or click to upload</md-button>
+        <div ngf-no-file-drop>File Drag/Drop is not supported for this browser</div>
+        <md-content class="upload-list">
+            <p ng-repeat="f in scan.uploads track by $index">{{::f.name}}
+                <md-progress-linear md-mode="determinate" value="{{f.progress}}"></md-progress-linear>
+            </p>
+        </md-content>
+        <div layout="row" layout-wrap>
+            <div class="graphics-preview" ng-click="ctrl.insertGraphics(item)"
+                ng-style="{'background-image': 'url(' + ctrl.examService.graphicsPreviewURL(item.id) + ')'}"
+                ng-repeat="item in ctrl.examService.exam.graphics | orderBy: item.name">
+                <div class="graphics-preview-header" layout="row" layout-align="center center">
+                    <h3 flex>{{item.name}}</h3>
+                    <md-button class="md-icon-button md-warn" ng-click="ctrl.examService.deleteGraphics(item)">
+                        <md-icon class="mdi-delete" aria-label="delete graphics"></md-icon>
+                    </md-button>
+                </div>
+            </div>
+        </div>
+    </md-dialog-content>
+
+    <div class="md-actions" layout="row">
+        <span flex></span>
+        <md-button ng-click="ctrl.closeDialog()" class="md-primary">
+         close
+        </md-button>
+    </div>
+</md-dialog>

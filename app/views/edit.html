@@ -57,7 +57,7 @@
 
   <!-- TODO: points -->
 
-    <md-content class="section" layout-padding>
+    <md-content class="section" layout-padding ng-hide="editor.isLatexOptionVisible">
   		<div layout="row" class="md-whiteframe-z1">
         <md-button aria-label="previous" class="md-primary md-raised" ng-show="editor.previousSection()" ng-click="editor.section = editor.previousSection()" ng-bind="editor.previousSection().title"></md-button>
         <span flex></span>

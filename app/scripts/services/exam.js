@@ -11,7 +11,7 @@ angular.module('grademanagerApp')
   .service('exam', function ($rootScope, API, auth) {
     var editor = this;
     var DiffSyncClient = diffsync.Client;
-    
+
     editor.load = function(callback) {
         var client = new DiffSyncClient(API.socket, API.project);
         client.on('connected', function(){
@@ -46,7 +46,7 @@ angular.module('grademanagerApp')
 
         client.initialize();
     };
-    
+
     editor.newSection = function newSection() {
         return {
             id: 's' + GUID(),
@@ -60,7 +60,7 @@ angular.module('grademanagerApp')
             questions: []
         };
     };
-    
+
     editor.addQuestion = function(section){
         section.questions.push({
             id: 'q' + GUID(),
@@ -70,11 +70,11 @@ angular.module('grademanagerApp')
             answers: []
         });
     };
-    
+
     editor.removeQuestion = function(section, question){
         section.questions.splice(section.questions.indexOf(question), 1);
     };
-    
+
     editor.addAnswer = function(question){
         question.answers.push({
             id: 'a' + GUID(),
@@ -86,20 +86,28 @@ angular.module('grademanagerApp')
     editor.removeAnswer = function(question, answer){
         question.answers.splice(question.answers.indexOf(answer), 1);
     };
-    
-    editor.addGraphics = function(){
-        //TODO upload
+
+    editor.createGraphics = function(){
+        return {
+            id: 'g' + GUID(),
+            border: false,
+            width: 0.7,
+            name: ''
+        };
+    };
+
+    editor.addGraphics = function(graphics){
         if(!editor.exam.graphics){
             editor.exam.graphics = {};
         }
-        var id = 'g' + GUID();
-        editor.exam.graphics[id] = {
-            id: id,
-            border: false,
-            width: 0.7
-        };
+        editor.exam.graphics[graphics.id] = graphics;
     };
-    
+
+    editor.deleteGraphics = function(graphics){
+        delete editor.exam.graphics[graphics.id];
+        //TODO: delete on server
+    };
+
     editor.computeHierarchyNumbers= function computeHierarchyNumbers(){
         var questionCount = 1;
         var sections = [0, 0, 0];
@@ -138,14 +146,24 @@ angular.module('grademanagerApp')
             }
         }
     };
-    
+
     editor.graphicsPreviewURL = function(id) {
         return API.PROJECT_URL + '/static/src/graphics/' + id + '_thumb.jpg?token='+ auth.getToken();
     };
-    
+
     editor.getGraphics = function (id) {
         if(editor.exam && editor.exam.graphics && editor.exam.graphics.hasOwnProperty(id)){
             return editor.exam.graphics[id];
+        }
+    };
+
+    editor.getGraphicsByName = function (name) {
+        if(editor.exam && editor.exam.graphics){
+            for(var key in editor.exam.graphics){
+                if(editor.exam.graphics[key].name === name){
+                    return editor.exam.graphics[key];
+                }
+            }
         }
     };
 
@@ -172,7 +190,7 @@ angular.module('grademanagerApp')
             var regex = new RegExp(char,"g");
             text = text.replace(regex, escapeChars[char]);
         }
-    
+
         return text;
     }
 
@@ -193,7 +211,7 @@ angular.module('grademanagerApp')
     function imgNode2Latex(node){
         var img = editor.getGraphics(node.getAttribute('id'));
         if(img){
-            
+
             var options = 'width=' + img.width + '\\textwidth';
             var out = "\\includegraphics[" + options  + "]{src/graphics/" + img.id + "}";
             if(img.border){
@@ -201,7 +219,7 @@ angular.module('grademanagerApp')
             }
             return out;
         }
-        
+
         return 'IMG\\_NOT\\_FOUND';
     }
 
@@ -218,47 +236,47 @@ angular.module('grademanagerApp')
                         case '#text':
                             out += escapeLatex(child.textContent);
                             break;
-    
+
                         case 'XMP':
                             out += ' ' + child.textContent + ' '; //check if too much is left out of textContent
                             break;
-    
+
                         case 'B':
                             out += '\\textbf{' + handleNode(child) + '}';
                             break;
-    
+
                         case 'I':
                             out += '\\emph{' + handleNode(child) + '}';
                             break;
-    
+
                         case 'PRE':
                             out += '\\texttt{' + handleNode(child) + '}';
                             break;
-    
+
                         case 'IMG':
                             out += imgNode2Latex(child);
                             break;
-    
+
                         case 'CODE':
                             out += codeNode2Latex(child);
                             break;
-    
+
                         case 'P':
                             out += handleNode(child) + '\n\n';
                             break;
-                            
+
                         case 'UL':
                             out += '\\begin{itemize}\n' + handleNode(child) + '\\end{itemize}\n';
                             break;
-                            
+
                         case 'LI':
                             out += '\\item ' + handleNode(child) + '\n';
                             break;
-                            
+
                         case 'HR':
                             out += '\\newpage\n';
                             break;
-    
+
                         default:
                             break;
                     }
@@ -272,11 +290,11 @@ angular.module('grademanagerApp')
     }
 
     /* TODO handle points */
-    
+
     function answerToLatex(answer, head){
         head.push('      \\' + (answer.correct ? 'bonne' : 'mauvaise') + '{' + html2Latex(answer.content) + '}');
     }
-    
+
     function choiceQuestionToLatex(question, type, head){
         var layout = question.layout === 'VERTICAL' ? 'reponses' : 'reponseshoriz';
         head.push('  \\begin{' + type + '}{Q' + ('00' + question.number).slice(-2) + '}');
@@ -288,29 +306,29 @@ angular.module('grademanagerApp')
         head.push('    \\end{' + layout + '}');
            head.push('  \\end{' + type + '}');
     }
-    
+
     function questionToLatex(section, question, head){
         head.push('\\element{' + section.id + '}{');
         switch (question.type) {
             case 'SINGLE':
                 choiceQuestionToLatex(question, 'question', head);
                 break;
-    
+
             case 'MULTIPLE':
                 choiceQuestionToLatex(question, 'questionmult', head);
                 break;
-    
+
             /* TODO handle other types */
         }
         head.push('}');
     }
-    
+
     function sectionToLatex(section, head, body){
         //head make questions
         section.questions.forEach(function(question){
             questionToLatex(section, question, head);
         });
-    
+
         //body  build title
         if(section.title !== ''){
             var title = '\n\\';
@@ -324,9 +342,9 @@ angular.module('grademanagerApp')
             title += '{' +  html2Latex(section.title) + '}\n';
             body.push(title);
         }
-    
+
         body.push(html2Latex(section.content));
-    
+
         if(section.questions.length > 0){
             if (section.shuffle) {
                 body.push('\melangegroupe{' + section.id + '}');
@@ -365,5 +383,5 @@ angular.module('grademanagerApp')
             questions_layout: body.join('\n')
         };
     };
-    
+
   });

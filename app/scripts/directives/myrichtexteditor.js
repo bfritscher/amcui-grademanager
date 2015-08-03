@@ -53,7 +53,7 @@ function GUID(){
 })(wysihtml5);
 
 angular.module('grademanagerApp')
-  .directive('myRichTextEditor', function ($timeout, exam) {
+  .directive('myRichTextEditor', function ($timeout, $mdDialog, exam) {
 
       var myParse = function(elementOrHtml_current, config){
         // replace empty tags
@@ -102,6 +102,20 @@ angular.module('grademanagerApp')
             }
         }
 
+        scope.showGraphicsManager = function($event){
+            $mdDialog.show({
+                clickOutsideToClose: true,
+                templateUrl: 'views/graphicsmanager.html',
+                targetEvent: $event,
+                controller: 'GraphicsManagerCtrl',
+                controllerAs: 'ctrl'
+            })
+            .then(function(id){
+                wysihtml5.commands.insertImage.exec(editor.composer, 'insertImage', {id: id});
+                $timeout(decorate);
+            });
+        };
+
         function initEditor(){
             editor = new wysihtml5.Editor(textarea, {
                 autoLink: false,
@@ -112,9 +126,6 @@ angular.module('grademanagerApp')
                 useLineBreaks: false,
                 stylesheets: ['styles/wysihtml5_custom.css']
             });
-
-            //TODO dialog;
-            scope.addGraphics = exam.addGraphics;
 
             scope.closeGraphicsToolbar = function(){
               graphicsToolbar.classList.add('hide');
