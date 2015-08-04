@@ -36,29 +36,47 @@ angular.module('grademanagerApp')
 		  }
 	  });
 
+
+	editor.lastPreview = 0;
+	editor.waitTime = 5 * 1000;
+	editor.previewWait = false;
+	var debounceTimer;
+
+	function throttleDebouncePreview(){
+		if(debounceTimer){
+			$timeout.cancel(debounceTimer);
+		}
+		if(new Date().getTime() - editor.lastPreview > editor.waitTime){
+			console.log('start preview');
+			editor.previewWait = false;
+			exam.preview();
+			editor.lastPreview = new Date().getTime();
+		} else {
+			console.log('wait preview');
+			editor.previewWait = true;
+			debounceTimer = $timeout(throttleDebouncePreview, editor.waitTime);
+		}
+	}
+
 	/* Socket collab data */
 	exam.load(function(client){
-		if (editor.examService.exam && editor.examService.exam.sections && editor.examService.exam.sections.length > 0){
-             editor.section = editor.examService.exam.sections[$location.search().section || 0];
-        } else {
-		     if(!editor.exam) {
-                  editor.examService.exam = {};
-             }
-             editor.section = editor.examService.newSection();
-             editor.examService.exam.sections = [editor.section];
-        }
 	    $scope.$watch('editor.examService.exam', function(){
 	        editor.examService.computeHierarchyNumbers();
 	        console.log('sync');
 	        client.sync();
-			//request preview debounce
-			/*
-			v
-		*/
+			//request preview throttle
+			throttleDebouncePreview();
+
 	    }, true);
 		$scope.$on("$destroy", function() {
 			client.removeAllListeners();
 		});
+		if (editor.examService.exam && editor.examService.exam.sections && editor.examService.exam.sections.length > 0){
+             editor.section = editor.examService.exam.sections[$location.search().section || 0];
+        } else {
+             editor.section = editor.examService.newSection();
+             editor.examService.exam.sections = [editor.section];
+        }
 	});
 
 	editor.leftNav = function (){
@@ -120,14 +138,13 @@ angular.module('grademanagerApp')
 		readOnly: true
 	};
 
+	editor.questionIsNoneCorrect = function(question){
+		return question.answers.every(function(a){
+			return !a.correct;
+		});
+	};
+
 	editor.showPreviewDialog = function($event){
-		/*
-		var data = exam.toLatex();
-		data.source = exam.exam.source;
-		$http.post(API.URL + '/project/' + $stateParams.project + '/preview', data)
-		.success(function(data){
-			editor.preview = data;
-		});*/
 
 		$mdDialog.show({
 	        clickOutsideToClose: true,

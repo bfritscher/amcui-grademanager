@@ -29,17 +29,21 @@ angular.module('grademanagerApp')
       return $http.post(self.URL + '/project/create', {project: project});
     };
 
+    function newLog(name){
+        self.logs[name] = {
+            msg: name,
+            log: '',
+            err: '',
+            progress: 0,
+            start: new Date()
+        };
+        self.sortedLogs.unshift(self.logs[name]);
+        return self.logs[name];
+    }
 
     self.getLog = function(name) {
         if(!self.logs.hasOwnProperty(name)){
-            self.logs[name] = {
-                msg: name,
-                log: '',
-                err: '',
-                progress: 0,
-                start: new Date()
-            };
-            self.sortedLogs.unshift(self.logs[name]);
+            newLog(name);
         }
         return self.logs[name];
     };
@@ -76,13 +80,17 @@ angular.module('grademanagerApp')
         });
 
 
+        var logLocal;
 
         self.socket.on('log', function(log){
-            var logLocal = self.getLog(log.msg);
 
             if (log.action === 'start') {
+                logLocal = newLog(log.msg);
                 logLocal.command = log.command;
                 logLocal.params = log.params;
+            } else {
+                //ensure a log exisits if joinging after start
+                logLocal= self.getLog(log.msg);
             }
 
             if (log.action === 'log') {

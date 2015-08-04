@@ -17,7 +17,7 @@
             <ol ui-tree-nodes="" ng-model="section.questions" data-type="question">
               <li class="question-menu" ng-repeat="question in section.questions track by question.id" ui-tree-node>
                 <div ui-tree-handle>
-                  <strong><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}}</strong>
+                  <strong><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span></strong>
                   <em>{{question.content | htmlToPlaintext | limitTo: 30}}...</em>
                 </div>
               </li>
@@ -31,12 +31,14 @@
 
 
   <div flex class="no-background" layout="column">
-      <div ng-if="app.api.options.status.printed" class="printed-bar" layout-padding>
+    <div ng-if="app.api.options.status.printed && !editor.hidePrintNotification" class="printed-bar" layout-padding layout="row" layout-align="center center">
       This project has been printed on {{app.api.options.status.printed | date: 'yyyy-MM-dd HH:mm'}}.
       <md-button class="md-raised md-primary"  ng-href="{{app.api.getDownloadZipURL()}}">Download Zip with all PDFs</md-button>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="editor.hidePrintNotification=true" aria-label="close message"><md-icon class="mdi-close"></md-icon></md-button>
     </div>
 
-    <div class="section-options md-whiteframe-z1" layout-padding>
+    <div class="section-options main-toolbar md-whiteframe-z1" layout-padding>
       <div class="" layout="row" layout-wrap layout-align="center start" layout-sm="column">
         <md-button aria-label="toggle menu" class="md-icon-button" ng-hide="editor.leftNav().isLockedOpen()" ng-click="editor.leftNav().open()">
           <md-icon class="mdi-menu"></md-icon>
@@ -55,29 +57,36 @@
         </md-input-container>
     	  <span flex></span>
         <div>
-          <md-button aria-label="preview" ng-click="editor.showPreviewDialog($event)">Preview</md-button>
-          <md-button aria-label="LaTeX options" class="md-primary" ng-click="editor.isLatexOptionVisible = !editor.isLatexOptionVisible">LaTeX options</md-button>
+          {{editor.lastPreview | date: 'HH:mm:ss'}}
+          <md-button aria-label="preview" ng-class="{'md-warn':  app.api.logs.preview.code>0}" ng-click="editor.showPreviewDialog($event)">{{editor.previewWait ? 'wait' : app.api.logs.preview.code == 0 ? 'Preview' : app.api.logs.preview.code > 0 ? 'error' : 'compiling'}}</md-button>
+          <md-button aria-label="LaTeX options" class="md-primary" ng-class="{'active': editor.isLatexOptionVisible}" ng-click="editor.isLatexOptionVisible = !editor.isLatexOptionVisible">LaTeX options</md-button>
           <md-button aria-label="print" class="md-warn" ng-click="editor.examService.print()">Print</md-button>
         </div>
       </div>
     </div>
 
 
-    <md-tabs flex id="latex-options" ng-if="editor.isLatexOptionVisible">
+    <md-tabs flex id="latex-options" ng-if="editor.isLatexOptionVisible" md-selected="editor.selectedSourcePreview">
       <md-tab label="source.tex">
-        <ui-codemirror ui-codemirror-opts="editor.latexSourceOptions" ng-model="editor.examService.exam.source"></ui-codemirror>
+        <ui-codemirror ng-if="editor.selectedSourcePreview == 0" ui-codemirror-opts="editor.latexSourceOptions" ng-model="editor.examService.exam.source"></ui-codemirror>
       </md-tab>
       <md-tab label="questions_definition.tex">
-        <ui-codemirror ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_definition"></ui-codemirror>
+        <ui-codemirror ng-if="editor.selectedSourcePreview == 1" ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_definition"></ui-codemirror>
       </md-tab>
       <md-tab label="questions_layout.tex">
-        <ui-codemirror ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_layout"></ui-codemirror>
+        <ui-codemirror ng-if="editor.selectedSourcePreview == 2" ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_layout"></ui-codemirror>
+      </md-tab>
+      <md-tab label="data.json">
+        <pre ng-if="editor.selectedSourcePreview == 3">
+          {{::editor.examService.getJSON()}}
+        </pre>
       </md-tab>
     </md-tabs>
 
   <!-- TODO: points -->
 
   <md-content class="section" layout-padding ng-hide="editor.isLatexOptionVisible">
+<div class="page-width-limit">
   <div class="md-whiteframe-z1">
       <div class="md-whiteframe-z1">
     		<div layout="row" class="section-header" layout-align="space-around end">
@@ -97,8 +106,8 @@
             <md-option ng-repeat="(key, value) in {'Level 1': 0, 'Level 2': 1, 'Level 3': 2}" value="{{value}}">{{key}}</md-option>
           </md-select>
           <md-checkbox class="md-primary" ng-model="editor.section.isNumbered" ng-disabled="editor.section.isSectionTitleVisibleOnAMC">Show number</md-checkbox>
-          <md-checkbox class="md-primary" ng-model="editor.section.isSectionTitleVisibleOnAMC" ng-change="editor.section.isSectionTitleVisibleOnAMC ? editor.section.isNumbered=true : ''">Visible in answer sheet</md-checkbox>
-          <md-checkbox class="md-primary" ng-model="editor.section.shuffle">Shuffle questions</md-checkbox>
+          <md-checkbox class="md-primary" ng-model="editor.section.isSectionTitleVisibleOnAMC" ng-change="editor.section.isSectionTitleVisibleOnAMC ? editor.section.isNumbered=true : ''">On answer sheet</md-checkbox>
+          <md-checkbox class="md-primary" ng-model="editor.section.shuffle">Shuffle</md-checkbox>
           <md-select  class="md-primary" placeholder="Columns" ng-model="editor.section.columns">
             <md-option ng-repeat="(key, value) in {'One column': 1, 'Two columns': 2}" value="{{value}}">{{key}}</md-option>
           </md-select>
@@ -106,7 +115,7 @@
           <md-button aria-label="delete section" class="md-warn" ng-click="editor.removeSection(editor.section)"><md-icon class="mdi-delete"></md-icon></md-button>
         </div>
       </div>
-      <my-rich-text-editor ng-model="editor.section.content" graphics="editor.examService.exam.graphics"></my-rich-text-editor>
+      <my-rich-text-editor class="page-width-limit" ng-model="editor.section.content" graphics="editor.examService.exam.graphics"></my-rich-text-editor>
   </div>
 
       <div ng-class="{'two-columns': editor.section.columns == 2}">
@@ -114,7 +123,7 @@
               <div>
                 <div class="question-header" layout="row" layout-padding>
                   <h3><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>
-                   Question {{question.number}}</h3>
+                   Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span></h3>
                 </div>
                 <div layout="row"  class="section-options md-whiteframe-z1">
                   <md-select placeholder="Type" ng-model="question.type">
@@ -123,6 +132,7 @@
                   <md-select placeholder="Layout" ng-model="question.layout">
                     <md-option ng-repeat="(key, value) in {'VERTICAL': 'VERTICAL', 'HORIZONTAL': 'HORIZONTAL'}" value="{{value}}">{{key}}</md-option>
                   </md-select>
+                  <md-button aria-label="copy question" class="md-primary" ng-click="editor.examService.copyQuestion(editor.section, question)"><md-icon class="mdi-content-copy"></md-icon></md-button>
                   <span flex></span>
                   <md-button aria-label="delete question" class="md-warn" ng-click="editor.examService.removeQuestion(editor.section, question)"><md-icon class="mdi-delete"></md-icon></md-button>
                 </div>
@@ -130,11 +140,16 @@
 
               <my-rich-text-editor ng-model="question.content" graphics="editor.examService.exam.graphics"></my-rich-text-editor>
 
-              <div layout="{{question.layout == 'HORIZONTAL' ? 'row' : 'column'}}"  layout-padding>
+              <div layout="{{question.layout == 'HORIZONTAL' ? 'row' : 'column'}}"  layout-padding layout-wrap layout-align="{{question.layout == 'HORIZONTAL' ? 'center start' : ''}}">
                 <div ng-repeat="answer in question.answers track by answer.id" class="answer" layout="row">
                     <label layout-padding class="answer-toggle"><input type="checkbox" ng-model="answer.correct"><md-icon ng-class="{'mdi-close': !answer.correct, 'mdi-check': answer.correct}"></md-icon></label>
                     <my-rich-text-editor ng-model="answer.content" graphics="editor.examService.exam.graphics" flex></my-rich-text-editor>
                     <md-button aria-label="delete answer" class="md-warn" ng-click="editor.examService.removeAnswer(question, answer)"><md-icon class="mdi-delete"></md-icon></md-button>
+                </div>
+                <div class="answer" layout="row" ng-if="question.type == 'MULTIPLE'">
+                  <label layout-padding class="answer-toggle"><input type="checkbox"><md-icon ng-class="{'mdi-close': !editor.questionIsNoneCorrect(question), 'mdi-check': editor.questionIsNoneCorrect(question)}"></md-icon></label>
+                  <div flex layout-padding class="myrichtexteditor answer-none">None of the above</div>
+                  <md-button aria-label="delete answer" class="md-warn" ng-disabled="'true'"><md-icon class="mdi-delete"></md-icon></md-button>
                 </div>
               </div>
               <div class="section-options answer-add">
@@ -146,6 +161,7 @@
       <div class="section-options md-whiteframe-z1 question-add">
         <md-button aria-label="add new question" class="md-primary" ng-click="editor.examService.addQuestion(editor.section)">Add Question</md-button>
       </div>
+</div>
     </md-content>
   </div>
 </div>

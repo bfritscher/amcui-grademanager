@@ -17,7 +17,7 @@ angular.module('grademanagerApp')
 
     ctrl.getErr = function(){
         if(ctrl.api.logs && ctrl.api.logs.preview){
-           return ctrl.api.logs.preview.log.match(/ERR:.*/g);
+           return ctrl.api.logs.preview.log.match(/ERR(?::|>).*/g);
         }
     };
 

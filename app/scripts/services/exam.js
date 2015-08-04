@@ -17,7 +17,7 @@ angular.module('grademanagerApp')
 		data.source = editor.exam.source;
         API.preview(data);
     };
-    
+
     editor.print = function(){
         //TODO: ask for speparate answer sheet??
         var data = editor.toLatex();
@@ -75,13 +75,26 @@ angular.module('grademanagerApp')
     };
 
     editor.addQuestion = function(section){
-        section.questions.push({
+        var question = {
             id: 'q' + GUID(),
             content: '<p></p>',
             type: 'SINGLE',
             layout: 'VERTICAL',
             answers: []
+        };
+        section.questions.push(question);
+        return question;
+    };
+
+    editor.copyQuestion = function(section, question){
+        var copy = editor.addQuestion(section);
+        copy.content = question.content;
+        copy.type = question.type;
+        copy.layout = question.layout;
+        question.answers.forEach(function(answer){
+            editor.copyAnswer(copy, answer);
         });
+        return copy;
     };
 
     editor.removeQuestion = function(section, question){
@@ -89,11 +102,20 @@ angular.module('grademanagerApp')
     };
 
     editor.addAnswer = function(question){
-        question.answers.push({
+        var answer = {
             id: 'a' + GUID(),
-            content: '<p>answer text</p>',
+            content: '<p></p>',
             correct: false
-        });
+        };
+        question.answers.push(answer);
+        return answer;
+    };
+
+    editor.copyAnswer = function(question, answer){
+        var copy = editor.addAnswer(question);
+        copy.content = answer.content;
+        copy.correct = answer.correct;
+        return copy;
     };
 
     editor.removeAnswer = function(question, answer){
@@ -162,6 +184,10 @@ angular.module('grademanagerApp')
 
     editor.graphicsPreviewURL = function(id) {
         return API.PROJECT_URL + '/static/src/graphics/' + id + '_thumb.jpg?token='+ auth.getToken();
+    };
+
+    editor.getJSON = function(){
+        return JSON.stringify(angular.copy(editor.exam), null, 2);
     };
 
     editor.getGraphics = function (id) {
@@ -286,6 +312,10 @@ angular.module('grademanagerApp')
                             out += '\\item ' + handleNode(child) + '\n';
                             break;
 
+                        case 'BOX':
+                            out += '\\fbox{\\parbox{\\textwidth}{\n' + handleNode(child) + '}}\\newline\n';
+                            break;
+
                         case 'HR':
                             out += '\\newpage\n';
                             break;
@@ -360,7 +390,7 @@ angular.module('grademanagerApp')
 
         if(section.questions.length > 0){
             if (section.shuffle) {
-                body.push('\melangegroupe{' + section.id + '}');
+                body.push('\\melangegroupe{' + section.id + '}');
             }
             var wrap = function(callback){
                 callback();

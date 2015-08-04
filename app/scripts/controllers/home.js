@@ -54,7 +54,7 @@ angular.module('grademanagerApp')
         home.error = '';
         API.createProject(home.newProjectName)
         .success(function(){
-          home.openProject(home.newProjectName);
+          home.openProject({project: home.newProjectName});
           home.newProjectName = '';
         })
         .error(function(data){

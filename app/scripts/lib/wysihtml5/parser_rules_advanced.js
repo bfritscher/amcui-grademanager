@@ -46,6 +46,7 @@ var wysihtml5ParserRules = {
     li:     {},
     p:      {},
     pre:    {},
+    box:    {},
     code:   {
        "check_attributes": {
           "id": "any"
