@@ -83,8 +83,6 @@
       </md-tab>
     </md-tabs>
 
-  <!-- TODO: points -->
-
   <md-content class="section" layout-padding ng-hide="editor.isLatexOptionVisible">
 <div class="page-width-limit">
   <div class="md-whiteframe-z1">
@@ -101,7 +99,7 @@
           <md-button aria-label="next or new" class="md-primary" ng-click="editor.section = editor.nextSection(true)" ng-bind="editor.nextSection().title"></md-button>
     		</div>
 
-        <div layout="row" class="section-options">
+        <div layout="row" class="section-options" layout-align="center center">
           <md-select  class="md-primary" placeholder="Level" ng-model="editor.section.level">
             <md-option ng-repeat="(key, value) in {'Level 1': 0, 'Level 2': 1, 'Level 3': 2}" value="{{value}}">{{key}}</md-option>
           </md-select>
@@ -119,20 +117,35 @@
   </div>
 
       <div ng-class="{'two-columns': editor.section.columns == 2}">
-          <div class="question md-whiteframe-z1" ng-repeat="question in editor.section.questions track by question.id">
+          <div class="question md-whiteframe-z1 {{question.type}}" ng-repeat="question in editor.section.questions track by question.id">
               <div>
                 <div class="question-header" layout="row" layout-padding>
-                  <h3><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>
+                  <h3><md-icon class="mdi-alert invalid" ng-hide="question.isValid" title="Need answers"></md-icon>
                    Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span></h3>
                 </div>
-                <div layout="row"  class="section-options md-whiteframe-z1">
+                <div layout="row"  class="section-options md-whiteframe-z1" layout-align="center center">
                   <md-select placeholder="Type" ng-model="question.type">
-                    <md-option ng-repeat="(key, value) in {'SINGLE': 'SINGLE', 'MULTIPLE': 'MULTIPLE', 'OPEN': 'OPEN', 'NUMBERCHOICE': 'NUMBERCHOICE'}" value="{{value}}">{{key}}</md-option>
+                    <md-option ng-repeat="value in ['SINGLE', 'MULTIPLE', 'OPEN']" value="{{value}}">{{value}}</md-option>
                   </md-select>
-                  <md-select placeholder="Layout" ng-model="question.layout">
+                  <md-select   ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" placeholder="Layout" ng-model="question.layout">
                     <md-option ng-repeat="(key, value) in {'VERTICAL': 'VERTICAL', 'HORIZONTAL': 'HORIZONTAL'}" value="{{value}}">{{key}}</md-option>
                   </md-select>
-                  <md-button aria-label="copy question" class="md-primary" ng-click="editor.examService.copyQuestion(editor.section, question)"><md-icon class="mdi-content-copy"></md-icon></md-button>
+                  <md-checkbox  ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" class="md-primary" ng-model="question.ordered">Ordered</md-checkbox>
+                  <md-input-container  ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'">
+                    <label>scoring</label>
+                    <input ng-model="question.scoring">
+                  </md-input-container>
+                  <md-button  ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" class="md-primary md-icon-button" href="http://home.gna.org/auto-qcm/auto-multiple-choice.en/graphical-interface.shtml#bareme" target="_blank"><md-icon class="mdi-help-circle"></md-icon></md-button>
+                  <md-checkbox ng-if="question.type == 'OPEN'" class="md-primary" ng-model="question.dots">Dots</md-checkbox>
+                  <md-input-container  ng-if="question.type == 'OPEN'">
+                    <label>lines</label>
+                    <input ng-model="question.lines" type="number" min="1">
+                  </md-input-container>
+                  <md-input-container  ng-if="question.type == 'OPEN'">
+                    <label>Points</label>
+                    <input ng-model="question.points" type="number" min="1">
+                  </md-input-container>
+                  <md-button title="copy question" aria-label="copy question" class="md-primary md-icon-button" ng-click="editor.examService.copyQuestion(editor.section, question)"><md-icon class="mdi-content-copy"></md-icon></md-button>
                   <span flex></span>
                   <md-button aria-label="delete question" class="md-warn" ng-click="editor.examService.removeQuestion(editor.section, question)"><md-icon class="mdi-delete"></md-icon></md-button>
                 </div>
@@ -140,7 +153,7 @@
 
               <my-rich-text-editor ng-model="question.content" graphics="editor.examService.exam.graphics"></my-rich-text-editor>
 
-              <div layout="{{question.layout == 'HORIZONTAL' ? 'row' : 'column'}}"  layout-padding layout-wrap layout-align="{{question.layout == 'HORIZONTAL' ? 'center start' : ''}}">
+              <div ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" layout="{{question.layout == 'HORIZONTAL' ? 'row' : 'column'}}"  layout-padding layout-wrap layout-align="{{question.layout == 'HORIZONTAL' ? 'center start' : ''}}">
                 <div ng-repeat="answer in question.answers track by answer.id" class="answer" layout="row">
                     <label layout-padding class="answer-toggle"><input type="checkbox" ng-model="answer.correct"><md-icon ng-class="{'mdi-close': !answer.correct, 'mdi-check': answer.correct}"></md-icon></label>
                     <my-rich-text-editor ng-model="answer.content" graphics="editor.examService.exam.graphics" flex></my-rich-text-editor>
@@ -152,8 +165,16 @@
                   <md-button aria-label="delete answer" class="md-warn" ng-disabled="'true'"><md-icon class="mdi-delete"></md-icon></md-button>
                 </div>
               </div>
-              <div class="section-options answer-add">
+              <div ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'"  class="section-options answer-add">
                 <md-button aria-label="add new answer" class="md-primary" ng-click="editor.examService.addAnswer(question)">Add Answer</md-button>
+              </div>
+
+              <div ng-if="question.type == 'OPEN'" layout="row" layout-align="end center" class="answer-open-points">
+                <div class="circle" ng-class="{'last': $last}" ng-repeat-start="p in editor.range(1 + question.points) track by $index"></div>
+                <div class="point" ng-repeat-end>{{$index}}{{$index > 1 ? 'pts' : 'pt'}}</div>
+              </div>
+              <div ng-if="question.type == 'OPEN'" class="answer-open">
+                <p ng-class="{'dots': question.dots}" ng-repeat="p in editor.range(question.lines) track by $index">&nbsp;</p>
               </div>
           </div>
       </div>
@@ -166,13 +187,10 @@
   </div>
 </div>
 <!--
-    preview
     option-> template list
     custom template
     preview files, edit files -> disable edit
     upload custom project -> disable edit
-    print nb series
-    d/l zipped?
   -->
 
   <!--

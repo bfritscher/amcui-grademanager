@@ -74,12 +74,25 @@ angular.module('grademanagerApp')
         };
     };
 
+/*
+Note supported
+QuestionIndicative
+\AMCBoxedAnswers
+
+TODO: \bareme{auto=0,v=-1,e=-2}
+
+*/
     editor.addQuestion = function(section){
         var question = {
             id: 'q' + GUID(),
             content: '<p></p>',
             type: 'SINGLE',
             layout: 'VERTICAL',
+            ordered: false,
+            scoring: '',
+            points: 1,
+            dots: false,
+            lines: 1,
             answers: []
         };
         section.questions.push(question);
@@ -91,6 +104,12 @@ angular.module('grademanagerApp')
         copy.content = question.content;
         copy.type = question.type;
         copy.layout = question.layout;
+        copy.ordered = question.ordered;
+        copy.scoring = question.scoring;
+        copy.points = question.points;
+        copy.dots = question.dots;
+        copy.lines = question.lines;
+
         question.answers.forEach(function(answer){
             editor.copyAnswer(copy, answer);
         });
@@ -175,9 +194,9 @@ angular.module('grademanagerApp')
                 question.number = questionCount;
                 questionCount++;
                 //validate question
-                question.isValid =  question.type === "SINGLE" ? question.answers.reduce(function(a, b){
+                question.isValid =  (question.type === "OPEN" ? true : question.answers.length > 0) && (question.type === "SINGLE" ? question.answers.reduce(function(a, b){
                         return a + b.correct;
-                    }, 0) === 1 : true;
+                    }, 0) === 1 : true);
             }
         }
     };
@@ -332,22 +351,52 @@ angular.module('grademanagerApp')
         return handleNode(div);
     }
 
-    /* TODO handle points */
-
     function answerToLatex(answer, head){
         head.push('      \\' + (answer.correct ? 'bonne' : 'mauvaise') + '{' + html2Latex(answer.content) + '}');
     }
 
     function choiceQuestionToLatex(question, type, head){
         var layout = question.layout === 'VERTICAL' ? 'reponses' : 'reponseshoriz';
-        head.push('  \\begin{' + type + '}{Q' + ('00' + question.number).slice(-2) + '}');
+        var beginQuestion = '  \\begin{' + type + '}{Q' + ('00' + question.number).slice(-2) + '}';
+        if (question.scoring) {
+            beginQuestion += '\\scoring{' + question.scoring + '}';
+        }
+        head.push(beginQuestion);
         head.push('\n  ' + html2Latex(question.content));
-        head.push('\n    \\begin{' + layout + '}');
+        var beginAnswers = '\n    \\begin{' + layout + '}';
+        if (question.ordered) {
+            beginAnswers += '[o]';
+        }
+        head.push(beginAnswers);
         question.answers.forEach(function(answer){
             answerToLatex(answer, head);
         });
         head.push('    \\end{' + layout + '}');
-           head.push('  \\end{' + type + '}');
+        head.push('  \\end{' + type + '}');
+    }
+
+    function openQuestionToLatex(question, head){
+        var beginQuestion = '  \\begin{question}{Q' + ('00' + question.number).slice(-2) + '}';
+        head.push(beginQuestion);
+        head.push('\n  ' + html2Latex(question.content));
+        var amcOpen = '    \\AMCOpen{';
+        amcOpen += 'lines=' + question.lines;
+        amcOpen += ',dots=' + (question.dots ?  'true' : 'false');
+        amcOpen += '}{';
+        head.push(amcOpen);
+        head.push('      \\wrongchoice[W]{0pt}\\scoring{0}');
+
+        for(var i=1; i < question.points; i++){
+            var answerType = 'wrongchoice';
+            var label = 'P' + i;
+            if(i === question.points-1) {
+                answerType = 'correctchoice';
+                label = 'C';
+            }
+            head.push('      \\' + answerType + '[' + label + ']{' + i + (i > 1 ? 'pts' : 'pt') + '}\\scoring{' + i + '}');
+        }
+        head.push('    }');
+        head.push('  \\end{question}');
     }
 
     function questionToLatex(section, question, head){
@@ -361,7 +410,8 @@ angular.module('grademanagerApp')
                 choiceQuestionToLatex(question, 'questionmult', head);
                 break;
 
-            /* TODO handle other types */
+            case 'OPEN':
+                openQuestionToLatex(question, head);
         }
         head.push('}');
     }

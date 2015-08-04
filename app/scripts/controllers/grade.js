@@ -8,7 +8,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('GradeCtrl', function ($scope, $http, $stateParams, API, auth, $mdDialog, $window) {
+  .controller('GradeCtrl', function ($scope, $http, $stateParams, API, auth, $mdDialog) {
 
     var grade = this;
 

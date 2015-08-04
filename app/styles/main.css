@@ -249,9 +249,18 @@ tr.active td{
   margin-top: 2em;
 }
 
+.question.OPEN{
+  padding-bottom: 30px;
+}
+
 .question-add{
   margin-top: 2em;
   margin-bottom: 4em;
+}
+
+.question .section-options md-input-container{
+  width: 50px;
+  margin: 0 8px;
 }
 
 .answer{
@@ -290,6 +299,46 @@ tr.active td{
   color: white;
   font-weight: bold;
   border-radius: 4px;
+}
+
+.answer-open{
+  border: 2px solid #000;
+  margin: 0 30px;
+  padding: 8px;
+  clear: both;
+}
+
+.answer-open p {
+  width: 100%;
+  margin: 0;
+  line-height: 42px;
+}
+
+.answer-open p.dots{
+  border-bottom: 1px dashed #333;
+}
+
+.answer-open-points {
+  background-color: rgb(238,238,238);
+  padding: 4px;
+  margin: 30px 30px 0 30px;
+  float:right;
+}
+
+.answer-open-points div.point{
+  margin: 0 4px 0 1px;
+}
+
+.answer-open-points div.circle {
+  border: 1px solid #000;
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.answer-open-points div.circle.last{
+  background-color: #000;
 }
 
 .wysihtml5-command-active .mdi {
@@ -449,7 +498,7 @@ my-pdf-viewer{
   color: teal;
 }
 
-.main-toolbar md-input-container{
+.main-toolbar md-input-container, .section-options md-input-container{
   padding: 0 0 10px 0;
 }
 

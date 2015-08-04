@@ -91,7 +91,6 @@ angular.module('grademanagerApp')
         var logLocal;
 
         self.socket.on('log', function(log){
-            console.log(log);
             if (log.action === 'start') {
                 logLocal = newLog(log.msg);
                 logLocal.command = log.command;

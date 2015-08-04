@@ -122,6 +122,10 @@ angular.module('grademanagerApp')
 		editor.section = newSection;
 	};
 
+	editor.range = function(n){
+		return new Array(parseInt(n));
+	};
+
 	editor.latexSourceOptions = {
 		mode: 'stex',
 		lineNumbers: true,
