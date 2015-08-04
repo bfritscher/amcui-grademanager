@@ -116,6 +116,9 @@ angular.module('grademanagerApp')
             });
         };
 
+
+        var currentImg;
+
         function initEditor(){
             editor = new wysihtml5.Editor(textarea, {
                 autoLink: false,
@@ -140,6 +143,7 @@ angular.module('grademanagerApp')
                         graphicsToolbar.style.left = imgElement.offsetLeft + 'px';
                         graphicsToolbar.style.width = imgElement.offsetWidth + 'px';
                         scope.graphics = exam.getGraphics(imgElement.getAttribute('id'));
+                        currentImg = imgElement;
                         scope.$apply();
                     }
                 });
@@ -190,7 +194,13 @@ angular.module('grademanagerApp')
           console.log(oldValue, newValue, scope.allGraphics, scope.graphics);
           //TODO only update if changed.
           //TODO only watch graphics which we own.
-          $timeout(decorate);
+          $timeout(function(){
+            decorate();
+            if(currentImg){
+              graphicsToolbar.style.width = currentImg.offsetWidth + 'px';
+            }
+          });
+
         }, true);
 
         // Sync model -> view
