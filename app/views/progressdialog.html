@@ -6,7 +6,12 @@
   </md-toolbar>
   <md-dialog-content md-scroll-y>
       <div layout="row" layout-align="center center">
-        <md-button class="md-raised md-primary" ng-if="ctrl.api.options.status.printed" ng-href="{{ctrl.api.getDownloadZipURL()}}">Download Zip with all PDFs</md-button>
+        <md-button class="md-raised md-primary" ng-if="ctrl.api.options.status.printed && ctrl.api.logs['printing done']"
+          ng-href="{{ctrl.api.getDownloadZipURL()}}">Download Zip with all PDFs</md-button>
+        <md-button class="md-raised md-primary" ng-if="ctrl.api.options.status.annotated && ctrl.api.logs['annotating done'] && ctrl.api.logs['annotating done'].type=='all'"
+           ng-href="{{ctrl.api.getAnnotateZipURL()}}">Download Zip with all annotated PDFs</md-button>
+        <md-button class="md-raised md-primary" ng-if="ctrl.api.options.status.annotated && ctrl.api.logs['annotating done'] && ctrl.api.logs['annotating done'].type=='single'"
+          ng-href="{{ctrl.api.getStaticFileURL(ctrl.api.logs['annotating done'].file)}}">Download {{ctrl.api.logs['annotating done'].file}}</md-button>
       </div>
       <div ng-repeat="log in ctrl.api.sortedLogs" class="log">
           <h4>{{log.msg}}</h4>

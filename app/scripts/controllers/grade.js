@@ -11,7 +11,7 @@ angular.module('grademanagerApp')
   .controller('GradeCtrl', function ($scope, $http, $stateParams, API, auth, $mdDialog, $window) {
 
     var grade = this;
-    
+
     API.loadProject($stateParams.project);
 
     grade.project = $stateParams.project;
@@ -130,29 +130,13 @@ angular.module('grademanagerApp')
     };
 
     grade.annotateScore = function(score){
-        score.annotateDisabled = true;
         $http.post(API.URL + '/project/' + $stateParams.project + '/annotate', {
           ids: [score.copy ? score.student + ':' + score.copy : score.student]
-        })
-        .success(function(log){
-          console.log(log);
-          score.annotateDisabled = false;
-          var found = log.logRegroupe.match(/(cr\/.*?\.pdf)/);
-          if ( found ){
-            $window.open(API.URL + '/project/' + $stateParams.project + '/static/' + found[1] + '?token=' + auth.getToken(), '_blank');
-          }
         });
     };
 
-    grade.annotateAllDisabled = false;
     grade.annotateAll = function(){
-        grade.annotateAllDisabled = true;
-        $http.post(API.URL + '/project/' + $stateParams.project + '/annotate')
-        .success(function(log){
-          console.log(log);
-          $window.open(API.URL + '/project/' + $stateParams.project + '/zip/annotate?token=' + auth.getToken(), '_blank');
-          grade.annotateAllDisabled = false;
-        });
+        $http.post(API.URL + '/project/' + $stateParams.project + '/annotate');
     };
 
     grade.showAssociationDialog = function($event, row){

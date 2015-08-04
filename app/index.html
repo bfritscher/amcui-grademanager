@@ -37,6 +37,11 @@
           <md-button aria-label="Open phone interactions menu"  ng-click="$mdOpenMenu()" ng-bind="app.getUsername()"></md-button>
           <md-menu-content>
             <md-menu-item>
+              <md-button ng-click="app.api.showProgressDialog()">
+                Task progress
+              </md-button>
+            </md-menu-item>
+            <md-menu-item>
               <md-button ng-click="app.logout()">
                 Logout
               </md-button>

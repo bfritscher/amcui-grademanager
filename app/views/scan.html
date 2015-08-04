@@ -16,14 +16,16 @@
       <p>Complete: {{scan.missing.complete}} <span ng-show="scan.missing.incomplete > 0">Incomplete: {{scan.missing.incomplete}}</span></p>
       <div ng-show="scan.missing.missing.length > 0">
         Missing pages:
-      <md-content class="scan-missing-list">
-
+        <md-content class="scan-missing-list">
           <div ng-repeat="missing in scan.missing.missing track by $index">{{::missing.student}}/{{::missing.page}}<span ng-show="missing.copy > 0">:{{::missing.copy}}</span></div>
-      </md-content>
+        </md-content>
       </div>
-      <p ng-show="scan.missing.failed.length > 0">Failed pages:
-        <div ng-repeat="failed in scan.missing.failed track by $index">{{::failed.filename}}</div>
-      </p>
+      <div ng-show="scan.missing.failed.length > 0">
+        Failed pages:
+        <md-content class="scan-missing-list">
+          <div ng-repeat="failed in scan.missing.failed track by $index">{{::failed.filename}}</div>
+        </md-content>
+      </div>
       <md-input-container md-no-float>
         <md-icon class="mdi-magnify"></md-icon>
         <input ng-model="scan.filter" type="text" placeholder="Filter">

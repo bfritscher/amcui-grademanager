@@ -52,6 +52,14 @@ angular.module('grademanagerApp')
         return self.URL + '/project/' + self.project + '/zip/pdf?token=' + $window.localStorage.getItem('jwtToken');
     };
 
+    self.getAnnotateZipURL = function(){
+        return self.URL + '/project/' + self.project + '/zip/annotate?token=' + $window.localStorage.getItem('jwtToken');
+    };
+
+    self.getStaticFileURL = function(file){
+        return self.URL + '/project/' + self.project + '/static/' + file + '?token=' + $window.localStorage.getItem('jwtToken');
+    };
+
     self.loadProject = function(project){
       if (self.project !== project) {
         self.project = project;
@@ -83,11 +91,16 @@ angular.module('grademanagerApp')
         var logLocal;
 
         self.socket.on('log', function(log){
-
+            console.log(log);
             if (log.action === 'start') {
                 logLocal = newLog(log.msg);
                 logLocal.command = log.command;
                 logLocal.params = log.params;
+
+                if (log.command === 'getimages') {
+                    self.showProgressDialog();
+                }
+
             } else {
                 //ensure a log exisits if joinging after start
                 logLocal= self.getLog(log.msg);
@@ -104,6 +117,9 @@ angular.module('grademanagerApp')
                     if (log.command === 'prepare') {
                         logLocal.progress+=0.001;
                     }
+                    if (log.command === 'prepare') {
+                        logLocal.progress+=0.01;
+                    }
                 }
             }
 
@@ -117,7 +133,7 @@ angular.module('grademanagerApp')
                 logLocal.end = new Date();
                 if (log.code > 0){
                     self.options.status.locked = 0;
-                    //display error
+                    //TODO? display error
                 }
             }
 
@@ -135,16 +151,47 @@ angular.module('grademanagerApp')
                 self.showProgressDialog();
             }
             if (event.action === 'end') {
-                self.sortedLogs.unshift({
+                var log = {
                     start: printTimer,
                     end: new Date(),
                     command: 'print',
                     msg: 'printing done',
                     log: event.pdfs.join('\n'),
                     progress: 1
-                });
+                };
+                self.sortedLogs.unshift();
+                self.logs['printing done'] = log;
                 self.options.status.locked = 0;
                 self.options.status.printed = new Date().getTime();
+            }
+            $rootScope.$apply();
+        });
+
+        var annotateTimer;
+        self.socket.on('annotate', function(event){
+            if (event.action === 'start') {
+                self.sortedLogs = [];
+                self.logs = {};
+                annotateTimer = new Date();
+                self.options.status.locked = 1;
+                self.options.status.annotated = undefined;
+                self.showProgressDialog();
+            }
+            if (event.action === 'end') {
+                var log = {
+                    start: annotateTimer,
+                    end: new Date(),
+                    command: 'print',
+                    msg: 'annotating done',
+                    log: '',
+                    type: event.type,
+                    file: event.file,
+                    progress: 1
+                };
+                self.sortedLogs.unshift(log);
+                self.logs['annotating done'] = log;
+                self.options.status.locked = 0;
+                self.options.status.annotated = new Date().getTime();
             }
             $rootScope.$apply();
         });
@@ -170,7 +217,6 @@ angular.module('grademanagerApp')
         self.options.users.sort();
         self.options.options = data.options || {};
         self.options.status = data.status || {};
-        console.log( data.status );
         if(self.options.status.locked > 0){
             self.showProgressDialog();
         }
