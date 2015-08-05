@@ -423,6 +423,12 @@ tr.active td{
 
 }
 
+
+.md-tab md-icon{
+  font-size: 14px;
+  line-height: 22px;
+}
+
 .wysiwyg-text-align-center {
   text-align: center;
 }
@@ -471,6 +477,11 @@ my-pdf-viewer{
   color: #fff;
   min-height: 64px;
   height: 64px;
+}
+
+.printed-bar .md-select-label,
+.printed-bar md-select:not([disabled]):focus .md-select-label{
+  color: #fff;
 }
 
 #main-view{

@@ -60,6 +60,10 @@ angular.module('grademanagerApp')
         return self.URL + '/project/' + self.project + '/static/' + file + '?token=' + $window.localStorage.getItem('jwtToken');
     };
 
+    self.loadTemplate = function(name){
+        return $http.post(self.URL + '/project/' + self.project + '/copy/template', {template: name});
+    };
+
     self.loadProject = function(project){
       if (self.project !== project) {
         self.project = project;

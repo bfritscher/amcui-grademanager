@@ -8,7 +8,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('EditCtrl', function ($scope, $http, $mdSidenav, $mdDialog, $location, $stateParams, $sce, $timeout, API, auth, exam) {
+  .controller('EditCtrl', function ($scope, $mdSidenav, $mdDialog, $location, $stateParams, $timeout, API, exam) {
 	var editor = this;
 	editor.examService = exam;
 
@@ -131,7 +131,9 @@ angular.module('grademanagerApp')
 		lineNumbers: true,
 		lineWrapping: true,
 		viewportMargin: Infinity,
-		readOnly: false
+		readOnly: false,
+		matchBrackets: true,
+		autoCloseBrackets: true
 	};
 
 	editor.latexPreviewOptions = {
@@ -139,7 +141,17 @@ angular.module('grademanagerApp')
 		lineNumbers: true,
 		lineWrapping: true,
 		viewportMargin: Infinity,
-		readOnly: true
+		readOnly: 'nocursor',
+		matchBrackets: true
+	};
+
+	editor.jsonPreviewOptions = {
+		mode: 'application/json',
+		lineNumbers: true,
+		lineWrapping: true,
+		viewportMargin: Infinity,
+		readOnly: 'nocursor',
+		matchBrackets: true
 	};
 
 	editor.questionIsNoneCorrect = function(question){

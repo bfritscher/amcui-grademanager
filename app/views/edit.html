@@ -38,6 +38,15 @@
       <md-button class="md-icon-button" ng-click="editor.hidePrintNotification=true" aria-label="close message"><md-icon class="mdi-close"></md-icon></md-button>
     </div>
 
+    <div ng-if="!editor.examService.exam.source" class="printed-bar" layout-padding layout="row" layout-align="center center">
+      This project's templace file is empty! Select a template:
+      <md-select  class="md-primary" placeholder="Template" ng-model="editor.chooseTemplate">
+        <md-option  ng-repeat="name in ['HEG-QCM', 'HEG-OPEN', 'HEC-QCM']" value="{{name}}">{{name}}</md-option>
+      </md-select>
+      <md-button class="md-raised md-primary"  ng-click="editor.examService.loadTemplate(editor.chooseTemplate)">Load</md-button>
+      <span flex></span>
+    </div>
+
     <div class="section-options main-toolbar md-whiteframe-z1">
       <div layout="row" layout-wrap layout-align="center start" layout-sm="column" layout-padding>
         <md-button aria-label="toggle menu" class="md-icon-button" ng-hide="editor.leftNav().isLockedOpen()" ng-click="editor.leftNav().open()">
@@ -70,16 +79,29 @@
       <md-tab label="source.tex">
         <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 0" ui-codemirror-opts="editor.latexSourceOptions" ng-model="editor.examService.exam.source"></ui-codemirror>
       </md-tab>
-      <md-tab label="questions_definition.tex">
-        <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 1" ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_definition"></ui-codemirror>
+      <md-tab>
+        <md-tab-label>
+           <md-icon class="mdi-lock"></md-icon> questions_definition.tex
+        </md-tab-label>
+        <md-tab-body>
+          <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 1" ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_definition"></ui-codemirror>
+        </md-tab-body>
       </md-tab>
-      <md-tab label="questions_layout.tex">
-        <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 2" ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_layout"></ui-codemirror>
+      <md-tab>
+        <md-tab-label>
+           <md-icon class="mdi-lock"></md-icon> questions_layout.tex
+        </md-tab-label>
+        <md-tab-body>
+          <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 2" ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_layout"></ui-codemirror>
+        </md-tab-body>
       </md-tab>
-      <md-tab label="data.json">
-        <pre ng-if="editor.selectedSourcePreview == 3">
-          {{::editor.examService.getJSON()}}
-        </pre>
+      <md-tab>
+        <md-tab-label>
+           <md-icon class="mdi-lock"></md-icon> data.json
+        </md-tab-label>
+        <md-tab-body>
+          <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 3" ui-codemirror-opts="editor.jsonPreviewOptions" ng-model="editor.examService.getJSON()"></ui-codemirror>
+        </md-tab-body>
       </md-tab>
     </md-tabs>
 

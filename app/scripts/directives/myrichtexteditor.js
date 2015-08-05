@@ -144,7 +144,7 @@ angular.module('grademanagerApp')
                         value: code.content || '\n',
   							        lineNumbers: code.numbers,
                         mode: code.mode,
-                        readOnly:'nocursor'
+                        readOnly: 'nocursor'
                     });
                     if (!watchers.hasOwnProperty(code.id)) {
                         watchCode(code);

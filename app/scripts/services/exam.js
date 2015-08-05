@@ -54,6 +54,15 @@ angular.module('grademanagerApp')
         client.initialize();
     };
 
+    editor.loadTemplate = function(name){
+        API.loadTemplate(name)
+        .success(function(source){
+            if(editor.exam){
+                editor.exam.source = source;
+            }
+        });
+    };
+
     editor.newSection = function newSection() {
         return {
             id: 's' + GUID(),
