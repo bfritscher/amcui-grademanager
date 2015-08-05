@@ -9,7 +9,7 @@
  */
 
 angular.module('grademanagerApp')
-  .controller('HomeCtrl', function ($scope, $state, auth, API) {
+  .controller('HomeCtrl', function ($scope, $state, $mdDialog, auth, exam, API) {
 
       var home = this;
 
@@ -64,6 +64,30 @@ angular.module('grademanagerApp')
         .error(function(data){
           home.error = {error: data};
         });
+      };
+
+      home.copyProject = function($event, item){
+          $mdDialog.show({
+              clickOutsideToClose: false,
+              targetEvent: $event,
+              templateUrl: 'views/promptdialog.html',
+              controller: 'PromptDialogCtrl',
+              controllerAs: 'ctrl',
+              locals: {
+                  options: {
+                      title: 'Copy project ' + item.project,
+                      content: 'Provide a name for the new copy:',
+                      label: 'new name',
+                      value: ''
+                  }
+              }
+          })
+          .then(function(name){
+              API.copyProject(item.project, name)
+              .success(function(){
+                  home.openProject(name);
+              });
+          });
       };
 
 

@@ -13,6 +13,10 @@ angular.module('grademanagerApp')
     ctrl.options = options;
 
     ctrl.closeDialog = function() {
-          $mdDialog.hide(ctrl.options.value);
-      };
+        $mdDialog.cancel();
+    };
+
+    ctrl.saveDialog = function() {
+        $mdDialog.hide(ctrl.options.value);
+    };
   });

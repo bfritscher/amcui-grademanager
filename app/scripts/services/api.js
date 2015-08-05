@@ -244,6 +244,14 @@ angular.module('grademanagerApp')
         });
     };
 
+    self.copyProject = function(src, dest){
+        return $http.post(self.URL + '/project/' + src + '/copy/project', {
+            project: dest
+        })
+        .error(function(msg){
+            $mdToast.show($mdToast.simple().content(msg).position('top right'));
+        });
+    };
 
     self.addUser = function(username, project){
       return $http.post(self.URL + '/project/' + project + '/add', {username: username});

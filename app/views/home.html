@@ -41,13 +41,15 @@
 				<md-list>
 					<md-list-item layout="row">
 						<b flex>Name</b>
-						<b>Status</b>
+						<b>Status&nbsp;</b>
+						<b>Action</b>
 					</md-list-item>
 				    <md-list-item ng-click="home.openProject(item)" ng-repeat="item in home.projects | filter: {'project': home.search}">
-						<md-checkbox></md-checkbox>
+						<md-checkbox aria-label="{{item.project}}"></md-checkbox>
 						<span flex>{{item.project}}</span>
 						<span ng-show="item.status.printed && !item.status.annotated">printed</span>
 						<span ng-show="item.status.annotated">annotated</span>
+						<md-button ng-click="home.copyProject($event, item);$event.stopPropagation();" title="copy" class="md-primary md-icon-button" aria-label="copy project"><md-icon class="mdi-content-copy"></md-icon></md-button>
 						<md-divider ng-if="!$last"></md-divider>
 					</md-list-item>
 					<md-list-item ng-hide="home.projects.length > 0">No projects found!</md-list-item>
