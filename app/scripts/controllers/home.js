@@ -17,6 +17,9 @@ angular.module('grademanagerApp')
 
       function getProjectList(){
         API.getProjectList().success(function(list){
+            list.sort(function(a, b){
+              return b.project < a.project;
+            });
             home.projects = list;
           });
       }
@@ -40,8 +43,9 @@ angular.module('grademanagerApp')
       };
 
       home.openProject = function(project){
-        //TODO: state based on project status? or last open?
-        if (project.status && project.status.printed){
+        if (project.status && project.status.annotated){
+          $state.go( 'grade', {project: project.project});
+        } else if (project.status && project.status.printed){
           $state.go( 'scan', {project: project.project});
         } else {
           $state.go( 'edit', {project: project.project});

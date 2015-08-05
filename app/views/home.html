@@ -1,40 +1,58 @@
-<md-content layout-padding class="no-background">
-	<form ng-submit="home.login()">
-	<md-card ng-hide="home.isAuthed()">
-		<md-card-content>
-			<md-input-container>
-				<label>Username</label>
-				<input ng-model="home.username" ng-required="true">
-			</md-input-container>
-			<md-input-container>
-				<label>Password</label>
-				<input ng-model="home.password" type="password" ng-required="true">
-			</md-input-container>
-			<ng-messages for="home.error" role="alert">
-			  <ng-message when="error">{{home.error.error}}</ng-message>
-			</ng-messages>
-		</md-card-content>
-		 <div class="md-actions" layout="row" layout-align="end center">
-	        <md-button class="md-primary" ng-click="home.login()">Login</md-button>
-			<md-button ng-click="home.login()">Create</md-button>
-	      </div>
-	</md-card>
+<md-content layout-padding class="no-background" layout-align="start center" layout="column" flex>
+	<form ng-hide="home.isAuthed()" ng-submit="home.login()">
+		<md-card>
+			<md-card-content>
+				<md-input-container>
+					<label>Username</label>
+					<input ng-model="home.username" ng-required="true">
+				</md-input-container>
+				<md-input-container>
+					<label>Password</label>
+					<input ng-model="home.password" type="password" ng-required="true">
+				</md-input-container>
+				<ng-messages for="home.error" role="alert">
+				  <ng-message when="error">{{home.error.error}}</ng-message>
+				</ng-messages>
+			</md-card-content>
+			 <div class="md-actions" layout="row" layout-align="end center">
+		        <md-button class="md-primary" ng-click="home.login()">Login</md-button>
+				<md-button ng-click="home.login()">Create</md-button>
+		      </div>
+		</md-card>
 	</form>
 	<div ng-show="home.isAuthed()">
-		<form ng-submit="home.createProject()" layout="row">
-			<md-input-container>
-				<label>Project name</label>
-				<input ng-model="home.newProjectName" ng-required="true">
-			</md-input-container>
-			<ng-messages for="home.error" role="alert">
-			  <ng-message when="error">{{home.error.error}}</ng-message>
-			</ng-messages>
-			<md-button class="md-primary md-raised">Create Project</md-button>
-		</form>
-		<md-list>
-			<md-subheader class="md-no-sticky">Projects</md-subheader>
-		    <md-list-item ng-click="home.openProject(item)" ng-repeat="item in home.projects">{{item.project}} <span ng-show="item.status.printed">[printed]</span></md-list-item>
-			<md-list-item ng-hide="home.projects.length > 0">No projects found!</md-list-item>
-		</md-list>
+		<md-card>
+			<md-card-content>
+				<form ng-submit="home.createProject()" layout="row" layout-align="center center">
+					<md-input-container>
+						<label>Project name</label>
+						<input ng-model="home.newProjectName" ng-required="true">
+					</md-input-container>
+					<ng-messages for="home.error" role="alert">
+					  <ng-message when="error">{{home.error.error}}</ng-message>
+					</ng-messages>
+					<md-button class="md-primary md-raised">Create Project</md-button>
+				</form>
+				<h2>Projects</h2>
+				<md-input-container>
+					<label>Search</label>
+					<input ng-model="home.search">
+				</md-input-container>
+				<md-list>
+					<md-list-item layout="row">
+						<b flex>Name</b>
+						<b>Status</b>
+					</md-list-item>
+				    <md-list-item ng-click="home.openProject(item)" ng-repeat="item in home.projects | filter: {'project': home.search}">
+						<md-checkbox></md-checkbox>
+						<span flex>{{item.project}}</span>
+						<span ng-show="item.status.printed && !item.status.annotated">printed</span>
+						<span ng-show="item.status.annotated">annotated</span>
+						<md-divider ng-if="!$last"></md-divider>
+					</md-list-item>
+					<md-list-item ng-hide="home.projects.length > 0">No projects found!</md-list-item>
+				</md-list>
+			</md-card-content>
+		</md-card>
 	</div>
 </md-content>
