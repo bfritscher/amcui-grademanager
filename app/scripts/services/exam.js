@@ -34,14 +34,6 @@ angular.module('grademanagerApp')
             editor.exam = client.getData();
             callback(client);
             $rootScope.$apply();
-            /*
-            $http.get('data/exam_test.json')
-            .success(function(data){
-                angular.extend(editor.exam, data);
-                $scope.$apply();
-                client.sync();
-            });
-            */
          });
 
          client.on('synced', function(){
@@ -271,6 +263,9 @@ TODO: \bareme{auto=0,v=-1,e=-2}
         if(img){
 
             var options = 'width=' + img.width + '\\textwidth';
+            if (img.options) {
+                options = img.options;
+            }
             var out = "\\includegraphics[" + options  + "]{src/graphics/" + img.id + "}";
             if(img.border){
                 out = "\\fbox{" + out + "}";

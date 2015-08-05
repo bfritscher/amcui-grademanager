@@ -10,6 +10,7 @@
   "strict": true,
   "undef": true,
   "unused": true,
+  "newcap": false,
   "globals": {
     "angular": false,
     "Papa": false,
@@ -19,6 +20,7 @@
     "wysihtml5": false,
     "wysihtml5ParserRules": false,
     "GUID": false,
-    "PDFJS": false
+    "PDFJS": false,
+    "CodeMirror": false
   }
 }

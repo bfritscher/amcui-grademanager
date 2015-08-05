@@ -388,6 +388,21 @@ tr.active td{
     border: 1px solid black;
 }
 
+.myrichtexteditor img:after{
+  content: 'custom options enabled';
+  display: block;
+  position: absolute;
+  color: red;
+  z-index: 8;
+  top: 50%;
+  left: 50%;
+}
+
+.myrichtexteditor img.options{
+  filter: blur(2px) grayscale(80%);
+  position: relative;
+}
+
 .myrichtexteditor textarea {
   width: 100%;
   min-height: 300px;
@@ -498,8 +513,15 @@ my-pdf-viewer{
   color: teal;
 }
 
+.main-toolbar{
+  margin-bottom: 1px;
+}
 .main-toolbar md-input-container, .section-options md-input-container{
   padding: 0 0 10px 0;
+}
+
+.main-toolbar > div{
+  height: 64px;
 }
 
 .CodeMirror {

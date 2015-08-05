@@ -14,10 +14,16 @@
     <textarea ng-model="content" ng-model-options="{ updateOn: 'blur'}" class="hide"></textarea>
 	<div class="preview"></div>
     <div class="graphics-toolbar hide" layout="row" ng-mousedown="$event.preventDefault()" layout-align="center center">
-        <md-checkbox ng-mousedown="$event.preventDefault();" ng-model="graphics.border">Border</md-checkbox>
-        <md-button  aria-label="narrower" class="md-icon-button" ng-mousedown="$event.preventDefault();graphics.width=graphics.width-0.1"><md-icon class="mdi-minus"></md-icon></md-button>
-        <p>{{graphics.width*100|number:0}}%</p>
-        <md-button aria-label="wider" class="md-icon-button" ng-mousedown="$event.preventDefault();graphics.width=graphics.width+0.1"><md-icon class="mdi-plus"></md-icon></md-button>
+        <md-checkbox class="md-primary" ng-mousedown="$event.preventDefault();" ng-model="graphics.border">Border</md-checkbox>
+        <div ng-show="!graphics.options" layout="row" layout-align="center center">
+            <md-button  aria-label="narrower" class="md-icon-button" ng-mousedown="$event.preventDefault();graphics.width=graphics.width-0.1"><md-icon class="mdi-minus"></md-icon></md-button>
+            <p>{{graphics.width*100|number:0}}%</p>
+            <md-button aria-label="wider" class="md-icon-button" ng-mousedown="$event.preventDefault();graphics.width=graphics.width+0.1"><md-icon class="mdi-plus"></md-icon></md-button>
+        </div>
+        <div ng-show="graphics.options" ng-mousedown="$event.preventDefault();showGraphicsSettings($event, graphics)">
+            {{graphics.options}}
+        </div>
+        <md-button aria-label="options" class="md-icon-button" ng-mousedown="$event.preventDefault();showGraphicsSettings($event, graphics)"><md-icon class="mdi-settings"></md-icon></md-button>
         <span flex></span>
         <md-button aria-label="close" class="md-icon-button" ng-mousedown="$event.preventDefault();closeGraphicsToolbar()"><md-icon class="mdi-close"></md-icon></md-button>
     </div>

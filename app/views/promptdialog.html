@@ -1,0 +1,24 @@
+<md-dialog aria-label="prompt" class="prompt-dialog">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2 ng-bind="ctrl.options.title"></h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="ctrl.closeDialog()">
+          <md-icon class="mdi-close" aria-label="Close dialog"></md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+  <md-dialog-content>
+	{{ctrl.options.content}}
+	<md-input-container>
+          <label>{{ctrl.options.label}}</label>
+          <input ng-model="ctrl.options.value">
+        </md-input-container>
+  	</md-dialog-content>
+  <div class="md-actions" layout="row">
+    <span flex></span>
+    <md-button ng-click="ctrl.closeDialog()" class="md-primary">
+     close
+    </md-button>
+  </div>
+</md-dialog>

@@ -189,5 +189,3 @@ angular.module('grademanagerApp')
       }
 	};
   });
-
-

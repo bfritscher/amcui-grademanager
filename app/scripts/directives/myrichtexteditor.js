@@ -38,7 +38,7 @@ function GUID(){
   };
 	wysihtml5.commands.insertCode = {
 	  exec: function(composer, command, html) {
-  		html = '<code id="code'+ GUID() +'".*?>code</code>';
+  		html = '<code id="code'+ GUID() +'"></code>';
   		command = 'insertHTML';
   		if (composer.commands.support(command)) {
   		  composer.doc.execCommand(command, false, html);
@@ -61,6 +61,7 @@ angular.module('grademanagerApp')
         elementOrHtml_current = elementOrHtml_current.replace(/<i><\/i>/, '');
         elementOrHtml_current = elementOrHtml_current.replace(/<pre><\/pre>/, '');
         elementOrHtml_current = elementOrHtml_current.replace(/<xmp><\/xmp>/, '');
+        elementOrHtml_current = elementOrHtml_current.replace(/(<code.*?>).*?(<\/code>)/g, '$1$2');
         return wysihtml5.dom.parse(elementOrHtml_current, config);
       };
 
@@ -81,6 +82,21 @@ angular.module('grademanagerApp')
         var graphicsToolbar = element.children()[3];
 
         var editor;
+        var currentImg;
+
+        var watchers = {};
+
+        function watchImg(img){
+          watchers[img.id] = scope.$watch("allGraphics['" + img.id + "']", function(){
+              console.log('watch img', img.id);
+              $timeout(function(){
+                  decorate();
+                  if(currentImg){
+                    graphicsToolbar.style.width = currentImg.offsetWidth + 'px';
+                  }
+              });
+          }, true);
+        }
 
         function decorate(){
             console.log('decorate');
@@ -93,11 +109,31 @@ angular.module('grademanagerApp')
                 var imgElement= imgs[i];
                 var img = exam.getGraphics(imgElement.getAttribute('id'));
                 if (img) {
+                    if (!watchers.hasOwnProperty(img.id)) {
+                        watchImg(img);
+                    }
                     imgElement.setAttribute('src', exam.graphicsPreviewURL(img.id));
                     imgElement.classList.toggle('border', img.border);
+                    imgElement.classList.toggle('options', img.options);
                     imgElement.style.width = img.width * 100 + '%';
                 } else {
                   imgElement.setAttribute('src', exam.graphicsPreviewURL(''));
+                }
+            }
+
+            var codes = element.getElementsByTagName('code');
+            for(var c=0; c < codes.length; c++){
+                var codeElement = codes[c];
+                codeElement.classList.add('wysihtml5-uneditable-container');
+                if(codeElement.children.length === 0){
+                  var cm = CodeMirror(codeElement, {
+                    viewportMargin:Infinity,
+                    value: 'test\ntest2\ntest3',
+      							lineNumbers: true, //
+      							//mode: code.mode,
+      							readOnly:'nocursor'
+                   });
+                   console.log('cm created', cm);
                 }
             }
         }
@@ -116,9 +152,6 @@ angular.module('grademanagerApp')
             });
         };
 
-
-        var currentImg;
-
         function initEditor(){
             editor = new wysihtml5.Editor(textarea, {
                 autoLink: false,
@@ -132,6 +165,27 @@ angular.module('grademanagerApp')
 
             scope.closeGraphicsToolbar = function(){
               graphicsToolbar.classList.add('hide');
+            };
+
+            scope.showGraphicsSettings = function($event, graphics){
+                $mdDialog.show({
+                    clickOutsideToClose: false,
+                    targetEvent: $event,
+                    templateUrl: 'views/promptdialog.html',
+                    controller: 'PromptDialogCtrl',
+                    controllerAs: 'ctrl',
+                    locals: {
+                        options: {
+                            title: 'Advanced options',
+                            content: 'Provide LaTeX \includegraphics options overrides:',
+                            label: 'options',
+                            value: graphics.options
+                        }
+                    }
+                })
+                .then(function(value){
+                    graphics.options = value;
+                });
             };
 
             $timeout(function(){
@@ -160,7 +214,7 @@ angular.module('grademanagerApp')
 
             // Sync view -> model
             editor.on('change', function(){
-              scope.$apply(function(){
+              $timeout(function(){
                   console.log('change');
                   ngModel.$setViewValue(editor.getValue(true));
               });
@@ -189,19 +243,6 @@ angular.module('grademanagerApp')
               editor.focus();
             });
         }
-
-        scope.$watch('allGraphics', function(oldValue, newValue){
-          console.log(oldValue, newValue, scope.allGraphics, scope.graphics);
-          //TODO only update if changed.
-          //TODO only watch graphics which we own.
-          $timeout(function(){
-            decorate();
-            if(currentImg){
-              graphicsToolbar.style.width = currentImg.offsetWidth + 'px';
-            }
-          });
-
-        }, true);
 
         // Sync model -> view
         ngModel.$render = function () {
