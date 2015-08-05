@@ -152,8 +152,10 @@ TODO: \bareme{auto=0,v=-1,e=-2}
     };
 
     editor.deleteGraphics = function(graphics){
-        delete editor.exam.graphics[graphics.id];
-        //TODO: delete on server
+        API.deleteGraphics(graphics)
+        .success(function(){
+            delete editor.exam.graphics[graphics.id];
+        });
     };
 
     editor.addCode = function(id){

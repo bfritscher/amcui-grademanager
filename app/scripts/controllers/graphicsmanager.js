@@ -8,10 +8,26 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('GraphicsManagerCtrl', function ($scope, $mdDialog, $stateParams, API, exam, Upload) {
+  .controller('GraphicsManagerCtrl', function ($scope, $mdDialog, $stateParams, $http, API, exam, Upload) {
     var ctrl = this;
     ctrl.examService = exam;
     ctrl.uploads = [];
+
+    //check for new graphics and create them
+    //TODO: move somewhere?
+    $http.get(API.URL + '/project/' + $stateParams.project + '/graphics/sync')
+    .success(function(filenames){
+        filenames.forEach(function(filename){
+            var id = filename.replace(/(.*)\..*?$/, '$1');
+            if(!exam.exam.graphics.hasOwnProperty(id)){
+                var graphics = exam.createGraphics();
+                graphics.name = filename;
+                graphics.id = id;
+                exam.addGraphics(graphics);
+            }
+        });
+    });
+
 
     $scope.$watch('ctrl.files', function () {
         function upload(file){

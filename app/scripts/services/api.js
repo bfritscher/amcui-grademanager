@@ -222,6 +222,13 @@ angular.module('grademanagerApp')
       });
     };
 
+    self.deleteGraphics = function(graphics){
+        return $http.post(self.URL + '/project/' + self.project + '/graphics/delete', {
+            id: graphics.id,
+            filename: graphics.name
+        });
+    };
+
     self.preview = function(data){
         return $http.post(self.URL + '/project/' + self.project + '/preview', data);
     };

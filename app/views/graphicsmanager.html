@@ -25,7 +25,7 @@
                 ng-repeat="item in ctrl.examService.exam.graphics | orderBy: item.name">
                 <div class="graphics-preview-header" layout="row" layout-align="center center">
                     <h3 flex>{{item.name}}</h3>
-                    <md-button class="md-icon-button md-warn" ng-click="ctrl.examService.deleteGraphics(item)">
+                    <md-button class="md-icon-button md-warn" ng-click="ctrl.examService.deleteGraphics(item); $event.stopPropagation();">
                         <md-icon class="mdi-delete" aria-label="delete graphics"></md-icon>
                     </md-button>
                 </div>
