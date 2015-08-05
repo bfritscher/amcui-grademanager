@@ -68,13 +68,13 @@
 
     <md-tabs flex id="latex-options" ng-if="editor.isLatexOptionVisible" md-selected="editor.selectedSourcePreview">
       <md-tab label="source.tex">
-        <ui-codemirror ng-if="editor.selectedSourcePreview == 0" ui-codemirror-opts="editor.latexSourceOptions" ng-model="editor.examService.exam.source"></ui-codemirror>
+        <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 0" ui-codemirror-opts="editor.latexSourceOptions" ng-model="editor.examService.exam.source"></ui-codemirror>
       </md-tab>
       <md-tab label="questions_definition.tex">
-        <ui-codemirror ng-if="editor.selectedSourcePreview == 1" ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_definition"></ui-codemirror>
+        <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 1" ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_definition"></ui-codemirror>
       </md-tab>
       <md-tab label="questions_layout.tex">
-        <ui-codemirror ng-if="editor.selectedSourcePreview == 2" ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_layout"></ui-codemirror>
+        <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 2" ui-codemirror-opts="editor.latexPreviewOptions" ng-model="editor.examService.toLatex().questions_layout"></ui-codemirror>
       </md-tab>
       <md-tab label="data.json">
         <pre ng-if="editor.selectedSourcePreview == 3">
@@ -113,7 +113,7 @@
           <md-button aria-label="delete section" class="md-warn" ng-click="editor.removeSection(editor.section)"><md-icon class="mdi-delete"></md-icon></md-button>
         </div>
       </div>
-      <my-rich-text-editor class="page-width-limit" ng-model="editor.section.content" graphics="editor.examService.exam.graphics"></my-rich-text-editor>
+      <my-rich-text-editor class="page-width-limit" ng-model="editor.section.content"></my-rich-text-editor>
   </div>
 
       <div ng-class="{'two-columns': editor.section.columns == 2}">
@@ -135,7 +135,7 @@
                     <label>scoring</label>
                     <input ng-model="question.scoring">
                   </md-input-container>
-                  <md-button  ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" class="md-primary md-icon-button" href="http://home.gna.org/auto-qcm/auto-multiple-choice.en/graphical-interface.shtml#bareme" target="_blank"><md-icon class="mdi-help-circle"></md-icon></md-button>
+                  <md-button  aria-label="scoring help" ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" class="md-primary md-icon-button" href="http://home.gna.org/auto-qcm/auto-multiple-choice.en/graphical-interface.shtml#bareme" target="_blank"><md-icon class="mdi-help-circle"></md-icon></md-button>
                   <md-checkbox ng-if="question.type == 'OPEN'" class="md-primary" ng-model="question.dots">Dots</md-checkbox>
                   <md-input-container  ng-if="question.type == 'OPEN'">
                     <label>lines</label>
@@ -151,12 +151,12 @@
                 </div>
               </div>
 
-              <my-rich-text-editor ng-model="question.content" graphics="editor.examService.exam.graphics"></my-rich-text-editor>
+              <my-rich-text-editor ng-model="question.content"></my-rich-text-editor>
 
               <div ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" layout="{{question.layout == 'HORIZONTAL' ? 'row' : 'column'}}"  layout-padding layout-wrap layout-align="{{question.layout == 'HORIZONTAL' ? 'center start' : ''}}">
                 <div ng-repeat="answer in question.answers track by answer.id" class="answer" layout="row">
                     <label layout-padding class="answer-toggle"><input type="checkbox" ng-model="answer.correct"><md-icon ng-class="{'mdi-close': !answer.correct, 'mdi-check': answer.correct}"></md-icon></label>
-                    <my-rich-text-editor ng-model="answer.content" graphics="editor.examService.exam.graphics" flex></my-rich-text-editor>
+                    <my-rich-text-editor ng-model="answer.content" flex></my-rich-text-editor>
                     <md-button aria-label="delete answer" class="md-warn" ng-click="editor.examService.removeAnswer(question, answer)"><md-icon class="mdi-delete"></md-icon></md-button>
                 </div>
                 <div class="answer" layout="row" ng-if="question.type == 'MULTIPLE'">

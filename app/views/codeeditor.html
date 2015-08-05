@@ -1,0 +1,29 @@
+<md-dialog aria-label="code editor" class="code-editor" flex="80">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>Code editing</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="ctrl.closeDialog()">
+          <md-icon class="mdi-close" aria-label="Close dialog"></md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+  <md-dialog-content layout="column">
+    <div layout="row">
+       <md-select placeholder="Mode" ng-model="ctrl.code.mode" class="md-primary">
+          <md-option ng-repeat="mode in ['text/html', 'text/css', 'text/javascript', 'text/x-sql']" value="{{mode}}">{{mode}}</md-option>
+       </md-select>
+	     <md-checkbox class="md-primary" ng-model="ctrl.code.numbers">Line numbers</md-checkbox>
+       <md-checkbox class="md-primary" ng-model="ctrl.code.border">Border</md-checkbox>
+    </div>
+    <md-content flex ng-class="{'border': ctrl.code.border}" layout="column">
+      <ui-codemirror flex ng-if="ctrl.load" ui-codemirror-opts="ctrl.options()" ng-model="ctrl.code.content"></ui-codemirror>
+    </md-content>
+  </md-dialog-content>
+  <div class="md-actions" layout="row">
+    <span flex></span>
+    <md-button ng-click="ctrl.closeDialog()" class="md-primary">
+     close
+    </md-button>
+  </div>
+</md-dialog>

@@ -20,7 +20,7 @@
             <p>{{graphics.width*100|number:0}}%</p>
             <md-button aria-label="wider" class="md-icon-button" ng-mousedown="$event.preventDefault();graphics.width=graphics.width+0.1"><md-icon class="mdi-plus"></md-icon></md-button>
         </div>
-        <div ng-show="graphics.options" ng-mousedown="$event.preventDefault();showGraphicsSettings($event, graphics)">
+        <div class="options" ng-show="graphics.options" ng-mousedown="$event.preventDefault();showGraphicsSettings($event, graphics)">
             {{graphics.options}}
         </div>
         <md-button aria-label="options" class="md-icon-button" ng-mousedown="$event.preventDefault();showGraphicsSettings($event, graphics)"><md-icon class="mdi-settings"></md-icon></md-button>

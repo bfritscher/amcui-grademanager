@@ -383,24 +383,16 @@ tr.active td{
     margin: 0;
     display: inline;
 }
-
-.myrichtexteditor .border{
-    border: 1px solid black;
+.myrichtexteditor .CodeMirror pre{
+  display: block;
 }
 
-.myrichtexteditor img:after{
-  content: 'custom options enabled';
-  display: block;
-  position: absolute;
-  color: red;
-  z-index: 8;
-  top: 50%;
-  left: 50%;
+.myrichtexteditor img.border{
+    border: 1px solid black;
 }
 
 .myrichtexteditor img.options{
   filter: blur(2px) grayscale(80%);
-  position: relative;
 }
 
 .myrichtexteditor textarea {
@@ -412,6 +404,10 @@ tr.active td{
   position: absolute;
   background-color: rgba(200, 200, 200, 0.8);
   min-width: 350px;
+}
+
+.myrichtexteditor .graphics-toolbar .options {
+  color: rgb(244,67,54);
 }
 
 .myrichtexteditor .toolbar a {
@@ -525,8 +521,15 @@ my-pdf-viewer{
 }
 
 .CodeMirror {
-  border: 1px solid #eee;
   height: auto;
+}
+
+ui-codemirror.border .CodeMirror{
+  border: 1px solid #eee;
+}
+
+code.border .CodeMirror, .code-editor .border{
+  border: 1px solid #000;
 }
 
 /* fix pdf.js viewer css */

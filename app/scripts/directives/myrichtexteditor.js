@@ -72,8 +72,7 @@ angular.module('grademanagerApp')
       transclude: true,
       templateUrl: 'views/myrichtexteditor.html',
       scope:{
-        'content': '=ngModel',
-        'allGraphics': '=graphics'
+        'content': '=ngModel'
       },
       link: function (scope, element, attrs, ngModel) {
         var toolbar = element.children()[0];
@@ -86,14 +85,25 @@ angular.module('grademanagerApp')
 
         var watchers = {};
 
+        scope.examService = exam;
+
         function watchImg(img){
-          watchers[img.id] = scope.$watch("allGraphics['" + img.id + "']", function(){
+          watchers[img.id] = scope.$watch("examService.exam.graphics['" + img.id + "']", function(){
               console.log('watch img', img.id);
               $timeout(function(){
                   decorate();
                   if(currentImg){
                     graphicsToolbar.style.width = currentImg.offsetWidth + 'px';
                   }
+              });
+          }, true);
+        }
+
+        function watchCode(code){
+          watchers[code.id] = scope.$watch("examService.exam.codes['" + code.id + "']", function(){
+              console.log('watch code', code.id);
+              $timeout(function(){
+                  decorate();
               });
           }, true);
         }
@@ -125,15 +135,26 @@ angular.module('grademanagerApp')
             for(var c=0; c < codes.length; c++){
                 var codeElement = codes[c];
                 codeElement.classList.add('wysihtml5-uneditable-container');
+                var code = exam.getCode(codeElement.getAttribute('id'), true);
+                codeElement.classList.toggle('border', code.border);
+                var cm;
                 if(codeElement.children.length === 0){
-                  var cm = CodeMirror(codeElement, {
-                    viewportMargin:Infinity,
-                    value: 'test\ntest2\ntest3',
-      							lineNumbers: true, //
-      							//mode: code.mode,
-      							readOnly:'nocursor'
-                   });
-                   console.log('cm created', cm);
+                    cm = CodeMirror(codeElement, {
+                        viewportMargin:Infinity,
+                        value: code.content || '\n',
+  							        lineNumbers: code.numbers,
+                        mode: code.mode,
+                        readOnly:'nocursor'
+                    });
+                    if (!watchers.hasOwnProperty(code.id)) {
+                        watchCode(code);
+                    }
+                    console.log('cm created', cm);
+                } else {
+                    cm = codeElement.children[0].CodeMirror;
+                    cm.setOption('lineNumbers', code.numbers);
+                    cm.setOption('mode', code.mode);
+                    cm.setValue(code.content);
                 }
             }
         }
@@ -151,6 +172,15 @@ angular.module('grademanagerApp')
                 $timeout(decorate);
             });
         };
+
+        function findParentCode(element){
+            if(element.tagName === 'CODE') {
+                return element;
+            }
+            if (element.parentElement) {
+                return findParentCode(element.parentElement);
+            }
+        }
 
         function initEditor(){
             editor = new wysihtml5.Editor(textarea, {
@@ -188,6 +218,7 @@ angular.module('grademanagerApp')
                 });
             };
 
+
             $timeout(function(){
                 editor.composer.editableArea.addEventListener('click', function(event){
                     if (event.target.tagName === 'IMG'){
@@ -199,6 +230,22 @@ angular.module('grademanagerApp')
                         scope.graphics = exam.getGraphics(imgElement.getAttribute('id'));
                         currentImg = imgElement;
                         scope.$apply();
+                    }
+
+                    var codeElement = findParentCode(event.target);
+                    if (codeElement){
+
+                        var code = exam.getCode(codeElement.getAttribute('id'));
+                        $mdDialog.show({
+                            clickOutsideToClose: false,
+                            targetEvent: event,
+                            templateUrl: 'views/codeeditor.html',
+                            controller: 'CodeEditorCtrl',
+                            controllerAs: 'ctrl',
+                            locals: {
+                                code: code
+                            }
+                        });
                     }
                 });
             });

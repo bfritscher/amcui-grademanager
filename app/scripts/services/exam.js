@@ -15,6 +15,7 @@ angular.module('grademanagerApp')
     editor.preview = function(){
         var data = editor.toLatex();
 		data.source = editor.exam.source;
+        data.codes = editor.exam.codes;
         API.preview(data);
     };
 
@@ -22,6 +23,7 @@ angular.module('grademanagerApp')
         //TODO: ask for speparate answer sheet??
         var data = editor.toLatex();
 		data.source = editor.exam.source;
+        data.codes = editor.exam.codes;
         API.print(data);
 	};
 
@@ -154,6 +156,31 @@ TODO: \bareme{auto=0,v=-1,e=-2}
         //TODO: delete on server
     };
 
+    editor.addCode = function(id){
+        var code = {
+            id: id,
+            border: true,
+            mode: '',
+            numbers: false,
+            content: ''
+        };
+        if(!editor.exam.codes){
+            editor.exam.codes = {};
+        }
+        editor.exam.codes[code.id] = code;
+        return code;
+    };
+
+    editor.getCode = function (id, create) {
+        if(editor.exam && editor.exam.codes && editor.exam.codes.hasOwnProperty(id)){
+            return editor.exam.codes[id];
+        } else {
+            if (create) {
+                return editor.addCode(id);
+            }
+        }
+    };
+
     editor.computeHierarchyNumbers= function computeHierarchyNumbers(){
         var questionCount = 1;
         var sections = [0, 0, 0];
@@ -244,18 +271,32 @@ TODO: \bareme{auto=0,v=-1,e=-2}
         return text;
     }
 
+    var modeToLanguage = {
+        'text/html': 'html',
+        'text/css': 'html',
+        'text/javascript': 'JavaScript',
+        'text/x-sql': 'SQL'
+    };
+
     /* TODO handle code and img and their options */
     function codeNode2Latex(node){
-        console.log(node);
-        return 'CODE\\_NOT\\_FOUND';
-        /*
-        var mode = app.Code.prototype.modeToLanguage[this.mode];
-            var out = "\\lstinputlisting[";
-            if(this.border) out+="frame=single,";
-            if(!this.numbers) out+="numbers=none,";
-            out += "language=" + mode + "]{src/" + this.id + "}";
+        var code = editor.getCode(node.getAttribute('id'));
+        if (code){
+            var out = '\\lstinputlisting[';
+            var options = [];
+            if (code.border) {
+                options.push('frame=single');
+            }
+            if (!code.numbers) {
+                options.push('numbers=none');
+            }
+            if(code.mode && modeToLanguage.hasOwnProperty(code.mode)){
+                options.push('language=' + modeToLanguage[code.mode]);
+            }
+            out += options.join(',') + ']{src/codes/' + code.id + '}';
             return out;
-        */
+        }
+        return 'CODE\\_NOT\\_FOUND';
     }
 
     function imgNode2Latex(node){
@@ -444,7 +485,7 @@ TODO: \bareme{auto=0,v=-1,e=-2}
                 wrap = function(callback){
                     body.push('\\begin{multicols}{' + section.columns + '}');
                     callback();
-                    body.push('\\end{multicols})');
+                    body.push('\\end{multicols}');
                 };
             }
             wrap(function(){
