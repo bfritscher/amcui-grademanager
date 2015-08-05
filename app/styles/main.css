@@ -423,6 +423,10 @@ tr.active td{
 
 }
 
+.wysiwyg-text-align-center {
+  text-align: center;
+}
+
 .wysihtml5-editor{
   padding: 8px;
 }

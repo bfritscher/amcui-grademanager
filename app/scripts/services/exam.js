@@ -356,7 +356,14 @@ TODO: \bareme{auto=0,v=-1,e=-2}
                             break;
 
                         case 'P':
-                            out += handleNode(child) + '\n\n';
+                            if (child.classList.contains('wysiwyg-text-align-center')) {
+                                out += '\\begin{center}\n';
+                                out += handleNode(child) + '\n';
+                                out += '\\end{center}\n\n\n';
+                            } else {
+                                out += handleNode(child) + '\n\n';
+                            }
+
                             break;
 
                         case 'UL':

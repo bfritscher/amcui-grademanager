@@ -1,11 +1,15 @@
+/*
 var wysihtml5ParserRules = {
+*/
     /**
      * CSS Class white-list
      * Following css classes won't be removed when parsed by the wysihtml5 html parser
      */
+     /*
     "classes": {
 
     },
+    */
     /**
      * Tag list
      *
@@ -32,12 +36,17 @@ var wysihtml5ParserRules = {
      *                            - alt:      strips unwanted characters. if the attribute is not set, then it gets set (to ensure valid and compatible HTML)
      *                            - numbers:  ensures that the attribute only contains numeric characters
      */
+     /*
     "tags": {
 
     }
 };
+*/
 
 var wysihtml5ParserRules = {
+  classes:{
+    "wysiwyg-text-align-center": 1
+  },
   tags: {
     b:      {},
     i:      {},
