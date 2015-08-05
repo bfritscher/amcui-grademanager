@@ -32,7 +32,6 @@ angular.module('grademanagerApp')
         client.on('connected', function(){
             // the initial data has been loaded,
             // you can initialize your application
-            console.log('Socket connected');
             editor.exam = client.getData();
             callback(client);
             $rootScope.$apply();
@@ -41,7 +40,6 @@ angular.module('grademanagerApp')
          client.on('synced', function(){
              // an update from the server has been applied
              // you can perform the updates in your application now
-            console.log('synced');
             $rootScope.$apply();
          });
 

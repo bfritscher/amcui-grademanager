@@ -47,12 +47,10 @@ angular.module('grademanagerApp')
 			$timeout.cancel(debounceTimer);
 		}
 		if(new Date().getTime() - editor.lastPreview > editor.waitTime){
-			console.log('start preview');
 			editor.previewWait = false;
 			exam.preview();
 			editor.lastPreview = new Date().getTime();
 		} else {
-			console.log('wait preview');
 			editor.previewWait = true;
 			debounceTimer = $timeout(throttleDebouncePreview, editor.waitTime);
 		}
@@ -62,7 +60,6 @@ angular.module('grademanagerApp')
 	exam.load(function(client){
 	    $scope.$watch('editor.examService.exam', function(){
 	        editor.examService.computeHierarchyNumbers();
-	        console.log('sync');
 	        client.sync();
 			//request preview throttle
 			throttleDebouncePreview();
@@ -184,7 +181,6 @@ angular.module('grademanagerApp')
         return (srcType === destType);
       },
 	  dropped: function(event) {
-        console.log(event);
         /*
         var sourceNode = event.source.nodeScope;
         var destNodes = event.dest.nodesScope;

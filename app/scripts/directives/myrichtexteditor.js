@@ -89,7 +89,6 @@ angular.module('grademanagerApp')
 
         function watchImg(img){
           watchers[img.id] = scope.$watch("examService.exam.graphics['" + img.id + "']", function(){
-              console.log('watch img', img.id);
               $timeout(function(){
                   decorate();
                   if(currentImg){
@@ -101,7 +100,6 @@ angular.module('grademanagerApp')
 
         function watchCode(code){
           watchers[code.id] = scope.$watch("examService.exam.codes['" + code.id + "']", function(){
-              console.log('watch code', code.id);
               $timeout(function(){
                   decorate();
               });
@@ -109,7 +107,6 @@ angular.module('grademanagerApp')
         }
 
         function decorate(){
-            console.log('decorate');
             var element = preview;
             if(editor){
               element= editor.composer.editableArea;
@@ -149,7 +146,6 @@ angular.module('grademanagerApp')
                     if (!watchers.hasOwnProperty(code.id)) {
                         watchCode(code);
                     }
-                    console.log('cm created', cm);
                 } else {
                     cm = codeElement.children[0].CodeMirror;
                     cm.setOption('lineNumbers', code.numbers);
@@ -294,9 +290,7 @@ angular.module('grademanagerApp')
         // Sync model -> view
         ngModel.$render = function () {
             var newValue = ngModel.$viewValue || '';
-            console.log('content change');
              if (preview) {
-               console.log('preview');
                preview.innerHTML = newValue;
              }
              if (editor) {
