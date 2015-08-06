@@ -143,6 +143,9 @@ tr.active td{
 .question-menu em{
   display: block;
   font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .no-background{

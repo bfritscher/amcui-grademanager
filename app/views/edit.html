@@ -17,9 +17,14 @@
             </div>
             <ol ui-tree-nodes="" ng-model="section.questions" data-type="question">
               <li class="question-menu" ng-repeat="question in section.questions track by question.id" ui-tree-node>
-                <div ui-tree-handle>
-                  <strong><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span></strong>
-                  <em>{{question.content | htmlToPlaintext | limitTo: 30}}...</em>
+                <div ui-tree-handle layout="row">
+                  <div flex>
+                    <strong layout-align="start center">
+                      <md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span>
+                    </strong>
+                    <em>{{question.content | htmlToPlaintext | limitTo: 50}}</em>
+                  </div>
+                  <md-button aria-label="select section" data-nodrag ng-href="{{editor.linkToQuestion(section, question)}}" class="md-icon-button"><md-icon class="mdi-eye"></md-icon></md-button>
                 </div>
               </li>
             </ol>
@@ -144,7 +149,7 @@
           <div class="question md-whiteframe-z1 {{question.type}}" ng-repeat="question in editor.section.questions track by question.id">
               <div>
                 <div class="question-header" layout="row" layout-padding>
-                  <h3><md-icon class="mdi-alert invalid" ng-hide="question.isValid" title="Need answers"></md-icon>
+                  <h3 id="q{{question.number}}"><md-icon class="mdi-alert invalid" ng-hide="question.isValid" title="Need answers"></md-icon>
                    Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span></h3>
                 </div>
                 <div layout="row"  class="section-options md-whiteframe-z1" layout-align="center center">

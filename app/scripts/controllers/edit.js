@@ -40,6 +40,11 @@ angular.module('grademanagerApp')
 	editor.lastPreview = 0;
 	editor.waitTime = 5 * 1000;
 	editor.previewWait = false;
+
+	editor.linkToQuestion = function(section, question){
+		return '#/' + $stateParams.project + '/edit?section=' + exam.exam.sections.indexOf(section) + '#q' + question.number;
+	};
+
 	var debounceTimer;
 
 	function throttleDebouncePreview(){
