@@ -124,6 +124,7 @@ TODO: \bareme{auto=0,v=-1,e=-2}
         copy.points = question.points;
         copy.dots = question.dots;
         copy.lines = question.lines;
+        copy.answers = [];
 
         question.answers.forEach(function(answer){
             editor.copyAnswer(copy, answer);
@@ -326,7 +327,7 @@ TODO: \bareme{auto=0,v=-1,e=-2}
         var img = editor.getGraphics(node.getAttribute('id'));
         if(img){
 
-            var options = 'width=' + img.width + '\\textwidth';
+            var options = 'width=' + img.width.toFixed(2) + '\\textwidth';
             if (img.options) {
                 options = img.options;
             }
@@ -343,7 +344,7 @@ TODO: \bareme{auto=0,v=-1,e=-2}
     function html2Latex(content){
         var div = document.createElement('div');
         div.innerHTML = content;
-        function handleNode(node){
+        function handleNode(node, level){
             if (node.hasChildNodes()) {
                 var childs = node.childNodes;
                 var out = '';
@@ -359,15 +360,15 @@ TODO: \bareme{auto=0,v=-1,e=-2}
                             break;
 
                         case 'B':
-                            out += '\\textbf{' + handleNode(child) + '}';
+                            out += '\\textbf{' + handleNode(child, level + 1) + '}';
                             break;
 
                         case 'I':
-                            out += '\\emph{' + handleNode(child) + '}';
+                            out += '\\emph{' + handleNode(child, level + 1) + '}';
                             break;
 
                         case 'TT':
-                            out += '\\texttt{' + handleNode(child) + '}';
+                            out += '\\texttt{' + handleNode(child, level + 1) + '}';
                             break;
 
                         case 'IMG':
@@ -381,24 +382,27 @@ TODO: \bareme{auto=0,v=-1,e=-2}
                         case 'P':
                             if (child.classList.contains('wysiwyg-text-align-center')) {
                                 out += '\\begin{center}\n';
-                                out += handleNode(child) + '\n';
-                                out += '\\end{center}\n\n\n';
+                                out += handleNode(child, level + 1) + '\n';
+                                out += '\\end{center}\n';
                             } else {
-                                out += handleNode(child) + '\n\n';
+                                out += handleNode(child, level + 1);
+                            }
+                            if(node.childNodes.length > 1){
+                                 out += '\n\n';
                             }
 
                             break;
 
                         case 'UL':
-                            out += '\\begin{itemize}\n' + handleNode(child) + '\\end{itemize}\n';
+                            out += '\\begin{itemize}\n' + handleNode(child, level + 1) + '\\end{itemize}\n';
                             break;
 
                         case 'LI':
-                            out += '\\item ' + handleNode(child) + '\n';
+                            out += '\\item ' + handleNode(child, level + 1) + '\n';
                             break;
 
                         case 'BOX':
-                            out += '\\fbox{\\parbox{\\textwidth}{\n' + handleNode(child) + '}}\\newline\n';
+                            out += '\\fbox{\\parbox{\\textwidth}{\n' + handleNode(child, level + 1) + '}}\\newline\n';
                             break;
 
                         case 'HR':
@@ -414,11 +418,11 @@ TODO: \bareme{auto=0,v=-1,e=-2}
                 return node.textContent;
             }
         }
-        return handleNode(div);
+        return handleNode(div, 0);
     }
 
     function answerToLatex(answer, head){
-        head.push('      \\' + (answer.correct ? 'bonne' : 'mauvaise') + '{' + html2Latex(answer.content) + '}');
+        head.push('      \\' + (answer.correct ? 'bonne' : 'mauvaise') + '{' + html2Latex(answer.content) + '      }');
     }
 
     function choiceQuestionToLatex(question, type, head){

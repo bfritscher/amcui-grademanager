@@ -41,8 +41,8 @@ angular.module('grademanagerApp')
         // replace empty tags
         elementOrHtml_current = elementOrHtml_current.replace(/<b><\/b>/, '');
         elementOrHtml_current = elementOrHtml_current.replace(/<i><\/i>/, '');
-        elementOrHtml_current = elementOrHtml_current.replace(/<pre><\/pre>/, '');
-        elementOrHtml_current = elementOrHtml_current.replace(/<xmp><\/xmp>/, '');
+        elementOrHtml_current = elementOrHtml_current.replace(/<tt><\/tt>/, '');
+        elementOrHtml_current = elementOrHtml_current.replace(/<var><\/var>/, '');
         elementOrHtml_current = elementOrHtml_current.replace(/(<code.*?>).*?(<\/code>)/g, '$1$2');
         return wysihtml5.dom.parse(elementOrHtml_current, config);
       };
