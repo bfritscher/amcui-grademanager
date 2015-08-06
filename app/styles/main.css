@@ -136,6 +136,10 @@ tr.active td{
 
 }
 
+.question-menu strong{
+  font-weight: bold;
+}
+
 .question-menu em{
   display: block;
   font-weight: normal;
@@ -492,6 +496,16 @@ my-pdf-viewer{
   border-bottom: 1px solid #eee;
 }
 
+.scroll-frame{
+  position: relative;
+}
+.scroll-section{
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
 .page-width-limit{
   max-width: 1000px;
   margin: 0 auto;
@@ -527,12 +541,17 @@ my-pdf-viewer{
 .main-toolbar{
   margin-bottom: 1px;
 }
-.main-toolbar md-input-container, .section-options md-input-container{
+
+.section-options md-input-container{
   padding: 0 0 10px 0;
 }
 
+.main-toolbar md-input-container{
+  padding: 0 0 0 0;
+}
+
 .main-toolbar > div{
-  height: 64px;
+  min-height: 64px;
 }
 
 .CodeMirror {

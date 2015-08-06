@@ -35,7 +35,7 @@ angular.module('grademanagerApp')
       home.login = function(){
         home.error = '';
         auth.login(home.username, home.password)
-        .error(function(data, status){
+        .error(function(data){
           home.error = {error: data};
         })
         .success(getProjectList);

@@ -1,4 +1,5 @@
-<md-content flex layout="column" class="no-background" layout-padding>
+<div flex class="scroll-frame">
+<md-content layout="column" class="no-background scroll-section" layout-padding>
 	<h2>Collaborators</h2>
 	<md-chips ng-model="ctrl.options.users" placeholder="add another username" secondary-placeholder="+username"></md-chips>
 
@@ -39,3 +40,4 @@
 		<md-button class="md-warn md-raised" ng-click="ctrl.saveOptions()">Save Options</md-button>
 	</p>
 </md-content>
+</div>

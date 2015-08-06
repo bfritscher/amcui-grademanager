@@ -179,9 +179,10 @@ angular.module('grademanagerApp')
 		}
         var destType = destNodes.$element.attr('data-type');
         return (srcType === destType);
-      },
+      }
+	  /*,
 	  dropped: function(event) {
-        /*
+
         var sourceNode = event.source.nodeScope;
         var destNodes = event.dest.nodesScope;
         // update changes to server
@@ -193,7 +194,7 @@ angular.module('grademanagerApp')
         } else { // save all
           $scope.saveGroups();
         }
-		*/
-      }
+
+      }*/
 	};
   });

@@ -208,6 +208,7 @@ module.exports = function (grunt) {
       dist: {
         src: [
           '<%= yeoman.dist %>/scripts/{,*/}*.js',
+          '!<%= yeoman.dist %>/scripts/pdf.worker.js',
           '<%= yeoman.dist %>/styles/{,*/}*.css',
           '<%= yeoman.dist %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}',
           '<%= yeoman.dist %>/styles/fonts/*'
@@ -361,7 +362,6 @@ module.exports = function (grunt) {
             '*.{ico,png,txt}',
             '.htaccess',
             '*.html',
-            'fonts/*',
             'images/{,*/}*.{webp}',
             'styles/fonts/{,*/}*.*'
           ]
@@ -370,6 +370,21 @@ module.exports = function (grunt) {
           cwd: '.tmp/images',
           dest: '<%= yeoman.dist %>/images',
           src: ['generated/*']
+        }, {
+          expand: true,
+          cwd: 'bower_components/pdfjs-dist/build',
+          dest: '<%= yeoman.dist %>/scripts',
+          src: [
+            'pdf.worker.js'
+          ]
+        },{
+          expand: true,
+          dot: true,
+          cwd: 'bower_components/mdi',
+          dest: '<%= yeoman.dist %>',
+          src: [
+            'fonts/*'
+          ]
         }]
       },
       styles: {

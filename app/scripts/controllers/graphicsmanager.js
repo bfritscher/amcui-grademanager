@@ -19,6 +19,9 @@ angular.module('grademanagerApp')
     .success(function(filenames){
         filenames.forEach(function(filename){
             var id = filename.replace(/(.*)\..*?$/, '$1');
+            if(!exam.exam.hasOwnProperty('graphics')){
+                exam.exam.graphics = {};
+            }
             if(!exam.exam.graphics.hasOwnProperty(id)){
                 var graphics = exam.createGraphics();
                 graphics.name = filename;
