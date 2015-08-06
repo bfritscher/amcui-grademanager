@@ -54,7 +54,7 @@ var wysihtml5ParserRules = {
     ul:     {},
     li:     {},
     p:      {},
-    pre:    {},
+    tt:     {},
     box:    {},
     code:   {
        "check_attributes": {
@@ -62,7 +62,7 @@ var wysihtml5ParserRules = {
        }
     },
     span:   {},
-    xmp:    {},
+    "var":    {},
     img:    {
       "check_attributes": {
           "id": "any"

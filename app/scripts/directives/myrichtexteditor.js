@@ -18,24 +18,6 @@ function GUID(){
 
  //patch wysihtml5 with additional commands
 (function(wysihtml5) {
-  wysihtml5.commands.latex = {
-    exec: function(composer, command) {
-      return wysihtml5.commands.formatInline.exec(composer, command, "xmp");
-    },
-
-    state: function(composer, command) {
-      return wysihtml5.commands.formatInline.state(composer, command, "xmp");
-    }
-  };
-  wysihtml5.commands.ttfont = {
-    exec: function(composer, command) {
-      return wysihtml5.commands.formatInline.exec(composer, command, "pre");
-    },
-
-    state: function(composer, command) {
-      return wysihtml5.commands.formatInline.state(composer, command, "pre");
-    }
-  };
 	wysihtml5.commands.insertCode = {
 	  exec: function(composer, command, html) {
   		html = '<code id="code'+ GUID() +'"></code>';

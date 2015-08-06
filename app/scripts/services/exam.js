@@ -340,7 +340,7 @@ TODO: \bareme{auto=0,v=-1,e=-2}
                             out += escapeLatex(child.textContent);
                             break;
 
-                        case 'XMP':
+                        case 'VAR':
                             out += ' ' + child.textContent + ' '; //check if too much is left out of textContent
                             break;
 
@@ -352,7 +352,7 @@ TODO: \bareme{auto=0,v=-1,e=-2}
                             out += '\\emph{' + handleNode(child) + '}';
                             break;
 
-                        case 'PRE':
+                        case 'TT':
                             out += '\\texttt{' + handleNode(child) + '}';
                             break;
 

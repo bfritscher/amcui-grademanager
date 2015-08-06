@@ -365,7 +365,7 @@ tr.active td{
   display: none;
 }
 
-.myrichtexteditor xmp{
+.myrichtexteditor var{
     font-family: monospace;
     white-space: pre;
     color: red;
@@ -383,12 +383,9 @@ tr.active td{
   display: block;
 }
 
-.myrichtexteditor pre{
+.myrichtexteditor tt{
     margin: 0;
     display: inline;
-}
-.myrichtexteditor .CodeMirror pre{
-  display: block;
 }
 
 .myrichtexteditor img.border{
