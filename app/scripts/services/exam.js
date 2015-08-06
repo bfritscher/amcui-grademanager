@@ -71,6 +71,7 @@ angular.module('grademanagerApp')
             isSectionTitleVisibleOnAMC: true,
             shuffle: false,
             columns: 1,
+            pageBreakBefore: false,
             questions: []
         };
     };
@@ -493,6 +494,9 @@ TODO: \bareme{auto=0,v=-1,e=-2}
         });
 
         //body  build title
+        if (section.pageBreakBefore) {
+            body.push('\\newpage');
+        }
         if(section.title !== ''){
             var title = '\n\\';
             if (section.isSectionTitleVisibleOnAMC) {

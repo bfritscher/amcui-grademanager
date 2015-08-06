@@ -139,6 +139,7 @@
           <md-select  class="md-primary" placeholder="Columns" ng-model="editor.section.columns">
             <md-option ng-repeat="(key, value) in {'One column': 1, 'Two columns': 2}" value="{{value}}">{{key}}</md-option>
           </md-select>
+          <md-checkbox class="md-primary" ng-model="editor.section.pageBreakBefore">Page break before</md-checkbox>
           <span flex></span>
           <md-button aria-label="delete section" class="md-warn" ng-click="editor.removeSection(editor.section)"><md-icon class="mdi-delete"></md-icon></md-button>
         </div>
