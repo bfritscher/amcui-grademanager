@@ -10,7 +10,7 @@
 angular.module('grademanagerApp')
   .service('API', function ($http, $timeout, $window, $rootScope, $mdDialog, $mdToast) {
     var self = this;
-    self.URL = 'http://192.168.56.101:9001';
+    self.URL = 'https://j42.org/amcui';
     self.project = false;
     self.options = {
       users: [],
@@ -68,7 +68,7 @@ angular.module('grademanagerApp')
       if (self.project !== project) {
         self.project = project;
         self.PROJECT_URL = self.URL + '/project/' + self.project;
-        self.socket = io.connect(self.URL + '?token='+ $window.localStorage.getItem('jwtToken'));
+        self.socket = io.connect('https://j42.org/' + '?token='+ $window.localStorage.getItem('jwtToken'), {path:'/amcui/socket.io'});
 
         self.loadOptions();
 
