@@ -438,10 +438,10 @@ TODO: \bareme{auto=0,v=-1,e=-2}
         head.push(amcOpen);
         head.push('      \\wrongchoice[W]{0pt}\\scoring{0}');
 
-        for(var i=1; i < question.points; i++){
+        for(var i=1; i <= question.points; i++){
             var answerType = 'wrongchoice';
             var label = 'P' + i;
-            if(i === question.points-1) {
+            if(i === question.points) {
                 answerType = 'correctchoice';
                 label = 'C';
             }

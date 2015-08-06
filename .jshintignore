@@ -1,2 +1,2 @@
 app/scripts/lib/diffsync.js
-app/scripts/lib/pdf.worker.js
+app/scripts/pdf.worker.js
