@@ -433,6 +433,12 @@ tr.active td{
   line-height: 22px;
 }
 
+.tab-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
 .wysiwyg-text-align-center {
   text-align: center;
 }

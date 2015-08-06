@@ -84,6 +84,12 @@ TODO: \bareme{auto=0,v=-1,e=-2}
 
 */
     editor.addQuestion = function(section){
+        //copy type from previous question
+        var previous;
+        if(section.questions && section.questions.length > 0){
+            previous = section.questions[section.questions.length - 1];
+        }
+
         var question = {
             id: 'q' + GUID(),
             content: '<p></p>',
@@ -93,9 +99,17 @@ TODO: \bareme{auto=0,v=-1,e=-2}
             scoring: '',
             points: 1,
             dots: false,
-            lines: 1,
+            lines: 3,
             answers: []
         };
+        if(previous){
+            question.type = previous.type;
+        }
+        if(question.type !== 'OPEN'){
+            editor.addAnswer(question);
+            editor.addAnswer(question);
+        }
+
         section.questions.push(question);
         return question;
     };

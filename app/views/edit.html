@@ -13,7 +13,7 @@
             <div ui-tree-handle layout="row" ng-class="{'active': section == editor.section}">
               <p>{{section.number}} {{section.title}}</p>
               <span flex></span>
-              <md-button aria-label="select section" data-nodrag ng-click="editor.section = section" class="md-icon-button"><md-icon class="mdi-eye"></md-icon></md-button>
+              <md-button aria-label="select section" data-nodrag ng-href="{{editor.linkToQuestion(section)}}" class="md-icon-button"><md-icon class="mdi-eye"></md-icon></md-button>
             </div>
             <ol ui-tree-nodes="" ng-model="section.questions" data-type="question">
               <li class="question-menu" ng-repeat="question in section.questions track by question.id" ui-tree-node>
@@ -81,8 +81,8 @@
       </div>
     </div>
 
-
-    <md-tabs flex id="latex-options" ng-if="editor.isLatexOptionVisible" md-selected="editor.selectedSourcePreview">
+  <div flex ng-if="editor.isLatexOptionVisible" layout="column" class="scroll-frame">
+    <md-tabs flex id="latex-options" md-selected="editor.selectedSourcePreview">
       <md-tab label="source.tex">
         <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 0" ui-codemirror-opts="editor.latexSourceOptions" ng-model="editor.examService.exam.source"></ui-codemirror>
       </md-tab>
@@ -111,18 +111,19 @@
         </md-tab-body>
       </md-tab>
     </md-tabs>
+    <md-button class="tab-close md-icon-button" ng-click="editor.isLatexOptionVisible = false"><md-icon class="mdi-close"></md-icon></md-button>
+  </div>
 <div flex class="scroll-frame" ng-hide="editor.isLatexOptionVisible">
 <md-content class="section scroll-section" layout-padding>
 <div class="page-width-limit">
   <div class="md-whiteframe-z1">
-      <div class="md-whiteframe-z1">
-    		<div layout="row" class="section-header" layout-align="space-around end">
+      <div class="md-whiteframe-z1" id="q0">
+    		<div layout="row" class="section-header" layout-align="space-around center">
           <md-button aria-label="previous" class="md-primary" ng-show="editor.previousSection()" ng-click="editor.section = editor.previousSection()" ng-bind="editor.previousSection().title"></md-button>
           <span flex></span>
           <h3>{{editor.section.number}}</h3>
-          <md-input-container>
-            <label>Section title</label>
-              <input type="text" ng-model="editor.section.title"/>
+          <md-input-container md-no-float>
+              <input type="text" ng-model="editor.section.title" placeholder="Section title"/>
             </md-input-container>
           <span flex></span>
           <md-button aria-label="next or new" class="md-primary" ng-click="editor.section = editor.nextSection(true)" ng-bind="editor.nextSection().title"></md-button>
