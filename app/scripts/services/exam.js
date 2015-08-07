@@ -269,7 +269,103 @@ TODO: \bareme{auto=0,v=-1,e=-2}
         }
     };
 
-    // Latex convert code
+    // latex import
+
+    function forEachMatch(re, str, callback){
+      var m;
+      while ((m = re.exec(str)) !== null) {
+        if (m.index === re.lastIndex) {
+          re.lastIndex++;
+        }
+        callback(m);
+      }
+    }
+
+    function latex2html(html){
+      html = html.replace(/\\(?:textbf|bf){([\s\S]*?)}/g, '<b>$1</b>');
+      html = html.replace(/\\(?:textit|emph){([\s\S]*?)}/g, '<i>$1</i>');
+      html = html.replace(/\\newline/g, '<p>&nbsp;</p>');
+      return html;
+    }
+
+    var sections = {};
+    function parseLayout(latex){
+        //TODO support other section types
+      forEachMatch(/AMCsection{(.*?)}([\s\S]*?)\\restituegroupe{(.*?)}/g, latex, function(m){
+        var section = editor.newSection();
+        section.title = m[1];
+        section.level =  0;
+        section.isNumbered = true;
+        section.isSectionTitleVisibleOnAMC = true;
+        section.content = latex2html(m[2]);
+        section.questions = sections[m[3]] || [];
+        editor.exam.sections.push(section);
+      });
+    }
+
+     function parseDefinition(latex){
+        sections = {};
+        editor.exam.course = latex.match(/\\newcommand{\\ACMUImatiere}{(.*?)}/)[1];
+        editor.exam.session = latex.match(/\\newcommand{\\ACMUIsession}{(.*?)}/)[1];
+        editor.exam.teacher = latex.match(/\\newcommand{\\ACMUIteacher}{(.*?)}/)[1];
+        forEachMatch(/\\element{(.*?)}[\s\S]*?\\begin{(question|questionmult)}{(.*?)}([\s\S]*?)\\end{\2}/g, latex, function(m){
+          if(!sections.hasOwnProperty(m[1])){
+            sections[m[1]] = [];
+          }
+          var question = {
+            id: m[3],
+            scoring: '',
+            points: 1,
+            answers: []
+          };
+          var rawContent = m[4];
+          var match = rawContent.match(/([\s\S]*?)\\begin{(reponses|reponseshoriz)}/);
+          if (match) {
+            //MultipleChoice
+            question.type = m[2] === 'question' ? 'SINGLE' : 'MULTIPLE';
+            question.content = latex2html(match[1]);
+            var answers = rawContent.match(/\\begin{(reponses|reponseshoriz)}\[?(o?)\]?([\s\S]*)\\end{\1}/);
+            question.layout = answers[1] === 'reponses' ? 'VERTICAL' : 'HORIZONTAL';
+            question.ordered = answers[2] === 'o';
+            forEachMatch(/\\(bonne|mauvaise){([\s\S]*?)}/g, answers[3], function(a){
+              question.answers.push(
+                {
+                    id: 'a' + GUID(),
+                    content: a[2],
+                    correct: a[1] === 'bonne'
+                }
+              );
+            });
+
+          } else {
+            match = rawContent.match(/([\s\S]*?)\\AMCOpen/);
+            if (match) {
+              //OPEN
+              question.type = 'OPEN';
+              question.content = latex2html(match[1]);
+              var open = rawContent.match(/\\AMCOpen{(.*?)}{[\s\S]*\\bonne.*\\bareme{(\d)}/);
+              var options = open[1].match(/lines=(\d+)/);
+              if(options){
+                question.lines = options[1];
+              }
+              options = open[1].match(/dots=(\d+)/);
+              if(options){
+                question.dots = options[1] === 'true';
+              }
+              question.points = open[2];
+            }
+          }
+
+          sections[m[1]].push(question);
+        });
+        parseLayout(latex);
+    }
+
+    editor.importLatex = function(latex){
+        parseDefinition(latex);
+    };
+
+    // Latex export code
 
     function escapeLatex(text){
         text = text.replace(/&nbsp;/g, ' ');

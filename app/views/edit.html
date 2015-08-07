@@ -110,6 +110,18 @@
           <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 3" ui-codemirror-opts="editor.jsonPreviewOptions" ng-model="editor.examService.getJSON()"></ui-codemirror>
         </md-tab-body>
       </md-tab>
+      <md-tab>
+        <md-tab-label>
+           import
+        </md-tab-label>
+        <md-tab-body>
+          <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 4" ui-codemirror-opts="editor.latexSourceOptions" ng-model="editor.importSource"></ui-codemirror>
+          <div layout-padding>
+            Past AMC Latex code here (amcui layout and question definition), then
+            <md-button ng-click="editor.examService.importLatex(editor.importSource)" class="md-raised md-primary">Import</md-button>
+          </div>
+        </md-tab-body>
+      </md-tab>
     </md-tabs>
     <md-button class="tab-close md-icon-button" ng-click="editor.isLatexOptionVisible = false"><md-icon class="mdi-close"></md-icon></md-button>
   </div>
