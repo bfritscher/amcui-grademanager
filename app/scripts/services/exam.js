@@ -373,7 +373,7 @@ TODO: \bareme{auto=0,v=-1,e=-2}
         var escapeChars = {
             "&lt;":"<",
             "&gt;":">",
-            "\\\\": "\\textbackslash",
+            "\\\\": "\\textbackslash ",
             "&": "\\&",
             "%": "\\%",
             "\\$": "\\$",
@@ -381,8 +381,8 @@ TODO: \bareme{auto=0,v=-1,e=-2}
             "_": "\\_",
             "\\{": "\\{",
             "\\}": "\\}",
-            "~": "\\textasciitilde",
-            "\\^": "\\textasciicircum"
+            "~": "\\textasciitilde ",
+            "\\^": "\\textasciicircum "
         };
         for(var char in escapeChars){
             var regex = new RegExp(char,"g");
