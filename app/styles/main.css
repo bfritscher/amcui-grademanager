@@ -270,8 +270,18 @@ tr.active td{
   margin: 0 8px;
 }
 
+md-input-container.question-scoring{
+  min-width: 100px;
+}
+
 .answer{
   margin-bottom: 1em;
+}
+
+.answer-horizontal {
+    -webkit-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
 }
 
 .answer-none{

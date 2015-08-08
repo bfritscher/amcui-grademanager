@@ -146,7 +146,7 @@
           <md-button aria-label="next or new" class="md-primary" ng-click="editor.section = editor.nextSection(true)" ng-bind="editor.nextSection().title"></md-button>
     		</div>
 
-        <div layout="row" class="section-options" layout-align="center center">
+        <div layout="row" class="section-options"  layout-wrap  layout-align="start center">
           <md-select  class="md-primary" placeholder="Level" ng-model="editor.section.level">
             <md-option ng-repeat="(key, value) in {'Level 1': 0, 'Level 2': 1, 'Level 3': 2}" value="{{value}}">{{key}}</md-option>
           </md-select>
@@ -171,7 +171,7 @@
                   <h3 id="q{{question.number}}"><md-icon class="mdi-alert invalid" ng-hide="question.isValid" title="Need answers"></md-icon>
                    Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span></h3>
                 </div>
-                <div layout="row"  class="section-options md-whiteframe-z1" layout-align="center center">
+                <div layout="row" layout-wrap class="section-options md-whiteframe-z1" layout-align="start center">
                   <md-select placeholder="Type" ng-model="question.type">
                     <md-option ng-repeat="value in ['SINGLE', 'MULTIPLE', 'OPEN']" value="{{value}}">{{value}}</md-option>
                   </md-select>
@@ -179,7 +179,7 @@
                     <md-option ng-repeat="(key, value) in {'VERTICAL': 'VERTICAL', 'HORIZONTAL': 'HORIZONTAL'}" value="{{value}}">{{key}}</md-option>
                   </md-select>
                   <md-checkbox  ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" class="md-primary" ng-model="question.ordered">Ordered</md-checkbox>
-                  <md-input-container  ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'">
+                  <md-input-container  class="question-scoring" ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'">
                     <label>scoring</label>
                     <input ng-model="question.scoring">
                   </md-input-container>
@@ -201,7 +201,8 @@
 
               <my-rich-text-editor ng-model="question.content"></my-rich-text-editor>
 
-              <div ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" layout="{{question.layout == 'HORIZONTAL' ? 'row' : 'column'}}"  layout-padding layout-wrap layout-align="{{question.layout == 'HORIZONTAL' ? 'center start' : ''}}">
+              <div ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" layout="{{question.layout == 'HORIZONTAL' ? 'row' : 'column'}}"  layout-padding
+                  layout-align="{{question.layout == 'HORIZONTAL' ? 'center start' : ''}}" ng-class="{'answer-horizontal': question.layout == 'HORIZONTAL'}">
                 <div ng-repeat="answer in question.answers track by answer.id" class="answer" layout="row">
                     <label layout-padding class="answer-toggle"><input type="checkbox" ng-model="answer.correct"><md-icon ng-class="{'mdi-close': !answer.correct, 'mdi-check': answer.correct}"></md-icon></label>
                     <my-rich-text-editor ng-model="answer.content" flex></my-rich-text-editor>
