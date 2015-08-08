@@ -2,14 +2,14 @@
     <div class="toolbar md-whiteframe-z1 hide" layout="row" layout-align="start center">
         <a data-wysihtml5-command="bold" title="CTRL+B"><md-icon class="mdi-format-bold"></md-icon></a>
         <a data-wysihtml5-command="italic" title="CTRL+I"><md-icon class="mdi-format-italic"></md-icon></a>
-        <a data-wysihtml5-command="formatInline" data-wysihtml5-command-value="tt"><md-icon class="mdi-format-text"></md-icon></a>
-        <a data-wysihtml5-command="formatInline"" data-wysihtml5-command-value="var">LaTeX</a>
+        <a data-wysihtml5-command="formatInline" title="Monospace CTRL+M" data-wysihtml5-command-value="tt"><md-icon class="mdi-format-text"></md-icon></a>
+        <a data-wysihtml5-command="formatInline" title="Latex Source not escaped CTRL+L" data-wysihtml5-command-value="var">LaTeX</a>
         <a data-wysihtml5-command="insertUnorderedList"><md-icon class="mdi-format-list-bulleted"></md-icon></a>
         <a data-wysihtml5-command="justifyCenter"><md-icon class="mdi-format-align-center"></md-icon></a>
         <a ng-mousedown="$event.preventDefault();showGraphicsManager($event)" href="javascript:;"><md-icon class="mdi-file-image-box"></md-icon></a>
         <a data-wysihtml5-command="insertCode" data-wysihtml5-command-value='<div class="code"></div>'><md-icon class="mdi-file-xml"></a>
         <a data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="box" title="frame box"><md-icon class="mdi-checkbox-blank-outline"></md-icon></a>
-        <a data-wysihtml5-action="change_view">switch view</md-icon></a>
+        <a data-wysihtml5-action="change_view" title="toggle html source">switch view</md-icon></a>
     </div>
     <textarea ng-model="content" ng-model-options="{ updateOn: 'blur'}" class="hide"></textarea>
 	<div class="preview"></div>

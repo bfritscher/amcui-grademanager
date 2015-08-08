@@ -37,6 +37,11 @@ function GUID(){
 angular.module('grademanagerApp')
   .directive('myRichTextEditor', function ($timeout, $mdDialog, exam) {
 
+      var shortcuts = {
+          77: ['formatInline', 'tt'],//m
+          76: ['formatInline', 'var']//l
+      };
+
       var myParse = function(elementOrHtml_current, config){
         // replace empty tags
         elementOrHtml_current = elementOrHtml_current.replace(/<b>\s*<\/b>/g, '');
@@ -184,6 +189,13 @@ angular.module('grademanagerApp')
                 contentEditableMode: true,
                 useLineBreaks: false,
                 stylesheets: ['styles/wysihtml5_custom.css']
+            });
+             wysihtml5.dom.observe(editor.composer.editableArea, 'keydown', function(event){
+                var command = shortcuts[event.keyCode];
+                if ((event.ctrlKey || event.metaKey) && !event.altKey && command) {
+                      editor.composer.commands.exec.apply(editor.composer.commands, command);
+                      event.preventDefault();
+                }
             });
 
             scope.closeGraphicsToolbar = function(){
