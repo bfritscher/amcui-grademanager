@@ -21,6 +21,7 @@
     "wysihtml5ParserRules": false,
     "GUID": false,
     "PDFJS": false,
-    "CodeMirror": false
+    "CodeMirror": false,
+    "Raven": false
   }
 }

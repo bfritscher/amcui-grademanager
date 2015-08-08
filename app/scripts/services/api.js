@@ -8,7 +8,12 @@
  * Service in the grademanagerApp.
  */
 angular.module('grademanagerApp')
-  .service('API', function ($http, $timeout, $window, $rootScope, $mdDialog, $mdToast) {
+  .service('API', function ($injector, $http, $timeout, $rootScope, $mdDialog, $mdToast) {
+
+    function getAuth(){
+        return $injector.get('auth');
+    }
+
     var self = this;
     self.URL = 'https://j42.org/amcui';
     self.SOCKET_URL = 'https://j42.org/';
@@ -50,15 +55,15 @@ angular.module('grademanagerApp')
     };
 
     self.getDownloadZipURL = function(){
-        return self.URL + '/project/' + self.project + '/zip/pdf?token=' + $window.localStorage.getItem('jwtToken');
+        return self.URL + '/project/' + self.project + '/zip/pdf?token=' + getAuth().getToken();
     };
 
     self.getAnnotateZipURL = function(){
-        return self.URL + '/project/' + self.project + '/zip/annotate?token=' + $window.localStorage.getItem('jwtToken');
+        return self.URL + '/project/' + self.project + '/zip/annotate?token=' + getAuth().getToken();
     };
 
     self.getStaticFileURL = function(file){
-        return self.URL + '/project/' + self.project + '/static/' + file + '?token=' + $window.localStorage.getItem('jwtToken');
+        return self.URL + '/project/' + self.project + '/static/' + file + '?token=' + getAuth().getToken();
     };
 
     self.loadTemplate = function(name){
@@ -67,10 +72,20 @@ angular.module('grademanagerApp')
 
     self.loadProject = function(project){
       if (self.project !== project) {
+          if (Raven){
+              Raven.setUserContext({
+                id: getAuth().getUsername()
+              });
+
+              Raven.setExtraContext({
+                  project: project
+              });
+          }
+
         self.project = project;
         self.PROJECT_URL = self.URL + '/project/' + self.project;
         self.newLog('connecting');
-        self.socket = io.connect(self.SOCKET_URL + '?token='+ $window.localStorage.getItem('jwtToken'), {path:'/amcui/socket.io'});
+        self.socket = io.connect(self.SOCKET_URL + '?token='+ getAuth().getToken(), {path:'/amcui/socket.io'});
 
         self.loadOptions();
 

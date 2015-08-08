@@ -37,6 +37,7 @@
     <!-- build:css(.tmp) styles/main.css -->
     <link rel="stylesheet" href="styles/main.css">
     <!-- endbuild -->
+
   </head>
   <body ng-app="grademanagerApp" ng-controller="AppCtrl as app" layout="column">
     <!--[if lte IE 8]>
@@ -137,6 +138,14 @@
     <script src="bower_components/codemirror/addon/edit/closetag.js"></script>
     <script src="bower_components/socket.io-client/socket.io.js"></script>
     <!-- endbuild -->
+
+<script src="//cdn.ravenjs.com/1.1.19/raven.min.js"></script>
+<script>
+Raven.config('https://1e8632b672284ea09d094bcf0670addf@j42.org/sentry/6', {
+    // we highly recommend restricting exceptions to a domain in order to filter out clutter
+    whitelistUrls: ['j42.org', 'localhost']
+}).install();
+</script>
 
       <!-- build:js({.tmp,app}) scripts/scripts.js -->
       <script src="scripts/app.js"></script>
