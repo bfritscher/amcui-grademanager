@@ -11,6 +11,7 @@ angular.module('grademanagerApp')
   .service('API', function ($http, $timeout, $window, $rootScope, $mdDialog, $mdToast) {
     var self = this;
     self.URL = 'https://j42.org/amcui';
+    self.SOCKET_URL = 'https://j42.org/';
     self.project = false;
     self.options = {
       users: [],
@@ -29,7 +30,7 @@ angular.module('grademanagerApp')
       return $http.post(self.URL + '/project/create', {project: project});
     };
 
-    function newLog(name){
+    self.newLog = function(name){
         self.logs[name] = {
             msg: name,
             log: '',
@@ -39,11 +40,11 @@ angular.module('grademanagerApp')
         };
         self.sortedLogs.unshift(self.logs[name]);
         return self.logs[name];
-    }
+    };
 
     self.getLog = function(name) {
         if(!self.logs.hasOwnProperty(name)){
-            newLog(name);
+            self.newLog(name);
         }
         return self.logs[name];
     };
@@ -68,11 +69,28 @@ angular.module('grademanagerApp')
       if (self.project !== project) {
         self.project = project;
         self.PROJECT_URL = self.URL + '/project/' + self.project;
-        self.socket = io.connect('https://j42.org/' + '?token='+ $window.localStorage.getItem('jwtToken'), {path:'/amcui/socket.io'});
+        self.newLog('connecting');
+        self.socket = io.connect(self.SOCKET_URL + '?token='+ $window.localStorage.getItem('jwtToken'), {path:'/amcui/socket.io'});
 
         self.loadOptions();
 
-        self.socket.on('error', function(error) {
+        self.socket.on('connect', function() {
+            var log = self.getLog('connecting');
+            log.end = new Date();
+            log.progress = 1;
+        });
+
+        self.socket.on('connect_error', function() {
+            var log = self.getLog('connecting');
+            log.end = new Date();
+            log.progress = 1;
+            log.code = 1;
+            log.err = 'Socket connection error, retrying, check firewall.';
+            self.showProgressDialog();
+        });
+
+        self.socket.on('reconnect_failed', function(error) {
+            $mdToast.show($mdToast.simple().content('Error reconnecting socket!').position('top right'));
             console.log('socket error:', error);
         });
 
@@ -96,7 +114,7 @@ angular.module('grademanagerApp')
 
         self.socket.on('log', function(log){
             if (log.action === 'start') {
-                logLocal = newLog(log.msg);
+                logLocal = self.newLog(log.msg);
                 logLocal.command = log.command;
                 logLocal.params = log.params;
 
@@ -162,7 +180,7 @@ angular.module('grademanagerApp')
                     log: event.pdfs.join('\n'),
                     progress: 1
                 };
-                self.sortedLogs.unshift();
+                self.sortedLogs.unshift(log);
                 self.logs['printing done'] = log;
                 self.options.status.locked = 0;
                 self.options.status.printed = new Date().getTime();

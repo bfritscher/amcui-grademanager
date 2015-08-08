@@ -13,11 +13,12 @@
         <md-button class="md-raised md-primary" ng-if="ctrl.api.options.status.annotated && ctrl.api.logs['annotating done'] && ctrl.api.logs['annotating done'].type=='single'"
           ng-href="{{ctrl.api.getStaticFileURL(ctrl.api.logs['annotating done'].file)}}">Download {{ctrl.api.logs['annotating done'].file}}</md-button>
       </div>
-      <div ng-repeat="log in ctrl.api.sortedLogs" class="log">
+      <div ng-repeat="log in ctrl.api.sortedLogs" class="log" ng-class="{'error': log.code > 0}">
           <h4>{{log.msg}}</h4>
-          <md-progress-linear md-mode="determinate" value="{{log.progress * 100}}"></md-progress-linear>
+          <md-progress-linear ng-class="{'md-warn': log.code > 0}" md-mode="determinate" value="{{log.progress * 100}}"></md-progress-linear>
           <p>{{log.start| date: 'HH:mm:ss'}} <span ng-if="log.end">: {{(log.end.getTime() - log.start.getTime())/1000 | number: 0}}s</span></p>
           <pre ng-if="log.command != 'prepare'">{{log.log}}</pre>
+          <pre ng-if="log.command != 'prepare' && log.code > 0">{{log.err}}</pre>
       </div>
   </md-dialog-content>
   <div class="md-actions" layout="row">

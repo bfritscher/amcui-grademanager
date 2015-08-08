@@ -28,12 +28,15 @@ angular.module('grademanagerApp')
 	};
 
     editor.load = function(callback) {
+        var log = API.newLog('loading exam');
         var client = new DiffSyncClient(API.socket, API.project);
         client.on('connected', function(){
             // the initial data has been loaded,
             // you can initialize your application
             editor.exam = client.getData();
             callback(client);
+            log.end = new Date();
+            log.progress = 1;
             $rootScope.$apply();
          });
 

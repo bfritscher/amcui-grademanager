@@ -1,4 +1,9 @@
-<div layout="row" flex class="no-background">
+<div ng-if="!editor.section" flex  layout-align="start center" layout="column">
+  <h1>Loading...</h1>
+  <md-progress-linear md-mode="indeterminate"></md-progress-linear>
+</div>
+
+<div layout="row" flex class="no-background" ng-if="editor.section">
   <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left"  md-is-locked-open="$mdMedia('gt-lg')">
     <md-toolbar class="md-accent md-whiteframe-z1" layout="row">
       <div class="md-toolbar-tools">
@@ -37,7 +42,7 @@
 
 
 
-  <div flex class="no-background" layout="column">
+  <div flex class="no-background" layout="column" ng-if="editor.section">
     <div ng-if="app.api.options.status.printed && !editor.hidePrintNotification" class="printed-bar" layout-padding layout="row" layout-align="center center">
       This project has been printed on {{app.api.options.status.printed | date: 'yyyy-MM-dd HH:mm'}}.
       <md-button class="md-raised md-primary"  ng-href="{{app.api.getDownloadZipURL()}}">Download Zip with all PDFs</md-button>
