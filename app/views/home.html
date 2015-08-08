@@ -44,7 +44,8 @@
 						<b>Status&nbsp;</b>
 						<b>Action</b>
 					</md-list-item>
-				    <md-list-item ng-click="home.openProject(item)" ng-repeat="item in home.projects | filter: {'project': home.search}">
+					<md-subheader class="md-no-sticky" ng-show="item.short != (home.projects | filter: {'project': home.search})[$index-1].short" ng-repeat-start="item in home.projects | filter: {'project': home.search}">{{item.short}}</md-subheader>
+				    <md-list-item ng-repeat-end ng-click="home.openProject(item)">
 						<md-checkbox aria-label="{{item.project}}"></md-checkbox>
 						<span flex>{{item.project}}</span>
 						<span ng-show="item.status.printed && !item.status.annotated">printed</span>

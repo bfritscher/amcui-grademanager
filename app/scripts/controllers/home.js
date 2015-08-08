@@ -20,7 +20,10 @@ angular.module('grademanagerApp')
             list.sort(function(a, b){
               return b.project < a.project;
             });
-            home.projects = list;
+            home.projects = list.map(function(item){
+                item.short = item.project.split('-')[0];
+                return item;
+            });
           });
       }
 
