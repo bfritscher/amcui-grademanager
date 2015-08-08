@@ -20,7 +20,7 @@
 		      </div>
 		</md-card>
 	</form>
-	<div ng-show="home.isAuthed()">
+	<div ng-show="home.isAuthed()" class="projects">
 		<md-card>
 			<md-card-content>
 				<form ng-submit="home.createProject()" layout="row" layout-align="center center">
@@ -38,22 +38,39 @@
 					<label>Search</label>
 					<input ng-model="home.search">
 				</md-input-container>
-				<md-list>
-					<md-list-item layout="row">
-						<b flex>Name</b>
-						<b>Status&nbsp;</b>
-						<b>Action</b>
-					</md-list-item>
-					<md-subheader class="md-no-sticky" ng-show="item.short != (home.projects | filter: {'project': home.search})[$index-1].short" ng-repeat-start="item in home.projects | filter: {'project': home.search}">{{item.short}}</md-subheader>
-				    <md-list-item ng-repeat-end ng-click="home.openProject(item)">
-						<md-checkbox aria-label="{{item.project}}"></md-checkbox>
-						<span flex>{{item.project}}</span>
-						<span ng-show="item.status.printed && !item.status.annotated">printed</span>
-						<span ng-show="item.status.annotated">annotated</span>
-						<md-button ng-click="home.copyProject($event, item);$event.stopPropagation();" title="copy" class="md-primary md-icon-button" aria-label="copy project"><md-icon class="mdi-content-copy"></md-icon></md-button>
-						<md-divider ng-if="!$last"></md-divider>
-					</md-list-item>
-					<md-list-item ng-hide="home.projects.length > 0">No projects found!</md-list-item>
+				<table ng-show="home.projects.length > 0">
+					<thead>
+						<tr>
+							<th colspan="2">Name</th>
+							<th>Status</th>
+							<th>Collaborators</th>
+							<th class="text-right">Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="subheader" ng-show="item.short != (home.projects | filter: {'project': home.search})[$index-1].short" ng-repeat-start="item in home.projects | filter: {'project': home.search}">
+							<td colspan="5">
+
+								{{item.short}}</td>
+						</tr>
+						<tr class="project" ng-repeat-end ng-click="home.openProject(item)">
+							<td><md-checkbox aria-label="{{item.project}}"></md-checkbox></td>
+							<td><b>{{item.project}}</b></td>
+							<td>
+								<span ng-show="item.status.printed && !item.status.annotated">printed</span>
+								<span ng-show="item.status.annotated">annotated</span>
+							</td>
+							<td>{{item.users | join: ', '}}</td>
+							<td class="text-right">
+								<md-button ng-click="home.openProject(item);$event.stopPropagation();" title="open" class="md-primary md-icon-button" aria-label="copy project"><md-icon class="mdi-eye"></md-icon></md-button>
+								<md-button ng-click="home.copyProject($event, item);$event.stopPropagation();" title="copy" class="md-primary md-icon-button" aria-label="copy project"><md-icon class="mdi-content-copy"></md-icon></md-button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<md-list ng-hide="home.projects.length > 0">
+					<md-list-item >No projects found!</md-list-item>
 				</md-list>
 			</md-card-content>
 		</md-card>

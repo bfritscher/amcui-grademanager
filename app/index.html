@@ -148,6 +148,8 @@ Raven.config('https://1e8632b672284ea09d094bcf0670addf@j42.org/sentry/6', {
 </script>
 
       <!-- build:js({.tmp,app}) scripts/scripts.js -->
+      <script src="scripts/lib/diffsync.js"></script>
+      <script src="scripts/lib/wysihtml5/parser_rules_advanced.js"></script>
       <script src="scripts/app.js"></script>
       <script src="scripts/controllers/app.js"></script>
       <script src="scripts/controllers/association.js"></script>
@@ -157,23 +159,23 @@ Raven.config('https://1e8632b672284ea09d094bcf0670addf@j42.org/sentry/6', {
       <script src="scripts/controllers/scanpreview.js"></script>
       <script src="scripts/controllers/grade.js"></script>
       <script src="scripts/controllers/options.js"></script>
-      <script src="scripts/directives/panzoom.js"></script>
-      <script src="scripts/services/api.js"></script>
-      <script src="scripts/services/authinterceptor.js"></script>
-      <script src="scripts/services/auth.js"></script>
-      <script src="scripts/lib/diffsync.js"></script>
-      <script src="scripts/lib/wysihtml5/parser_rules_advanced.js"></script>
-      <script src="scripts/directives/myrichtexteditor.js"></script>
-      <script src="scripts/filters/htmltoplaintext.js"></script>
-      <script src="scripts/services/exam.js"></script>
-      <script src="scripts/directives/mypdfviewer.js"></script>
-      <script src="scripts/controllers/editpreview.js"></script>
-      <script src="scripts/directives/stringtonumber.js"></script>
-      <script src="scripts/controllers/graphicsmanager.js"></script>
-      <script src="scripts/filters/unique.js"></script>
       <script src="scripts/controllers/progressdialog.js"></script>
       <script src="scripts/controllers/promptdialog.js"></script>
       <script src="scripts/controllers/codeeditor.js"></script>
+      <script src="scripts/controllers/editpreview.js"></script>
+      <script src="scripts/controllers/graphicsmanager.js"></script>
+      <script src="scripts/directives/panzoom.js"></script>
+      <script src="scripts/directives/myrichtexteditor.js"></script>
+      <script src="scripts/directives/mypdfviewer.js"></script>
+      <script src="scripts/directives/stringtonumber.js"></script>
+      <script src="scripts/services/api.js"></script>
+      <script src="scripts/services/authinterceptor.js"></script>
+      <script src="scripts/services/auth.js"></script>
+      <script src="scripts/services/exam.js"></script>
+      <script src="scripts/filters/htmltoplaintext.js"></script>
+      <script src="scripts/filters/join.js"></script>
+      <script src="scripts/filters/unique.js"></script>
+
       <!-- endbuild -->
       <script>
         PDFJS.workerSrc = 'scripts/pdf.worker.js';
