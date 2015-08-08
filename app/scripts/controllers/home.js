@@ -45,12 +45,13 @@ angular.module('grademanagerApp')
       };
 
       home.openProject = function(project){
+
         if (project.status && project.status.annotated){
           $state.go( 'grade', {project: project.project});
         } else if (project.status && project.status.printed){
           $state.go( 'scan', {project: project.project});
         } else {
-          $state.go( 'edit', {project: project.project});
+          $state.go( 'edit', {project: project.project}, {reload: true});
         }
 
 
