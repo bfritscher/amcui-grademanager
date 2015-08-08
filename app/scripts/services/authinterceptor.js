@@ -8,7 +8,7 @@
  * Factory in the grademanagerApp.
  */
 angular.module('grademanagerApp')
-  .factory('authInterceptor', function ($injector) {
+  .factory('authInterceptor', function ($injector, $q) {
     return {
       request: function(config) {
         var auth = $injector.get('auth');
@@ -28,6 +28,14 @@ angular.module('grademanagerApp')
           auth.saveToken(res.data.token);
         }
         return res;
+      },
+      'responseError': function(response) {
+          if (response && response.status === 401) {
+              var auth = $injector.get('auth');
+              auth.logout();
+          }
+
+        return $q.reject(response);
       }
     };
   });
