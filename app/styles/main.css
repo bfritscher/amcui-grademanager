@@ -270,6 +270,10 @@ tr.active td{
   margin: 0 8px;
 }
 
+.code-editor md-dialog-content {
+  padding: 0 1px;
+}
+
 md-input-container.question-scoring{
   min-width: 100px;
 }

@@ -9,7 +9,7 @@
     </div>
   </md-toolbar>
   <md-dialog-content layout="column">
-    <div layout="row">
+    <div layout="row" layout-align="start center" class="section-options" layout-wrap>
        <md-select placeholder="Mode" ng-model="ctrl.code.mode" class="md-primary">
           <md-option ng-repeat="mode in ['text/html', 'text/css', 'text/javascript', 'text/x-sql']" value="{{mode}}">{{mode}}</md-option>
        </md-select>
