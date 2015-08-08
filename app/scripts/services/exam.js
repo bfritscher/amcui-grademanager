@@ -20,7 +20,7 @@ angular.module('grademanagerApp')
     };
 
     editor.print = function(){
-        //TODO: ask for speparate answer sheet??
+        //TODO: ask for speparate answer sheet?? #49
         var data = editor.toLatex();
 		data.source = editor.exam.source;
         data.codes = editor.exam.codes;
@@ -76,14 +76,6 @@ angular.module('grademanagerApp')
         };
     };
 
-/*
-Note supported
-QuestionIndicative
-\AMCBoxedAnswers
-
-TODO: \bareme{auto=0,v=-1,e=-2}
-
-*/
     editor.addQuestion = function(section){
         //copy type from previous question
         var previous;
@@ -290,7 +282,7 @@ TODO: \bareme{auto=0,v=-1,e=-2}
 
     var sections = {};
     function parseLayout(latex){
-        //TODO support other section types
+        //TODO support other section types #29
       forEachMatch(/AMCsection{(.*?)}([\s\S]*?)\\restituegroupe{(.*?)}/g, latex, function(m){
         var section = editor.newSection();
         section.title = m[1];
@@ -399,7 +391,6 @@ TODO: \bareme{auto=0,v=-1,e=-2}
         'text/x-sql': 'SQL'
     };
 
-    /* TODO handle code and img and their options */
     function codeNode2Latex(node){
         var code = editor.getCode(node.getAttribute('id'));
         if (code){

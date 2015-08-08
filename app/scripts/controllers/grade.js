@@ -108,7 +108,7 @@ angular.module('grademanagerApp')
             return isNaN(s.id) ? max : s.id > max ? s.id : max;
           }, 0) + 1;
         }
-        //TODO merge data with same id?
+        //TODO merge data with same id? #44
         grade.students.data.push(row);
       });
     };
@@ -226,7 +226,7 @@ angular.module('grademanagerApp')
                     calculatedField.formula.maxGrade,
                     calculatedField.formula.roundingFormula,
                     calculatedField.formula.roundingUnit);
-            //TODO: make configurable?
+            //TODO: make configurable? #45
             if (g >= 4){
               iteration.pass++;
             } else if (g >= 3.5){
@@ -281,7 +281,7 @@ angular.module('grademanagerApp')
           var value = display(file.data[i]);
           //save value to cache
           row[key] = value;
-          //TODO save when finished
+          //TODO save when finished #46
           return value;
         }
       }

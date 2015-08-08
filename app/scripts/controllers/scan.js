@@ -11,7 +11,7 @@ angular.module('grademanagerApp')
   .controller('ScanCtrl', function ($scope, $http, $state, $stateParams, API, Upload) {
     var scan = this;
     API.loadProject($stateParams.project);
-    
+
     scan.orderBy = 'id';
     scan.reverse = false;
     scan.uploads = [];
@@ -45,7 +45,7 @@ angular.module('grademanagerApp')
             }).progress(function (evt) {
                 file.progress = 100.0 * evt.loaded / evt.total;
             }).success(function () {
-              //TODO: better way
+              //TODO: better way #47
               loadData();
             });
         }
@@ -58,7 +58,7 @@ angular.module('grademanagerApp')
     });
 
     function loadData(){
-      //TODO move to service?
+      //TODO move to service? #47
       $http.get(API.URL + '/project/' + $stateParams.project +'/capture')
       .success(function(data){
         scan.pages = data;
