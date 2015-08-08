@@ -112,7 +112,7 @@
            <md-icon class="mdi-lock"></md-icon> data.json
         </md-tab-label>
         <md-tab-body>
-          <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 3" ui-codemirror-opts="editor.jsonPreviewOptions" ng-model="editor.examService.getJSON()"></ui-codemirror>
+          <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 3" ui-codemirror-opts="editor.jsonPreviewOptions" ng-init="json = editor.examService.getJSON()" ng-model="json"></ui-codemirror>
         </md-tab-body>
       </md-tab>
       <md-tab>
