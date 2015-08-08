@@ -87,7 +87,7 @@ angular.module('grademanagerApp')
           .then(function(name){
               API.copyProject(item.project, name)
               .success(function(){
-                  home.openProject(name);
+                  home.openProject({project: name});
               });
           });
       };
