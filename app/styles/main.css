@@ -486,6 +486,10 @@ my-pdf-viewer{
   margin: 1em;
 }
 
+.graphics-preview:hover {
+  border: 2px solid rgb(244,67,54);
+}
+
 .graphics-preview-header{
   background-color: rgba(200, 200, 200, 0.6);
   padding: 0.2em;

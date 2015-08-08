@@ -14,20 +14,23 @@
               ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true">
               Drop pdfs or images here or click to upload</md-button>
         <div ngf-no-file-drop>File Drag/Drop is not supported for this browser</div>
-        <md-content class="upload-list">
-            <p ng-repeat="f in scan.uploads track by $index">{{::f.name}}
-                <md-progress-linear md-mode="determinate" value="{{f.progress}}"></md-progress-linear>
-            </p>
-        </md-content>
+        <md-input-container>
+			<label>Search</label>
+			<input ng-model="ctrl.search">
+		</md-input-container>
         <div layout="row" layout-wrap>
             <div class="graphics-preview" ng-click="ctrl.insertGraphics(item)"
-                ng-style="{'background-image': 'url(' + ctrl.examService.graphicsPreviewURL(item.id) + ')'}"
-                ng-repeat="item in ctrl.examService.exam.graphics | orderBy: item.name">
+                ng-style="{'background-image': ctrl.progress[item.id].progress < 100 ? 'none' : 'url(' + ctrl.examService.graphicsPreviewURL(item.id) + ')'}"
+                ng-repeat="item in ctrl.graphics | filter: {'name': ctrl.search} track by $index">
                 <div class="graphics-preview-header" layout="row" layout-align="center center">
                     <h3 flex>{{item.name}}</h3>
-                    <md-button class="md-icon-button md-warn" ng-click="ctrl.examService.deleteGraphics(item); $event.stopPropagation();">
+                    <md-button ng-hide="ctrl.progress[item.id].progress < 100" class="md-icon-button md-warn" ng-click="ctrl.examService.deleteGraphics(item); $event.stopPropagation();">
                         <md-icon class="mdi-delete" aria-label="delete graphics"></md-icon>
                     </md-button>
+                </div>
+                <div ng-show="ctrl.progress[item.id].progress < 100">
+                    <h4>Uploading</h4>
+                    <md-progress-linear md-mode="determinate" value="{{ctrl.progress[item.id].progress}}"></md-progress-linear>
                 </div>
             </div>
         </div>

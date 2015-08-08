@@ -12,6 +12,8 @@ angular.module('grademanagerApp')
     var ctrl = this;
     ctrl.examService = exam;
     ctrl.uploads = [];
+    ctrl.graphics = [];
+    ctrl.progress = {};
 
     //check for new graphics and create them
     //TODO: move somewhere?
@@ -40,7 +42,13 @@ angular.module('grademanagerApp')
                 graphics = exam.createGraphics();
                 graphics.name = file.name;
             }
-            ctrl.uploads.push(file);
+            var index = ctrl.uploads.indexOf(graphics);
+            if(index > -1){
+                ctrl.uploads.splice(index, 1);
+            }
+            ctrl.uploads.unshift(graphics);
+            ctrl.progress[graphics.id] = file;
+            buildList();
             Upload.upload({
                 url: API.URL + '/project/' + $stateParams.project + '/upload/graphics',
                 file: file,
@@ -48,8 +56,10 @@ angular.module('grademanagerApp')
                     id: graphics.id
                 }
             }).progress(function (evt) {
-                file.progress = 100.0 * evt.loaded / evt.total;
+                file.progress = (100.0 * evt.loaded / evt.total) * 0.8;
+                console.log(file.progress);
             }).success(function () {
+                file.progress = 100;
                 exam.addGraphics(graphics);
             });
         }
@@ -61,6 +71,25 @@ angular.module('grademanagerApp')
             }
         }
     });
+
+    function buildList(){
+        var items = [];
+        for(var key in ctrl.examService.exam.graphics){
+            if(ctrl.examService.exam.graphics.hasOwnProperty(key)){
+                //add only not new uploads
+                if (ctrl.uploads.indexOf(ctrl.examService.exam.graphics[key]) === -1) {
+                    items.push(ctrl.examService.exam.graphics[key]);
+                }
+            }
+        }
+        items.sort(function(a, b){
+            return a.name > b.name ? 1 : -1;
+        });
+        ctrl.graphics = ctrl.uploads.slice(0).concat(items);
+    }
+
+
+    $scope.$watch('ctrl.examService.exam.graphics', buildList, true);
 
     ctrl.insertGraphics = function(graphics){
         $mdDialog.hide(graphics.id);
