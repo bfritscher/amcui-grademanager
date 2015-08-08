@@ -169,7 +169,7 @@ angular.module('grademanagerApp')
                 logLocal.end = new Date();
                 if (log.code > 0){
                     self.options.status.locked = 0;
-                    //TODO? display error #48
+                    self.showProgressDialog();
                 }
             }
 
