@@ -39,12 +39,27 @@ angular.module('grademanagerApp')
 
       var myParse = function(elementOrHtml_current, config){
         // replace empty tags
-        elementOrHtml_current = elementOrHtml_current.replace(/<b><\/b>/, '');
-        elementOrHtml_current = elementOrHtml_current.replace(/<i><\/i>/, '');
-        elementOrHtml_current = elementOrHtml_current.replace(/<tt><\/tt>/, '');
-        elementOrHtml_current = elementOrHtml_current.replace(/<var><\/var>/, '');
+        elementOrHtml_current = elementOrHtml_current.replace(/<b>\s*<\/b>/g, '');
+        elementOrHtml_current = elementOrHtml_current.replace(/<i>\s*<\/i>/g, '');
+        elementOrHtml_current = elementOrHtml_current.replace(/<tt>\s*<\/tt>/g, '');
+        elementOrHtml_current = elementOrHtml_current.replace(/<var>\s*<\/var>/g, '');
         elementOrHtml_current = elementOrHtml_current.replace(/(<code.*?>).*?(<\/code>)/g, '$1$2');
-        return wysihtml5.dom.parse(elementOrHtml_current, config);
+        //fix no line return allowed in latex
+        var div = document.createElement('div');
+        div.innerHTML = elementOrHtml_current;
+        var list = div.getElementsByTagName('B');
+        for(var i=0; i < list.length; i++){
+            list[i].innerHTML = list[i].innerHTML.replace(/\r?\n/g, ' ');
+        }
+        list = div.getElementsByTagName('I');
+        for(i=0; i < list.length; i++){
+            list[i].innerHTML = list[i].innerHTML.replace(/\r?\n/g, ' ');
+        }
+        list = div.getElementsByTagName('TT');
+        for(i=0; i < list.length; i++){
+            list[i].innerHTML = list[i].innerHTML.replace(/\r?\n/g, ' ');
+        }
+        return wysihtml5.dom.parse( div.innerHTML, config );
       };
 
      return {
