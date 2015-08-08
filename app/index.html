@@ -2,10 +2,29 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>Grade Manager (AMC-UI)</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+<link rel="apple-touch-icon" sizes="57x57" href="apple-touch-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="apple-touch-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="apple-touch-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="apple-touch-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="apple-touch-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-180x180.png">
+<link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="android-chrome-192x192.png" sizes="192x192">
+<link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="manifest.json">
+<link rel="shortcut icon" href="favicon.ico">
+<meta name="msapplication-TileColor" content="#2d89ef">
+<meta name="msapplication-TileImage" content="mstile-144x144.png">
+<meta name="msapplication-config" content="browserconfig.xml">
+<meta name="theme-color" content="#ffffff">
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
     <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
@@ -28,11 +47,13 @@
     <md-toolbar md-scroll-shrink>
       <div class="md-toolbar-tools">
         <h3>
-          <a class="navbar-brand" href="#/">GradeManager</a>
+          <a class="navbar-brand" href="#/">
+            <img src="images/auto-multiple-choice.svg" id="logo">
+            Grade Manager (AMC-UI)</a>
           <span ng-bind="app.project()"></span>
         </h3>
         <span flex></span>
-        <md-menu ng-show="app.isAuthed()">
+        <md-menu ng-show="app.isAuthed()" ng-cloak>
           <md-button aria-label="Open phone interactions menu"  ng-click="$mdOpenMenu()" ng-bind="app.getUsername()"></md-button>
           <md-menu-content>
             <md-menu-item>
@@ -50,7 +71,7 @@
       </div>
     </md-toolbar>
 
-    <div class="md-whiteframe-z1" layout="row" layout-align="end center">
+    <div class="md-whiteframe-z1" layout="row" layout-align="end center" ng-cloak>
         <md-tabs ng-hide="app.hideTabs" md-selected="app.tabIndex" flex>
             <md-tab label="Edit" md-on-select="app.go('edit')"></md-tab>
             <md-tab label="Scan" md-on-select="app.go('scan')"></md-tab>

@@ -585,3 +585,7 @@ code.border .CodeMirror, .code-editor .border{
   box-sizing: content-box;
 }
 
+#logo {
+  height: 48px;
+  vertical-align: middle;
+}
