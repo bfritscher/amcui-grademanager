@@ -275,7 +275,7 @@ angular.module('grademanagerApp')
     };
 
     self.saveOptions = function(options){
-        return $http.post(self.URL + '/project/' + self.project + '/options', {options: options})
+        return $http.post(self.URL + '/project/' + self.project + '/options', {options: options});
     };
 
     self.deleteGraphics = function(graphics){

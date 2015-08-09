@@ -89,6 +89,18 @@ angular.module('grademanagerApp')
     }
     loadScores();
 
+
+    this.getStudentById = function(id){
+        for(var i=0; i < grade.students.data.length; i++){
+            if (grade.students.data[i].id === id) {
+              return grade.students.data[i];
+            }
+        }
+    };
+
+    // parse CSV data and integrate into into the in memory table
+    // source server CSV local paste data or csv.
+    // match by id key
     grade.parseCSV = function(csv){
       var result = Papa.parse(csv, {
           header: true,
@@ -102,14 +114,20 @@ angular.module('grademanagerApp')
         }
       });
       result.data.forEach(function(row){
-        if (!row.hasOwnProperty('id')){
+        var existingRow;
+        if (!row.hasOwnProperty('id')) {
           //new unique id
           row.id = grade.students.data.reduce(function(max, s){
             return isNaN(s.id) ? max : s.id > max ? s.id : max;
           }, 0) + 1;
         }
         //TODO merge data with same id? #44
-        grade.students.data.push(row);
+        existingRow = self.getStudentById(row.id);
+        if (existingRow) {
+          angular.extend(existingRow, row);
+        } else{
+          grade.students.data.push(row);
+        }
       });
     };
 
@@ -252,61 +270,72 @@ angular.module('grademanagerApp')
     var self = this;
     self.files = JSON.parse(localStorage.getItem('files') || '[]');
 
-    self.source = 'name';
-    self.idx = 2;
-    self.match = "(row['Surname'] + ' ' + row['First name']).toUpperCase() === lookupValue.toUpperCase()";
-    self.display = "row['Email address']";
-
-    function save(){
+    self.save = function(){
       localStorage.setItem('files', angular.toJson(self.files));
-    }
-
-    this.vLookup = function(lookupValue, fileIdx, lookupColumn, dataColumn){
-      var file = self.files[fileIdx];
-      for( var i=0; i < file.data.length; i++){
-        if(file.data[i] && file.data[i][lookupColumn] === lookupValue){
-          return file.data[i][dataColumn];
-        }
-      }
-      return undefined;
     };
 
-    this.vLookup2 = function(row, key, lookupValue, fileIdx, matchFunc, displayFunc){
-      var file = self.files[fileIdx];
+
+    this.makeFunc = function(func){
       /*jslint evil: true */
-      var match = new Function('lookupValue', 'row', 'return  ' + matchFunc + ';');
-      var display = new Function('row', 'return  ' + displayFunc + ';');
-      for( var i=0; i < file.data.length; i++){
-        if(match(lookupValue || '', file.data[i])){
-          var value = display(file.data[i]);
-          //save value to cache
-          row[key] = value;
-          //TODO save when finished #46
-          return value;
-        }
-      }
-      row[key] = undefined;
-      return undefined;
+       return new Function('row', 'try{ return ' + func + '; } catch (e) { return; }');
     };
 
-    this.calculate = function(file, index){
-      if(!file.meta.calculated){
-        file.meta.calculated = [];
+    //lookup only student
+    //row = external row
+    this.lookup = function(row, fileLookup, studentLookup) {
+      var lookupValue = this.makeFunc(fileLookup)(row);
+      var matches = [];
+      if(lookupValue){
+        var studentLookupFunc = this.makeFunc(studentLookup);
+        grade.students.data.forEach(function(studentRow){
+            if (studentLookupFunc(studentRow) === lookupValue){
+              matches.push(studentRow.id);
+            }
+        });
       }
-      file.meta.calculated[index] = {
-        type: 'vLookup2',
-        source: 'Group',
-        targetFile: 0,
-        match: 'row.groupe === lookupValue',
-        display: 'row.note'
-      };
-      save();
+      return matches;
     };
+
+    this.demoStudent = function(file){
+      return self.makeFunc(file.studentLookup)(self.getStudentById(parseInt(file.demoid)));
+    };
+
+    this.import = function(file){
+        var studentLookupFunc = this.makeFunc(file.studentLookup);
+        var lookupValueFunc = this.makeFunc(file.fileLookup);
+
+        //merge field
+        var fields = [];
+        for(var key in file.meta.selected){
+          var field = file.meta.fields[key];
+          fields.push(field);
+          if (grade.students.fields.indexOf(field) < 0 ){
+            grade.students.fields.push(field);
+          }
+        }
+
+        file.data.forEach(function(row){
+          var lookupValue = lookupValueFunc(row);
+          if(lookupValue){
+            self.students.data.forEach(function(studentRow){
+                if (studentLookupFunc(studentRow) === lookupValue){
+                  fields.forEach(function(field){
+                    studentRow[field] = row[field];
+                  });
+                }
+            });
+          }
+        });
+        grade.tabIndex = 0;
+    };
+
 
     this.removeFile = function(file){
       self.files.splice(self.files.indexOf(file),1);
-      save();
+      self.save();
     };
+
+    /* import csv by DnD */
 
     function dragenter(e) {
       e.stopPropagation();
@@ -333,7 +362,7 @@ angular.module('grademanagerApp')
         $scope.$apply(function(){
           results.name = fileName;
     		  self.files.push(results);
-          save();
+          self.save();
         });
     	};
     }

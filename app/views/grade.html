@@ -27,8 +27,12 @@ highlight impossible? missing? confirm reviewed
   <div id="dropbox">
   	DROPZONE
   </div>
-  <textarea ng-change="grade.parsePasteData()" ng-model="grade.pasteData"></textarea>
-  <md-tabs flex>
+  <textarea
+    ng-change="grade.parsePasteData()"
+    ng-model-options="{ updateOn: 'blur' }"
+    ng-model="grade.pasteData"
+    ></textarea>
+  <md-tabs flex md-selected="grade.tabIndex">
     <md-tab label="Students">
       <section class="grades">
         <div ng-if="grade.students.data.length > 0 && grade.table">
@@ -129,31 +133,41 @@ highlight impossible? missing? confirm reviewed
     </md-tab>
     <md-tab label="{{file.name.substring(0,20)}}" ng-repeat="file in grade.files">
       <md-content>
+        <div>
+          Lookup:
+          <p>studentLookup: <input ng-model="file.studentLookup" ng-model-options="{ updateOn: 'blur' }" ng-change="grade.save()">
+           <input ng-model="file.demoid"  ng-change="grade.save()">
+              {{grade.demoStudent(file)}}
+            </p>
+          <p>fileLookup: <input ng-model="file.fileLookup" ng-model-options="{ updateOn: 'blur' }" ng-change="grade.save()"></p>
+          <md-button class="md-warn" ng-click="grade.import(file)">import</md-button>
+        </div>
         <table>
         	<thead>
         		<tr>
+              <th>Student Match</th>
+              <th>Lookup Value</th>
         			<th ng-repeat="key in file.meta.fields track by $index">
-                {{key}}
-                <md-button class="" ng-click="grade.calculate(file, $index)">calculate</md-button>
-              </th>
-              <th>
-                <textarea ng-model="grade.source"></textarea>
-                <textarea ng-model="grade.idx"></textarea>
-                <textarea ng-model="grade.match"></textarea>
-                <textarea ng-model="grade.display"></textarea>
-
+                <div layout="row">
+                  <md-checkbox class="md-primary" ng-model="file.meta.selected[$index]" ng-change="grade.save()">{{key}}</md-checkbox>
+                  <md-button aria-label="remove column" ng-click="file.meta.fields.splice($index, 1);grade.save();" class="md-warn button-remove" ng-hide="col == 'id'"><md-icon class="mdi-close"></md-icon></md-button>
+                </div>
               </th>
         		</tr>
         	</thead>
         	<tbody>
         		<tr ng-repeat="row in file.data">
-        			<td ng-repeat="(key, value) in row">{{value}}
-                <span ng-if="file.meta.calculated[$index]">
-                  {{grade[file.meta.calculated[$index].type](row, key, row[file.meta.calculated[$index].source], file.meta.calculated[$index].targetFile, file.meta.calculated[$index].match, file.meta.calculated[$index].display)}}
-                </span>
+              <td>
+{{
+grade.lookup(row, file.fileLookup, file.studentLookup)
+}}
               </td>
-              <td></td>
-              <td ng-if="row.Group">{{grade.vLookup(row.Group, grade.idx, 'groupe', 'note')}}</td>
+              <td>
+{{
+grade.makeFunc(file.fileLookup)(row)
+}}
+              </td>
+        			<td ng-repeat="key in file.meta.fields track by $index">{{row[key]}}</td>
         		</tr>
         	</tbody>
         </table>
