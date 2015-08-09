@@ -30,6 +30,13 @@
 		<md-slider class="md-primary" md-discrete string-to-number ng-model="ctrl.options.options.seuil" min="0" max="1" step="0.05" aria-label="threshold"></md-slider>
 		When one uses a separate answer sheet, letters or digits use at least 0.5.
 	</p>
+	<p>
+		<b>Type of scans</b>
+		<md-select  ng-disabled="true" class="md-primary" placeholder="Type of scans" ng-model="ctrl.options.options.auto_capture_mode">
+	      <md-option value="0">Different answer sheets</md-option>
+	      <md-option value="1">Some answer sheets were photocopied</md-option>
+	    </md-select>
+	</p>
 
 	<h3>Annotation</h3>
 	<md-input-container>

@@ -22,7 +22,7 @@ angular.module('grademanagerApp')
     ctrl.resetLockURL = API.URL + '/project/' + $stateParams.project + '/reset/lock?token=' + auth.getToken();
 
     ctrl.saveOptions = function(){
-      $http.post(API.URL + '/project/' + $stateParams.project + '/options', {options: ctrl.options.options})
+      API.saveOptions(ctrl.options.options)
       .success(function(){
          $mdToast.show($mdToast.simple().content('Options saved!').position('top right'));
       });

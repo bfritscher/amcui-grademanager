@@ -1,4 +1,13 @@
-<div layout="row" flex>
+<div ng-if="app.api.options.options.auto_capture_mode == -1" class="printed-bar" layout-padding layout="row" layout-align="center center">
+    You have to choose the type of scans you use for this project:
+    <md-select  class="md-primary" placeholder="Type of scans" ng-model="scan.auto_capture_mode">
+      <md-option value="0">Different answer sheets</md-option>
+      <md-option value="1">Some answer sheets were photocopied</md-option>
+    </md-select>
+    <md-button class="md-raised md-primary"  ng-click="app.api.options.options.auto_capture_mode = scan.auto_capture_mode; app.api.saveOptions(app.api.options.options)">Save</md-button>
+    <span flex></span>
+</div>
+<div ng-if="app.api.options.options.auto_capture_mode != -1"  layout="row" flex>
   <div class="scan-pages" layout="column">
     <div layout-padding>
       <h3>Upload papers</h3>
