@@ -132,8 +132,8 @@ tr.active td{
     border: 2px dashed #bed2db;
 }
 
-.section-menu > .angular-ui-tree-handle {
-
+.section-menu md-checkbox{
+  margin: 0;
 }
 
 .question-menu strong{
