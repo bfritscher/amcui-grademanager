@@ -1,5 +1,5 @@
 <div flex class="scroll-frame">
-<md-content layout="column" class="no-background scroll-section" layout-padding>
+<md-content layout="column" class="no-background scroll-section options" layout-padding>
 	<h2>Collaborators</h2>
 	<md-chips ng-model="ctrl.options.users" placeholder="add another username" secondary-placeholder="+username"></md-chips>
 
@@ -12,19 +12,91 @@
 	</p>
 
 	<h2>Options</h2>
+	<p>
+		<md-button class="md-warn md-raised" ng-click="ctrl.saveOptions()">Save Options</md-button>
+	</p>
+	<h3>Print</h3>
 	<md-input-container>
 		<label>Nb of copies</label>
 		<input ng-model="ctrl.options.options.nombre_copies" string-to-number type="number">
 	</md-input-container>
 	<p>
+		<md-checkbox class="md-primary" ng-model="ctrl.options.options.split" ng-true-value="'1'" ng-false-value="'0'">Print answersheet in separate file.</md-checkbox>
+	</p>
+
+	<h3>Scan</h3>
+	<p>
 		Threshold: {{ctrl.options.options.seuil * 100 | number: 0}}% black filled
 		<md-slider class="md-primary" md-discrete string-to-number ng-model="ctrl.options.options.seuil" min="0" max="1" step="0.05" aria-label="threshold"></md-slider>
 		When one uses a separate answer sheet, letters or digits use at least 0.5.
 	</p>
+
+	<h3>Annotation</h3>
+	<md-input-container>
+		<label>Annotation filename pattern</label>
+		<input ng-model="ctrl.options.options.modele_regroupement">
+	</md-input-container>
+	<p>(N) is replaced by the student's name. (ID) is replaced by the student number. (<i>COL</i>) any other column in the student.csv</p>
+
 	<md-input-container>
 		<label>Annotation</label>
 		<textarea ng-model="ctrl.options.options.verdict"></textarea>
 	</md-input-container>
+
+	<h4>Annotation marks</h4>
+	<table>
+		<tr>
+			<th>Preview</th>
+			<th>To be ticked</th>
+			<th>Ticked</th>
+			<th>Type</th>
+			<th>Color</th>
+		</tr>
+		<tr>
+			<td><md-icon ng-style="{color: ctrl.options.options.symbole_0_0_color}" ng-class="{'mdi-close': ctrl.options.options.symbole_0_0_type == 'mark', 'mdi-checkbox-blank-outline': ctrl.options.options.symbole_0_0_type == 'box', 'mdi-checkbox-blank-circle-outline': ctrl.options.options.symbole_0_0_type == 'circle'}"></md-icon></td>
+			<td>no</td>
+			<td>no</td>
+			<td>
+				<md-select  class="md-primary" placeholder="type" ng-model="ctrl.options.options.symbole_0_0_type">
+              		<md-option  ng-repeat="value in ::ctrl.types" value="{{value}}">{{value}}</md-option>
+            	</md-select>
+			</td>
+			<td><span class="color" ng-click="ctrl.options.options.symbole_0_0_color = color" ng-repeat="color in ::ctrl.colors" ng-style="{'background-color': color}" ng-class="{'selected': ctrl.options.options.symbole_0_0_color == color}"></span></td>
+		</tr>
+        <tr>
+            <td><md-icon ng-style="{color: ctrl.options.options.symbole_0_1_color}" ng-class="{'mdi-close': ctrl.options.options.symbole_0_1_type == 'mark', 'mdi-checkbox-blank-outline': ctrl.options.options.symbole_0_1_type == 'box', 'mdi-checkbox-blank-circle-outline': ctrl.options.options.symbole_0_1_type == 'circle'}"></md-icon></td>
+            <td>no</td>
+            <td>yes</td>
+            <td>
+                <md-select  class="md-primary" placeholder="type" ng-model="ctrl.options.options.symbole_0_1_type">
+                      <md-option  ng-repeat="value in ::ctrl.types" value="{{value}}">{{value}}</md-option>
+                </md-select>
+            </td>
+            <td><span class="color" ng-click="ctrl.options.options.symbole_0_1_color = color" ng-repeat="color in ::ctrl.colors" ng-style="{'background-color': color}" ng-class="{'selected': ctrl.options.options.symbole_0_1_color == color}"></span></td>
+        </tr>
+        <tr>
+            <td><md-icon ng-style="{color: ctrl.options.options.symbole_1_0_color}" ng-class="{'mdi-close': ctrl.options.options.symbole_1_0_type == 'mark', 'mdi-checkbox-blank-outline': ctrl.options.options.symbole_1_0_type == 'box', 'mdi-checkbox-blank-circle-outline': ctrl.options.options.symbole_1_0_type == 'circle'}"></md-icon></td>
+            <td>yes</td>
+            <td>no</td>
+            <td>
+                <md-select  class="md-primary" placeholder="type" ng-model="ctrl.options.options.symbole_1_0_type">
+                      <md-option  ng-repeat="value in ::ctrl.types" value="{{value}}">{{value}}</md-option>
+                </md-select>
+            </td>
+            <td><span class="color" ng-click="ctrl.options.options.symbole_1_0_color = color" ng-repeat="color in ::ctrl.colors" ng-style="{'background-color': color}" ng-class="{'selected': ctrl.options.options.symbole_1_0_color == color}"></span></td>
+        </tr>
+        <tr>
+            <td><md-icon ng-style="{color: ctrl.options.options.symbole_1_1_color}" ng-class="{'mdi-close': ctrl.options.options.symbole_1_1_type == 'mark', 'mdi-checkbox-blank-outline': ctrl.options.options.symbole_1_1_type == 'box', 'mdi-checkbox-blank-circle-outline': ctrl.options.options.symbole_1_1_type == 'circle'}"></md-icon></td>
+            <td>yes</td>
+            <td>yes</td>
+            <td>
+                <md-select  class="md-primary" placeholder="type" ng-model="ctrl.options.options.symbole_1_1_type">
+                      <md-option  ng-repeat="value in ::ctrl.types" value="{{value}}">{{value}}</md-option>
+                </md-select>
+            </td>
+            <td><span class="color" ng-click="ctrl.options.options.symbole_1_1_color = color" ng-repeat="color in ::ctrl.colors" ng-style="{'background-color': color}" ng-class="{'selected': ctrl.options.options.symbole_1_1_color == color}"></span></td>
+        </tr>
+	</table>
 
 	<md-switch ng-model="showAllOptions" aria-label="show all options">
    		Display all options

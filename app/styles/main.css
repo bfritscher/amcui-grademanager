@@ -610,3 +610,15 @@ code.border .CodeMirror, .code-editor .border{
   height: 48px;
   vertical-align: middle;
 }
+
+.options .color{
+  width: 40px;
+  height: 40px;
+  display: inline-block;
+  margin: 8px;
+  cursor: pointer;
+}
+
+.options .color.selected{
+  border: 2px solid rgb(33,150,243);
+}
