@@ -76,7 +76,7 @@
     <div class="md-whiteframe-z1" layout="row" layout-align="end center" ng-cloak>
         <md-tabs ng-hide="app.hideTabs" md-selected="app.tabIndex" flex>
             <md-tab label="Edit" md-on-select="app.go('edit')"></md-tab>
-            <md-tab label="Scan" md-on-select="app.go('scan')"></md-tab>
+            <md-tab label="Scan" md-on-select="app.go('scan')" ng-disabled="app.api.options.users.length > 0 && !app.api.options.status.printed"></md-tab>
             <md-tab label="Grade" md-on-select="app.go('grade')"></md-tab>
             <md-tab label="Options" md-on-select="app.go('options')"></md-tab>
         </md-tabs>

@@ -97,6 +97,12 @@ tr.active td{
   right: 5px;
 }
 
+.scan-rotate {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+}
+
 .text-left{
   text-align: left;
 }

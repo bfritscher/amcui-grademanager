@@ -7,21 +7,26 @@
  * # panZoo
  */
 angular.module('grademanagerApp')
-  .directive('panZoom', function ($window) {
+  .directive('panZoom', function ($window, $timeout) {
     return {
       restrict: 'A',
       link: function postLink(scope, element) {
-        var panZoom = svgPanZoom(element[0], {
-          controlIconsEnabled: true,
-          panEnabled: true,
-          zoomEnabled: true,
-          minZoom: 0.5,
-          maxZoom: 10});
-        angular.element($window).bind('resize', function() {
-          panZoom.resize();
-          panZoom.fit();
-          panZoom.center();
-          scope.$apply();
+        scope.preview.rotate = true;
+
+        //delay for viewBox to update
+        $timeout(function(){
+          var panZoom = svgPanZoom(element[0], {
+            controlIconsEnabled: true,
+            panEnabled: true,
+            zoomEnabled: true,
+            minZoom: 0.5,
+            maxZoom: 10});
+          angular.element($window).bind('resize', function() {
+            panZoom.resize();
+            panZoom.fit();
+            panZoom.center();
+            scope.$apply();
+          });
         });
       }
     };

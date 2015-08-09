@@ -8,7 +8,7 @@
  * Service in the grademanagerApp.
  */
 angular.module('grademanagerApp')
-  .service('exam', function ($rootScope, API, auth) {
+  .service('exam', function ($rootScope, $mdDialog, API, auth) {
     var editor = this;
     var DiffSyncClient = diffsync.Client;
 
@@ -20,11 +20,25 @@ angular.module('grademanagerApp')
     };
 
     editor.print = function(){
-        //TODO: ask for speparate answer sheet?? #49
-        var data = editor.toLatex();
-		data.source = editor.exam.source;
-        data.codes = editor.exam.codes;
-        API.print(data);
+        function print(){
+            var data = editor.toLatex();
+    		data.source = editor.exam.source;
+            data.codes = editor.exam.codes;
+            API.print(data);
+        }
+
+        if (API.options.status.scanned) {
+            $mdDialog.show($mdDialog.confirm()
+                .title('')
+                .content('Papers analysis was already made on the basis of the current working documents. If you modify working documents, you will not be capable any more of analyzing the papers you have already distributed!')
+                .ok('Print & Overwrite')
+                .cancel('Cancel')
+                .theme('md-warn'))
+            .then(print);
+
+        } else {
+            print();
+        }
 	};
 
     editor.load = function(callback) {
