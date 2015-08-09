@@ -29,11 +29,10 @@ angular.module('grademanagerApp')
 
         if (API.options.status.scanned) {
             $mdDialog.show($mdDialog.confirm()
-                .title('')
+                .title('Warning!')
                 .content('Papers analysis was already made on the basis of the current working documents. If you modify working documents, you will not be capable any more of analyzing the papers you have already distributed!')
                 .ok('Print & Overwrite')
-                .cancel('Cancel')
-                .theme('md-warn'))
+                .cancel('Cancel'))
             .then(print);
 
         } else {
