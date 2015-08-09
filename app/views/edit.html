@@ -16,7 +16,8 @@
         <ol ui-tree-nodes="" ng-model="editor.examService.exam.sections" data-type="section">
           <li class="section-menu" ng-repeat="section in editor.examService.exam.sections track by section.id" ng:init="parentIndex = $index" ui-tree-node>
             <div ui-tree-handle layout="row" ng-class="{'active': section == editor.section}">
-              <p>{{section.number}} {{section.title}}</p>
+              <p ng-if="editor.copyMode"><md-checkbox ng-model="editor.copyCheckbox[section.id]" ng-change="editor.toggleCopy(section)" class="md-primary" data-nodrag>{{section.number}} {{section.title}}</md-checkbox></p>
+              <p ng-if="!editor.copyMode">{{section.number}} {{section.title}}</p>
               <span flex></span>
               <md-button aria-label="select section" data-nodrag ng-href="{{editor.linkToQuestion(section)}}" class="md-icon-button"><md-icon class="mdi-eye"></md-icon></md-button>
             </div>
@@ -25,7 +26,10 @@
                 <div ui-tree-handle layout="row">
                   <div flex>
                     <strong layout-align="start center">
-                      <md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span>
+                      <md-checkbox  ng-model="editor.copyCheckbox[question.id]" ng-change="editor.toggleCopy(section, question)" ng-if="editor.copyMode" class="md-primary" data-nodrag>
+                        <md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span>
+                      </md-checkbox>
+                      <div ng-if="!editor.copyMode"><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span></div>
                     </strong>
                     <em>{{question.content | htmlToPlaintext | limitTo: 50}}</em>
                   </div>
@@ -35,6 +39,21 @@
             </ol>
           </li>
         </ol>
+      </div>
+      <md-divider></md-divider>
+      <div>
+        <md-switch class="md-primary" ng-model="editor.copyMode" ng-change="editor.API.getProjectList()" aria-label="copy mode">
+          Activate copy
+        </md-switch>
+        <div ng-if="editor.copyMode">
+          <p>{{editor.copySummary().questions}} question(s) in {{editor.copySummary().sections}} section(s).</p>
+          <p layout="row" layout-align="start center" layout-wrap>
+            <md-select  class="md-primary" placeholder="CopyTo" ng-model="editor.copyToName">
+              <md-option  ng-repeat="item in editor.API.projects" value="{{item.project}}">{{item.project}}</md-option>
+            </md-select>
+            <md-button ng-click="editor.copyTo()" class="md-primary" ng-disabled="editor.copySummary().sections == 0 || !editor.copyTo">Copy</md-button>
+          </p>
+        </div>
       </div>
     </md-content>
     </div>

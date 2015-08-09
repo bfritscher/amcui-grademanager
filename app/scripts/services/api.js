@@ -17,6 +17,8 @@ angular.module('grademanagerApp')
     var self = this;
     self.URL = 'https://j42.org/amcui';
     self.SOCKET_URL = 'https://j42.org/';
+    //self.URL = 'http://192.168.56.101:9001';
+    //self.SOCKET_URL = 'http://192.168.56.101:9001/';
     self.project = false;
     self.options = {
       users: [],
@@ -26,9 +28,19 @@ angular.module('grademanagerApp')
     self.connected = {};
     self.logs = {};
     self.sortedLogs = [];
+    self.projects = [];
 
     self.getProjectList = function(){
-      return $http.get(self.URL + '/project/list');
+      return $http.get(self.URL + '/project/list')
+      .success(function(list){
+            list.sort(function(a, b){
+              return b.project < a.project;
+            });
+            self.projects = list.map(function(item){
+                item.short = item.project.split('-')[0];
+                return item;
+            });
+      });
     };
 
     self.createProject = function(project){
@@ -85,7 +97,7 @@ angular.module('grademanagerApp')
         self.project = project;
         self.PROJECT_URL = self.URL + '/project/' + self.project;
         self.newLog('connecting');
-        self.socket = io.connect(self.SOCKET_URL + '?token='+ getAuth().getToken(), {path:'/amcui/socket.io'});
+        self.socket = io.connect(self.SOCKET_URL + '?token='+ getAuth().getToken(), {path:'/amcui/socket.io'}); //
 
         self.loadOptions();
 
@@ -101,6 +113,7 @@ angular.module('grademanagerApp')
             log.progress = 1;
             log.code = 1;
             log.err = 'Socket connection error, retrying, check firewall.';
+            self.options.status.locked = 0;
             self.showProgressDialog();
         });
 
@@ -169,7 +182,9 @@ angular.module('grademanagerApp')
                 logLocal.end = new Date();
                 if (log.code > 0){
                     self.options.status.locked = 0;
-                    self.showProgressDialog();
+                    if(log.msg !== 'preview'){
+                       self.showProgressDialog();
+                    }
                 }
             }
 
@@ -279,6 +294,15 @@ angular.module('grademanagerApp')
 
     self.copyProject = function(src, dest){
         return $http.post(self.URL + '/project/' + src + '/copy/project', {
+            project: dest
+        })
+        .error(function(msg){
+            $mdToast.show($mdToast.simple().content(msg).position('top right'));
+        });
+    };
+
+    self.copyGraphics = function(src, dest){
+        return $http.post(self.URL + '/project/' + src + '/copy/graphics', {
             project: dest
         })
         .error(function(msg){

@@ -8,9 +8,10 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('EditCtrl', function ($scope, $mdSidenav, $mdDialog, $location, $stateParams, $timeout, API, exam) {
+  .controller('EditCtrl', function ($scope, $mdSidenav, $mdDialog, $mdToast, $location, $state, $stateParams, $timeout, API, exam) {
 	var editor = this;
 	editor.examService = exam;
+	editor.API = API;
 
 	//TODO automate
 	API.loadProject($stateParams.project);
@@ -79,6 +80,8 @@ angular.module('grademanagerApp')
              editor.section = editor.examService.newSection();
              editor.examService.exam.sections = [editor.section];
         }
+		//handleCopy
+		handleCopy();
 	});
 
 	editor.leftNav = function (){
@@ -202,4 +205,118 @@ angular.module('grademanagerApp')
 
       }*/
 	};
+
+	editor.copy = {
+
+	};
+
+	editor.copyCheckbox = {
+
+	};
+
+	function findQuestionCopy(questions, id){
+		for(var i=0; i < questions.length; i++){
+			if(questions[i].id === id){
+				return questions[i];
+			}
+		}
+	}
+
+	editor.copySummary = function(){
+		var sectionsCount = Object.keys(editor.copy).length;
+		return {
+			sections: sectionsCount,
+			questions: Object.keys(editor.copyCheckbox).length - sectionsCount,
+		};
+	};
+
+	editor.toggleCopy = function(section, question) {
+		var sectionCopy, questionCopy;
+		if(editor.copy.hasOwnProperty(section.id)){
+			sectionCopy = editor.copy[section.id];
+			if(question){
+				//question handle
+				questionCopy = findQuestionCopy(sectionCopy.questions, question.id);
+				if(questionCopy){
+					//remove
+					sectionCopy.questions.splice(sectionCopy.questions.indexOf(questionCopy), 1);
+					editor.copyCheckbox[question.id] = false;
+				} else {
+					//add
+					sectionCopy.questions.splice(section.questions.indexOf(question), 0, angular.copy(question));
+					editor.copyCheckbox[question.id] = true;
+				}
+
+			} else {
+				//remove section
+
+				sectionCopy.questions.forEach(function(q){
+					editor.copyCheckbox[q.id] = false;
+				});
+				editor.copyCheckbox[section.id] = false;
+				delete editor.copy[section.id];
+			}
+		} else {
+			//add section copy
+			sectionCopy = angular.copy(section);
+			editor.copy[section.id] = sectionCopy;
+			editor.copyCheckbox[sectionCopy.id] = true;
+			//add question
+			if(question){
+				sectionCopy.questions = [];
+				sectionCopy.questions.splice(section.questions.indexOf(question), 0, angular.copy(question));
+				editor.copyCheckbox[question.id] = true;
+			} else {
+				//add all
+				sectionCopy.questions.forEach(function(q){
+					editor.copyCheckbox[q.id] = true;
+				});
+			}
+		}
+	};
+
+	editor.copyTo = function(){
+		var name = editor.copyToName;
+		var copy = {
+			src: $stateParams.project,
+			dest: name,
+			sections: editor.copy,
+			graphics: {},
+			codes: {}
+		};
+		//TODO: filter code and graphics to be copied #54
+		copy.graphics = angular.copy(exam.exam.graphics);
+		copy.codes = angular.copy(exam.exam.codes);
+		localStorage.setItem('copy', angular.toJson(copy));
+		$state.go( 'edit', {project: name}, {reload: true});
+	};
+
+	function handleCopy(){
+		var copy = localStorage.getItem('copy');
+		if(copy) {
+			copy = angular.fromJson(copy);
+			if (copy.dest === $stateParams.project){
+				for(var key in copy.sections){
+					if(copy.sections.hasOwnProperty(key)){
+						//handle duplicate id
+						if(exam.getSection(copy.sections[key].id)){
+							copy.sections[key].id = GUID();
+						}
+						exam.exam.sections.push(copy.sections[key]);
+					}
+				}
+				if(!exam.exam.graphics){
+					exam.exam.graphics = {};
+				}
+				if(!exam.exam.codes){
+					exam.exam.codes = {};
+				}
+				angular.extend(exam.exam.graphics, copy.graphics);
+				angular.extend(exam.exam.codes, copy.codes);
+				API.copyGraphics(copy.src, copy.dest);
+				$mdToast.show($mdToast.simple().content('Content has been copied!').position('top right'));
+				localStorage.removeItem('copy');
+			}
+		}
+	}
   });

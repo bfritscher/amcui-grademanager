@@ -79,6 +79,14 @@ angular.module('grademanagerApp')
         };
     };
 
+    editor.getSection = function (id){
+        for(var i=0; i < editor.exam.sections.length; i++){
+			if(editor.exam.sections[i].id === id){
+				return editor.exam.sections[i];
+			}
+		}
+    };
+
     editor.addQuestion = function(section){
         //copy type from previous question
         var previous;

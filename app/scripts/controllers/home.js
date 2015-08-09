@@ -13,19 +13,7 @@ angular.module('grademanagerApp')
 
       var home = this;
 
-      home.projects = [];
-
-      function getProjectList(){
-        API.getProjectList().success(function(list){
-            list.sort(function(a, b){
-              return b.project < a.project;
-            });
-            home.projects = list.map(function(item){
-                item.short = item.project.split('-')[0];
-                return item;
-            });
-          });
-      }
+     home.API = API;
 
       home.isAuthed = function(){
         return auth.isAuthed();
@@ -41,7 +29,7 @@ angular.module('grademanagerApp')
         .error(function(data){
           home.error = {error: data};
         })
-        .success(getProjectList);
+        .success(API.getProjectList);
       };
 
       home.openProject = function(project){
@@ -95,7 +83,7 @@ angular.module('grademanagerApp')
 
 
       if(home.isAuthed()){
-        getProjectList();
+         API.getProjectList();
       }
 
   });
