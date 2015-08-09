@@ -8,12 +8,20 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('GraphicsManagerCtrl', function ($scope, $mdDialog, $stateParams, $http, API, exam, Upload) {
+  .controller('GraphicsManagerCtrl', function ($scope, $timeout, $mdDialog, $stateParams, $http, API, exam, Upload) {
     var ctrl = this;
     ctrl.examService = exam;
     ctrl.uploads = [];
     ctrl.graphics = [];
     ctrl.progress = {};
+
+    ctrl.deleteGraphics = function(item){
+        ctrl.examService.deleteGraphics(item);
+        if(ctrl.uploads.indexOf(item) > -1){
+            ctrl.uploads.splice(ctrl.uploads.indexOf(item), 1);
+        }
+        buildList();
+    };
 
     //check for new graphics and create them
     //TODO: move somewhere?
@@ -59,8 +67,10 @@ angular.module('grademanagerApp')
                 file.progress = (100.0 * evt.loaded / evt.total) * 0.8;
                 console.log(file.progress);
             }).success(function () {
-                file.progress = 100;
-                exam.addGraphics(graphics);
+                $timeout(function(){
+                    file.progress = 100;
+                    exam.addGraphics(graphics);
+                });
             });
         }
 

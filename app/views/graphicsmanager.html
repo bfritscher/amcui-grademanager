@@ -9,7 +9,7 @@
         </div>
     </md-toolbar>
 
-    <md-dialog-content>
+    <md-dialog-content >
         <md-button ngf-drop ngf-select ng-model="ctrl.files" class="md-raised md-accent drop-box"
               ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true">
               Drop pdfs or images here or click to upload</md-button>
@@ -18,13 +18,13 @@
 			<label>Search</label>
 			<input ng-model="ctrl.search">
 		</md-input-container>
-        <div layout="row" layout-wrap>
+        <div class="thumb-container" layout="row" layout-wrap  ngf-drop  ng-model="ctrl.files"  ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true">
             <div class="graphics-preview" ng-click="ctrl.insertGraphics(item)"
                 ng-style="{'background-image': ctrl.progress[item.id].progress < 100 ? 'none' : 'url(' + ctrl.examService.graphicsPreviewURL(item.id) + ')'}"
                 ng-repeat="item in ctrl.graphics | filter: {'name': ctrl.search} track by $index">
                 <div class="graphics-preview-header" layout="row" layout-align="center center">
                     <h3 flex>{{item.name}}</h3>
-                    <md-button ng-hide="ctrl.progress[item.id].progress < 100" class="md-icon-button md-warn" ng-click="ctrl.examService.deleteGraphics(item); $event.stopPropagation();">
+                    <md-button ng-hide="ctrl.progress[item.id].progress < 100" class="md-icon-button md-warn" ng-click="ctrl.deleteGraphics(item); $event.stopPropagation();">
                         <md-icon class="mdi-delete" aria-label="delete graphics"></md-icon>
                     </md-button>
                 </div>

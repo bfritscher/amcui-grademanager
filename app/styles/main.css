@@ -160,9 +160,12 @@ tr.active td{
   max-height: 200px;
 }
 
-.md-button.md-accent.md-raised.dragover {
-    border: 3px dashed rgb(255,64,129);
-    background-color: rgb(238,238,238);
+.drop-box, .thumb-container{
+  border: 3px solid transparent;
+}
+
+.dragover{
+  border: 3px dashed rgb(230, 20, 20);
 }
 
 .scan-delete {

@@ -18,7 +18,7 @@
 	</md-input-container>
 	<p>
 		Threshold: {{ctrl.options.options.seuil * 100 | number: 0}}% black filled
-		<md-slider md-discrete string-to-number ng-model="ctrl.options.options.seuil" min="0" max="1" step="0.05" aria-label="threshold"></md-slider>
+		<md-slider class="md-primary" md-discrete string-to-number ng-model="ctrl.options.options.seuil" min="0" max="1" step="0.05" aria-label="threshold"></md-slider>
 		When one uses a separate answer sheet, letters or digits use at least 0.5.
 	</p>
 	<md-input-container>
