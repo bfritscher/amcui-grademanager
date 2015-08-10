@@ -654,3 +654,11 @@ code.border .CodeMirror, .code-editor .border{
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.grades .legend{
+  font-size: 70%;
+}
+
+.grades .legend span{
+  padding: 5px;
+}
