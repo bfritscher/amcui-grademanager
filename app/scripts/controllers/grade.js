@@ -136,6 +136,11 @@ angular.module('grademanagerApp')
       grade.pasteData = '';
     };
 
+    grade.parseAsNewFile = function(){
+      addNewFile(grade.pasteData);
+    };
+
+
     grade.removeStudent = function(student){
        grade.students.data.splice(grade.students.data.indexOf(student), 1);
     };
@@ -363,21 +368,29 @@ angular.module('grademanagerApp')
           results.name = fileName;
     		  self.files.push(results);
           self.save();
+          grade.pasteData = '';
         });
     	};
+    }
+
+
+    function addNewFile(data, name){
+      if(!name){
+        name = 'CSV#' + self.files.length;
+      }
+      Papa.parse(data, {
+          worker: true,
+          header: true,
+          dynamicTyping: true,
+          skipEmptyLines: true,
+        	complete: handleDataFactory(name)
+        });
     }
 
     function handleFiles(files) {
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
-        Papa.parse(file, {
-          worker: true,
-          header: true,
-          dynamicTyping: true,
-          skipEmptyLines: true,
-          //step: function(row),
-        	complete: handleDataFactory(file.name)
-        });
+        addNewFile(file, file.name);
       }
     }
 

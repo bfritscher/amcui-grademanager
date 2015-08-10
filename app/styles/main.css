@@ -154,6 +154,14 @@ tr.active td{
   text-overflow: ellipsis;
 }
 
+.question-stat{
+  width: 400px;
+  margin: 20px;
+}
+.answer-stat {
+  white-space: nowrap;
+}
+
 .no-background{
   background-color: transparent;
 }
@@ -627,4 +635,10 @@ code.border .CodeMirror, .code-editor .border{
 
 .options .color.selected{
   border: 2px solid rgb(33,150,243);
+}
+
+.md-toolbar-tools h3{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

@@ -23,15 +23,15 @@ highlight impossible? missing? confirm reviewed
     <span flex></span>
     <md-button class="md-icon-button" ng-click="grade.hidePrintNotification=true" aria-label="close message"><md-icon class="mdi-close"></md-icon></md-button>
   </div>
+  <div class="section-options" layout-padding>
+    <md-input-container>
+      <label>Paste CSV data or drop a file</label>
+      <textarea ng-model="grade.pasteData" id="dropbox"></textarea>
+    </md-input-container>
+    <md-button class="md-primary" ng-click="grade.parsePasteData()">Append data to Students</md-button>
+    <md-button class="md-primary" ng-click="grade.parseAsNewFile()">Add as new file</md-button>
 
-  <div id="dropbox">
-  	DROPZONE
   </div>
-  <textarea
-    ng-change="grade.parsePasteData()"
-    ng-model-options="{ updateOn: 'blur' }"
-    ng-model="grade.pasteData"
-    ></textarea>
   <md-tabs flex md-selected="grade.tabIndex">
     <md-tab label="Students">
       <section class="grades">
@@ -75,7 +75,7 @@ highlight impossible? missing? confirm reviewed
           	</thead>
             <tbody>
               <tr ng-repeat="u in grade.unmatched track by $index">
-                <td colspan="{{grade.students.fields.length + 1}}"><md-button aria-label="manual association" ng-click="grade.showAssociationDialog($event, u)">manual match</md-button></td>
+                <td colspan="{{grade.students.fields.length + 1}}"><md-button class="md-primary" aria-label="manual association" ng-click="grade.showAssociationDialog($event, u)">manual match</md-button></td>
                 <td></td>
                 <td></td>
                 <td class="text-right">{{grade.grade(grade.unmatched[u.key].total, max, 1, 6, 'round', 0.1)}}</td>
@@ -103,7 +103,7 @@ highlight impossible? missing? confirm reviewed
             </tbody>
             <tfoot>
               <tr>
-                <th><md-button class="md-raised md-accent" ng-click="grade.annotateAll()">Annotate All</md-button></th>
+                <th><md-button class="md-raised md-warn" ng-click="grade.annotateAll()">Annotate All</md-button></th>
                 <th ng-class="{'text-right': col=='id'}" ng-repeat="col in grade.students.fields track by $index"></th>
                 <th></th>
                 <th></th>
@@ -119,28 +119,42 @@ highlight impossible? missing? confirm reviewed
     </md-tab>
 
     <md-tab label="Stats">
-      <md-button aria-label="sort title" class="md-raised" ng-click="grade.statsOrder='title'">order q</md-button>
-      <md-button aria-label="sort mean"  class="md-raised" ng-click="grade.statsOrder='avg'">order mean</md-button>
-      <md-button aria-label="catalog"  class="md-raised" ng-href="{{app.linkTo('catalog.pdf')}}">Get Catalog</md-button>
-      <div class="question" ng-repeat="q in grade.stats| orderBy:grade.statsOrder">
-        <h2 ng-bind="q.title"></h2>
-        <div>total: {{q.total}} mean: {{(q.avg*100).toFixed(2)}}%</div>
-        <div class="answer-dist">
-          <div ng-repeat="a in q.answers" ng-style="{width: a.nb/q.total*100 +'%'}" class="correct-{{a.correct}}">{{a.answer}}.{{a.nb}}.{{(a.nb/q.total*100).toFixed(2)}}%</div>
+      <div class="section-options md-whiteframe-z1">
+        <md-button aria-label="sort title" class="md-primary" ng-click="grade.statsOrder='title'">order by question</md-button>
+        <md-button aria-label="sort mean"  class="md-primary" ng-click="grade.statsOrder='avg'">order by mean</md-button>
+        <md-button aria-label="catalog"  class="md-primary" ng-href="{{app.linkTo('catalog.pdf')}}">Download Catalog.pdf</md-button>
+      </div>
+      <div ng-if="grade.tabIndex == 1" layout="row" layout-wrap>
+        <div class="question-stat" ng-repeat="q in grade.stats| orderBy:grade.statsOrder">
+          <h2 ng-bind="q.title"></h2>
+          <div><b>total:</b> {{q.total}} <b>mean:</b> {{(q.avg*100).toFixed(2)}}%</div>
+          <div class="answer-dist">
+            <div ng-repeat="a in q.answers" ng-style="{width: a.nb/q.total*100 +'%'}" class="answer-stat correct-{{a.correct}}" layout="row"><span flex>{{a.answer}} {{a.nb}}</span><span>{{(a.nb/q.total*100).toFixed(2)}}%</span></div>
+          </div>
         </div>
       </div>
-
     </md-tab>
     <md-tab label="{{file.name.substring(0,20)}}" ng-repeat="file in grade.files">
-      <md-content>
-        <div>
-          Lookup:
-          <p>studentLookup: <input ng-model="file.studentLookup" ng-model-options="{ updateOn: 'blur' }" ng-change="grade.save()">
-           <input ng-model="file.demoid"  ng-change="grade.save()">
-              {{grade.demoStudent(file)}}
-            </p>
-          <p>fileLookup: <input ng-model="file.fileLookup" ng-model-options="{ updateOn: 'blur' }" ng-change="grade.save()"></p>
-          <md-button class="md-warn" ng-click="grade.import(file)">import</md-button>
+      <md-content ng-if="grade.tabIndex == $index + 2">
+        <div class="section-options" layout-padding>
+          <div layout="row" layout-sm="column">
+          <md-input-container flex>
+            <label>StudentLookup</label>
+            <input ng-model="file.studentLookup" ng-model-options="{ updateOn: 'blur' }" ng-change="grade.save()">
+          </md-input-container>
+          <md-input-container>
+            <label>test student id</label>
+            <input ng-model="file.demoid"  ng-change="grade.save()">
+          </md-input-container>
+          <p>{{grade.demoStudent(file)}}</p>
+          </div>
+          <div layout="row" layout-sm="column">
+            <md-input-container flex>
+              <label>CurrentFileLookup</label>
+                <input ng-model="file.fileLookup" ng-model-options="{ updateOn: 'blur' }" ng-change="grade.save()">
+            </md-input-container>
+            <md-button class="md-warn" ng-click="grade.import(file)">import selected columns</md-button>
+          </div>
         </div>
         <table>
         	<thead>
@@ -159,7 +173,7 @@ highlight impossible? missing? confirm reviewed
         		<tr ng-repeat="row in file.data">
               <td>
 {{
-grade.lookup(row, file.fileLookup, file.studentLookup)
+grade.lookup(row, file.fileLookup, file.studentLookup).join(', ')
 }}
               </td>
               <td>
@@ -171,7 +185,7 @@ grade.makeFunc(file.fileLookup)(row)
         		</tr>
         	</tbody>
         </table>
-        <md-button class="md-raised md-warn" ng-click="grade.removeFile(file)">Remove</md-button>
+        <md-button class="md-raised md-warn" ng-click="grade.removeFile(file)">Remove file</md-button>
       </md-content>
     </md-tab>
   </md-tabs>
