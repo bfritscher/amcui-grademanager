@@ -23,6 +23,8 @@ angular.module('grademanagerApp')
       data: []
     };
 
+    grade.files = [];
+
     var debounceTimer;
 
     function debounceSave(){
