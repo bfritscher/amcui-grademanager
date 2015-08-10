@@ -69,26 +69,35 @@ highlight impossible? missing? confirm reviewed
           	<thead>
           		<tr>
                 <th></th>
-                <th ng-repeat="col in grade.students.fields track by $index">{{col}}
-                  <md-button class="button-remove"aria-label="rename column" ng-click="grade.renameColumn($event, grade.students.fields, $index, grade.students.data)" ng-hide="col == 'id'"><md-icon class="mdi-pencil"></md-icon></md-button>
-                  <md-button aria-label="remove column" ng-click="grade.removeCol(col)" class="md-warn button-remove" ng-hide="col == 'id'"><md-icon class="mdi-close"></md-icon></md-button></th>
-                <th>
-                  <input ng-model="grade.finalGrade"><br/>
-                  FinalGrade
+                <th ng-repeat="col in grade.students.fields track by $index">
+                  <div layout="row" layout-align="start end">
+                    <span>{{col}}</span>
+                    <md-button class="button-remove"aria-label="rename column" ng-click="grade.renameColumn($event, grade.students.fields, $index, grade.students.data)" ng-hide="col == 'id'"><md-icon class="mdi-pencil"></md-icon></md-button>
+                    <md-button aria-label="remove column" ng-click="grade.removeCol(col)" class="md-warn button-remove" ng-hide="col == 'id'"><md-icon class="mdi-close"></md-icon></md-button>
+                  </div>
                 </th>
-                <th><input ng-model="grade.max" ng-change="grade.dataTable({variable: grade.max, formula: grade.test})"><br/>
-                    Grade
+                <th class="text-left">
+                  <md-input-container>
+                    <label>Final grade formula</label>
+                    <input ng-model="grade.finalGrade">
+                  </md-input-container>
+                </th>
+                <th class="text-left grade-max">
+                  <md-input-container>
+                    <label>Points</label>
+                    <input ng-model="grade.max" ng-change="grade.dataTable({variable: grade.max, formula: grade.test})" min="0" type="number">
+                  </md-input-container>
                 </th>
                 <th>Total</th>
-                <th ng-repeat="(qtitle, value) in grade.questions track by $index">
-                  {{qtitle}}<br/>(max:{{value.max}})</th>
+                <th class="score" ng-repeat="(qtitle, value) in grade.questions track by $index">
+                  {{qtitle}}<br/><span class="question-max">(max:{{value.max}})</span></th>
           		</tr>
           	</thead>
             <tbody>
               <tr ng-repeat="u in grade.unmatched track by $index">
                 <td colspan="{{grade.students.fields.length + 1}}"><md-button class="md-primary" aria-label="manual association" ng-click="grade.showAssociationDialog($event, u)">manual match</md-button></td>
                 <td></td>
-                <td class="text-right">{{grade.grade(grade.unmatched[u.key].total, grade.max, 1, 6, 'round', 0.1)}}</td>
+                <td class="text-right grade">{{grade.grade(grade.unmatched[u.key].total, grade.max, 1, 6, 'round', 0.1) | number: 2}}</td>
                 <td class="text-right">{{grade.unmatched[u.key].total}}</td>
                 <td class="text-right score why-{{grade.whys[grade.unmatched[u.key].key + ':' + value.question]}}"
                     ng-repeat="(qtitle, value) in grade.questions track by $index">
@@ -101,8 +110,8 @@ highlight impossible? missing? confirm reviewed
                   <md-button ng-show="grade.scores[s.id]" aria-label="view annotated" ng-click="grade.annotateScore(grade.scores[s.id])" class="md-accent button-remove"><md-icon class="mdi-eye"></md-icon></md-button>
                 </td>
                 <td ng-class="{'text-right': col=='id'}" ng-repeat="col in grade.students.fields track by $index">{{s[col]}}</td>
-                <td class="text-right" ng-class="{'grade-fail': s.FinalGrade < 3.5, 'grade-pass': s.FinalGrade >= 4, 'grade-remed': s.FinalGrade >=3.5 && s.FinalGrade < 4}">{{grade.calculate(s, 'FinalGrade', grade.finalGrade)}}</td>
-                <td class="text-right" ng-class="{'grade-fail': s.Grade < 3.5, 'grade-pass': s.Grade >= 4, 'grade-remed': s.Grade >=3.5 && s.Grade < 4}">{{grade.scores[s.id].hasOwnProperty('total') ? grade.valueSaver(s, 'Grade', grade.grade(grade.scores[s.id].total, grade.max, 1, 6, 'round', 0.1)) : 0}}</td>
+                <td class="text-right grade" ng-class="{'grade-fail': s.FinalGrade < 3.5, 'grade-pass': s.FinalGrade >= 4, 'grade-remed': s.FinalGrade >=3.5 && s.FinalGrade < 4}">{{grade.calculate(s, 'FinalGrade', grade.finalGrade)}}</td>
+                <td class="text-right grade" ng-class="{'grade-fail': s.Grade < 3.5, 'grade-pass': s.Grade >= 4, 'grade-remed': s.Grade >=3.5 && s.Grade < 4}">{{grade.scores[s.id].hasOwnProperty('total') ? grade.valueSaver(s, 'Grade', grade.grade(grade.scores[s.id].total, grade.max, 1, 6, 'round', 0.1)) : 0}}</td>
                 <td class="text-right">{{grade.scores[s.id].total}}</td>
                 <td class="text-right score why-{{grade.whys[grade.scores[s.id].key + ':' + value.question]}}"
                   ng-repeat="(qtitle, value) in grade.questions track by $index">
@@ -119,7 +128,7 @@ highlight impossible? missing? confirm reviewed
                 <th class="text-right">{{grade.avgTotalStudent('FinalGrade') | number: 2}}</th>
                 <th class="text-right">{{grade.avgTotalStudent('Grade') | number: 2}}</th>
                 <th class="text-right">{{grade.avgTotal()}}</th>
-                <th class="text-right"
+                <th class="text-right score"
                     ng-repeat="(qtitle, value) in grade.questions track by $index">
                     {{grade.avgQuestion(qtitle) / value.max * 100 | number: 0}}%</th>
               </tr>

@@ -163,15 +163,15 @@ tr.active td{
 }
 
 .grade-pass{
-  color: green;
+  color: rgb(69, 134, 22);
 }
 
 .grade-fail{
-  color: rgb(255, 60, 5);
+  color: rgb(255, 71, 19);
 }
 
 .grade-remed{
-  color: orange;
+  color: rgb(245, 166, 65);
 }
 
 .no-background{
@@ -207,15 +207,15 @@ tr.active td{
 }
 
 .why-V{
-  background-color: yellow;
+  background-color: rgb(241, 233, 56);
 }
 
 .why-E{
-  background-color: red;
+  background-color: rgb(255, 84, 84);
 }
 
 .why-P{
-  background-color: blueviolet;
+  background-color: rgb(213, 188, 236);
 }
 
 .score a{
@@ -661,4 +661,31 @@ code.border .CodeMirror, .code-editor .border{
 
 .grades .legend span{
   padding: 5px;
+}
+
+.grades table .md-button{
+  margin: 0;
+}
+
+.grades tbody td, .grades tbody th{
+  white-space: nowrap;
+  padding: 0 4px;
+}
+
+.grades table md-input-container{
+  padding-bottom: 0;
+}
+
+.grades .grade-max md-input-container{
+  width: 60px;
+}
+.question-max{
+  font-size: 80%;
+  font-style: italic;
+}
+.grades .grade{
+  font-weight: bold;
+}
+.grades .score{
+  font-size: 80%;
 }
