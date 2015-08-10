@@ -137,6 +137,11 @@ angular.module('grademanagerApp')
             $rootScope.$apply();
         });
 
+        self.socket.on('update:options', function(options){
+            self.options.options = options;
+            $rootScope.$apply();
+        });
+
 
         var logLocal;
 
@@ -263,7 +268,10 @@ angular.module('grademanagerApp')
 
     self.loadOptions = function(){
       $http.get(self.URL + '/project/' + self.project + '/options')
-      .success(function(data){
+      .success(self.handleOptions);
+    };
+
+    self.handleOptions = function(data){
         self.options.users = data.users || [];
         self.options.users.sort();
         self.options.options = data.options || {};
@@ -271,10 +279,12 @@ angular.module('grademanagerApp')
         if(self.options.status.locked > 0){
             self.showProgressDialog();
         }
-      });
     };
 
     self.saveOptions = function(options){
+        if(!options){
+            options = self.options.options;
+        }
         return $http.post(self.URL + '/project/' + self.project + '/options', {options: options});
     };
 

@@ -166,18 +166,18 @@ highlight impossible? missing? confirm reviewed
           <div layout="row" layout-sm="column">
           <md-input-container flex>
             <label>StudentLookup</label>
-            <input ng-model="file.studentLookup" ng-model-options="{ updateOn: 'blur' }" ng-change="grade.save()">
+            <input ng-model="file.studentLookup" ng-model-options="{ updateOn: 'blur' }" ng-blur="grade.save()">
           </md-input-container>
           <md-input-container>
             <label>test student id</label>
-            <input ng-model="file.demoid"  ng-change="grade.save()">
+            <input ng-model="file.demoid"  ng-blur="grade.save()">
           </md-input-container>
           <p>{{grade.demoStudent(file)}}</p>
           </div>
           <div layout="row" layout-sm="column">
             <md-input-container flex>
               <label>CurrentFileLookup</label>
-                <input ng-model="file.fileLookup" ng-model-options="{ updateOn: 'blur' }" ng-change="grade.save()">
+                <input ng-model="file.fileLookup" ng-model-options="{ updateOn: 'blur' }" ng-blur="grade.save()">
             </md-input-container>
             <md-button class="md-warn" ng-click="grade.import(file)">import selected columns</md-button>
           </div>

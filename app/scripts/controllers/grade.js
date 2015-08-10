@@ -102,7 +102,7 @@ angular.module('grademanagerApp')
         }
 
         if (!API.options.options.final_grade_formula){
-          API.options.options.final_grade_formula = 'row.Grade'
+          API.options.options.final_grade_formula = 'row.Grade';
         }
 
       });
@@ -363,10 +363,14 @@ angular.module('grademanagerApp')
     /* DND */
     var dropbox;
     var self = this;
-    self.files = JSON.parse(localStorage.getItem('files') || '[]');
+
+    $http.get(API.URL + '/project/' + $stateParams.project + '/gradefiles')
+    .success(function(data){
+      self.files = data || [];
+    });
 
     self.save = function(){
-      localStorage.setItem('files', angular.toJson(self.files));
+      $http.post(API.URL + '/project/' + $stateParams.project + '/gradefiles', grade.files);
     };
 
 
@@ -464,6 +468,9 @@ angular.module('grademanagerApp')
       return function handleData(results) {
         $scope.$apply(function(){
           results.name = fileName;
+          results.studentLookup = 'row.name.toLowerCase()';
+          results.fileLookup = "(row['First Name']  +  ' ' + row.last_name).toLowerCase()";
+          results.demoid = 1;
     		  self.files.push(results);
           self.save();
           grade.pasteData = '';
