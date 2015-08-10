@@ -162,6 +162,18 @@ tr.active td{
   white-space: nowrap;
 }
 
+.grade-pass{
+  color: green;
+}
+
+.grade-fail{
+  color: rgb(255, 60, 5);
+}
+
+.grade-remed{
+  color: orange;
+}
+
 .no-background{
   background-color: transparent;
 }

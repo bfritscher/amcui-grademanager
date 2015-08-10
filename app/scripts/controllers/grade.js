@@ -8,7 +8,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('GradeCtrl', function ($scope, $http, $stateParams, API, auth, $mdDialog) {
+  .controller('GradeCtrl', function ($scope, $http, $timeout, $stateParams, API, auth, $mdDialog) {
 
     var grade = this;
 
@@ -23,21 +23,30 @@ angular.module('grademanagerApp')
       data: []
     };
 
+    var debounceTimer;
+
+    function debounceSave(){
+        if(debounceTimer){
+    			$timeout.cancel(debounceTimer);
+    		}
+        debounceTimer = $timeout(function(){
+            $http({
+               method: 'POST',
+               url: API.URL + '/project/' + $stateParams.project + '/csv',
+               headers: {
+                 'Content-Type': 'text/plain'
+               },
+               data: Papa.unparse(angular.copy(grade.students))
+            })
+            .success(loadScores);
+            //reload data if auto-assoc has added info
+        }, 1000);
+    }
+
     $http.get(API.URL + '/project/' + $stateParams.project + '/csv')
     .success(function(csv){
       grade.parseCSV(csv);
-      $scope.$watch('grade.students', function(){
-         $http({
-           method: 'POST',
-           url: API.URL + '/project/' + $stateParams.project + '/csv',
-           headers: {
-             'Content-Type': 'text/plain'
-           },
-           data: Papa.unparse(angular.copy(grade.students))
-         })
-         .success(loadScores);
-         //reload data if auto-assoc has added info
-      }, true);
+      $scope.$watch('grade.students', debounceSave, true);
     });
 
     $http.get(API.URL + '/project/' + $stateParams.project + '/stats')
@@ -178,14 +187,87 @@ angular.module('grademanagerApp')
       });
     };
 
-    /* calc test */
+    grade.renameColumn = function($event, fields, index, data){
+      var name = fields[index];
+      $mdDialog.show({
+              clickOutsideToClose: false,
+              targetEvent: $event,
+              templateUrl: 'views/promptdialog.html',
+              controller: 'PromptDialogCtrl',
+              controllerAs: 'ctrl',
+              locals: {
+                  options: {
+                      title: 'Rename column ',
+                      content: '',
+                      label: 'Column name',
+                      value: name
+                  }
+              }
+          })
+          .then(function(newName){
+              if (newName && newName !== name){
+                  fields[index] = newName;
+                  data.forEach(function(row){
+                    if (row.hasOwnProperty(name)){
+                      row[newName] = row[name];
+                      delete row[name];
+                    }
+                  });
+                  grade.save();
+              }
+          });
+    };
 
-    $scope.max = 22;
+    /* calc test */
+    //TODO #61
+    grade.max = 10;
+
+    grade.finalGrade = 'row.Grade * 0.5 + row.NoteCC * 0.5';
+
+
+    grade.valueSaver = function(row, field, value){
+      //check header
+      if (grade.students.fields.indexOf(field) < 0 ){
+        grade.students.fields.push(field);
+      }
+      if(value && !isNaN(value)){
+        value = parseFloat(value.toPrecision(2));
+        if(row[field] !== value){
+          row[field] = value;
+        }
+      }
+      return value;
+    };
+
+
+    grade.calculate = function(row, field, func){
+      return grade.valueSaver(row, field, grade.minMaxRoundGrade(grade.makeFunc(func)(row)));
+    };
+
+    grade.minMaxRoundRatio = function(value, minGrade, maxGrade, roundingFormula, roundingUnit){
+      return Math.max(minGrade, Math.min(maxGrade,
+        Math[roundingFormula]( ((value * (maxGrade - minGrade)) + minGrade) / roundingUnit ) * roundingUnit ));
+    };
+
+    grade.minMaxRoundGrade = function(g){
+      return grade.minMaxRoundRatio(g / 6, 1, 6, 'round', 0.1);
+    };
 
     //handle value save?
     grade.grade = function(rawValue, total, minGrade, maxGrade, roundingFormula, roundingUnit){
-      return Math.max(minGrade, Math.min(maxGrade,
-        Math[roundingFormula]( ((rawValue / total * (maxGrade - minGrade)) + minGrade) / roundingUnit ) * roundingUnit ));
+      return grade.minMaxRoundRatio(rawValue / total, minGrade, maxGrade, roundingFormula, roundingUnit);
+    };
+
+    grade.avgTotalStudent = function(field){
+        var a = grade.students.data.reduce(function(a, item){
+          if (item[field] !== '' && !isNaN(item[field])){
+            a.total += item[field];
+            a.count++;
+          }
+          return a;
+
+        }, {total: 0, count: 0});
+        return a.total / a.count;
     };
 
     grade.avg = function(getter){
@@ -270,7 +352,7 @@ angular.module('grademanagerApp')
       grade.table = table;
     };
 
-    /* TEST */
+    /* DND */
     var dropbox;
     var self = this;
     self.files = JSON.parse(localStorage.getItem('files') || '[]');
@@ -282,7 +364,7 @@ angular.module('grademanagerApp')
 
     this.makeFunc = function(func){
       /*jslint evil: true */
-       return new Function('row', 'try{ return ' + func + '; } catch (e) { return; }');
+       return new Function('row', 'try{ return ' + func + '; } catch (e) { return "error"; }');
     };
 
     //lookup only student
