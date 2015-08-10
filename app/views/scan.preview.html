@@ -3,12 +3,10 @@
   <md-checkbox class="md-primary scan-rotate" ng-model="preview.rotate">rotate</md-checkbox>
   <svg ng-if="preview.page" pan-zoom version="1.1" flex
        xmlns="http://www.w3.org/2000/svg" xmlns:xlink= "http://www.w3.org/1999/xlink">
-      <image xlink:href="" ng-xlink:href="{{preview.pageSrc()}}" x="0" y="0" ng-attr-width="{{preview.page.width}}px" ng-attr-height="{{preview.page.height}}px"
-        style="transform: {{preview.rotate ? 'matrix(' + preview.page.a + ',' + preview.page.b + ',' + preview.page.c + ',' + preview.page.d + ',' + preview.page.e + ',' + preview.page.f + ')' : 'matrix(1,0,0,1,0,0)'}}"
-          />
+      <image xlink:href="" ng-xlink:href="{{preview.pageSrc()}}" x="0" y="0" ng-attr-width="{{preview.page.width}}px" ng-attr-height="{{preview.page.height}}px" style="transform: {{preview.rotate ? 'matrix(' + preview.page.a + ',' + preview.page.b + ',' + preview.page.c + ',' + preview.page.d + ',' + preview.page.e + ',' + preview.page.f + ')' : 'matrix(1,0,0,1,0,0)'}}"></image>
     <g ng-attr-transform="{{ preview.rotate ? 'matrix(' + preview.page.a + ',' + preview.page.b + ',' + preview.page.c + ',' + preview.page.d + ',' + preview.page.e + ',' + preview.page.f + ')' : ''}}">
-    <path ng-repeat="z in preview.zones" ng-attr-d="M {{z.x0}} {{z.y0}} L {{z.x1}} {{z.y1}} L {{z.x2}} {{z.y2}} L {{z.x3}} {{z.y3}} Z"
-      ng-click="preview.toggle(z)" ng-attr-stroke="{{preview.ticked(z) && 'red' || 'blue'}}" fill="transparent" stroke-width="4" ng-attr-stroke-dasharray="{{z.manual > -1 && '6,3' || '0'}}"/>
+      <path ng-repeat="z in preview.zones" ng-attr-d="M {{z.x0}} {{z.y0}} L {{z.x1}} {{z.y1}} L {{z.x2}} {{z.y2}} L {{z.x3}} {{z.y3}} Z"
+        ng-click="preview.toggle(z)" ng-attr-stroke="{{preview.ticked(z) && 'red' || 'blue'}}" fill="transparent" stroke-width="4" ng-attr-stroke-dasharray="{{z.manual > -1 && '6,3' || '0'}}"/>
     </g>
   </svg>
 </div>
