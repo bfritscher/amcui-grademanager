@@ -62,6 +62,7 @@ angular.module('grademanagerApp')
         grade.unmatched = {};
         grade.questions = {};
         grade.whys = {};
+        grade.maxPoints = 0;
         data.forEach(function(row){
           var key = row.student + ':' +  row.copy;
           var id = key;
@@ -70,7 +71,7 @@ angular.module('grademanagerApp')
             id = row.id;
             target = 'scores';
           }
-          //TODO: if id and not exists in students? add it ot students?
+          //TODO: if id and not exists in students? add it to students?
           if (!grade[target].hasOwnProperty(id)) {
             grade[target][id] = {
               id: row.id,
@@ -87,6 +88,7 @@ angular.module('grademanagerApp')
                 question: row.question,
                 page: row.page
               };
+              grade.maxPoints += row.max;
           }
           grade[target][id].total += row.score;
           grade[target][id].questions[row.title] = row.score;
@@ -94,6 +96,15 @@ angular.module('grademanagerApp')
           grade.whys[key + ':' + row.question] = row.why;
 
         });
+
+        if (!API.options.options.points_max) {
+          API.options.options.points_max = grade.maxPoints;
+        }
+
+        if (!API.options.options.final_grade_formula){
+          API.options.options.final_grade_formula = 'row.Grade'
+        }
+
       });
     }
     loadScores();
@@ -222,8 +233,6 @@ angular.module('grademanagerApp')
     };
 
     /* calc test */
-    //TODO #61
-    grade.max = 10;
 
     grade.finalGrade = 'row.Grade * 0.5 + row.NoteCC * 0.5';
 
