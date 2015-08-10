@@ -426,6 +426,13 @@ angular.module('grademanagerApp')
     function dragenter(e) {
       e.stopPropagation();
       e.preventDefault();
+      dropbox.classList.toggle('dragover', true);
+    }
+
+    function dragleave(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      dropbox.classList.toggle('dragover', false);
     }
 
     function dragover(e) {
@@ -436,6 +443,7 @@ angular.module('grademanagerApp')
     function drop(e) {
       e.stopPropagation();
       e.preventDefault();
+      dropbox.classList.toggle('dragover', false);
 
       var dt = e.dataTransfer;
       var files = dt.files;
@@ -450,6 +458,7 @@ angular.module('grademanagerApp')
     		  self.files.push(results);
           self.save();
           grade.pasteData = '';
+          grade.tabIndex = grade.files.length + 1;
         });
     	};
     }
@@ -459,13 +468,15 @@ angular.module('grademanagerApp')
       if(!name){
         name = 'CSV#' + self.files.length;
       }
-      Papa.parse(data, {
-          worker: true,
+
+      $timeout(function(){
+        Papa.parse(data, {
           header: true,
           dynamicTyping: true,
           skipEmptyLines: true,
         	complete: handleDataFactory(name)
         });
+      });
     }
 
     function handleFiles(files) {
@@ -478,5 +489,6 @@ angular.module('grademanagerApp')
     dropbox = document.getElementById("dropbox");
     dropbox.addEventListener("dragenter", dragenter, false);
     dropbox.addEventListener("dragover", dragover, false);
+    dropbox.addEventListener("dragleave", dragleave, false);
     dropbox.addEventListener("drop", drop, false);
   });

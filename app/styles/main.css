@@ -190,7 +190,7 @@ tr.active td{
   border: 3px solid transparent;
 }
 
-.dragover{
+.dragover, md-input-container .md-input.dragover{
   border: 3px dashed rgb(230, 20, 20);
 }
 
