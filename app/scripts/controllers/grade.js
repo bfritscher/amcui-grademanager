@@ -149,6 +149,9 @@ angular.module('grademanagerApp')
       addNewFile(grade.pasteData);
     };
 
+    grade.export = function(){
+      grade.pasteData = Papa.unparse(angular.copy(grade.students));
+    };
 
     grade.removeStudent = function(student){
        grade.students.data.splice(grade.students.data.indexOf(student), 1);
@@ -241,21 +244,17 @@ angular.module('grademanagerApp')
 
 
     grade.calculate = function(row, field, func){
-      return grade.valueSaver(row, field, grade.minMaxRoundGrade(grade.makeFunc(func)(row)));
+      return grade.valueSaver(row, field, grade.minMaxRoundGrade(grade.makeFunc(func)(row), 1, 6, 'round', 0.1));
     };
 
-    grade.minMaxRoundRatio = function(value, minGrade, maxGrade, roundingFormula, roundingUnit){
+    grade.minMaxRoundGrade = function(g, minGrade, maxGrade, roundingFormula, roundingUnit){
       return Math.max(minGrade, Math.min(maxGrade,
-        Math[roundingFormula]( ((value * (maxGrade - minGrade)) + minGrade) / roundingUnit ) * roundingUnit ));
-    };
-
-    grade.minMaxRoundGrade = function(g){
-      return grade.minMaxRoundRatio(g / 6, 1, 6, 'round', 0.1);
+        Math[roundingFormula]( g / roundingUnit ) * roundingUnit ));
     };
 
     //handle value save?
     grade.grade = function(rawValue, total, minGrade, maxGrade, roundingFormula, roundingUnit){
-      return grade.minMaxRoundRatio(rawValue / total, minGrade, maxGrade, roundingFormula, roundingUnit);
+      return grade.minMaxRoundGrade(((rawValue / total * (maxGrade - minGrade)) + minGrade), minGrade, maxGrade, roundingFormula, roundingUnit);
     };
 
     grade.avgTotalStudent = function(field){

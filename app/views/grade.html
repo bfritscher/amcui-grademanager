@@ -23,15 +23,20 @@ highlight impossible? missing? confirm reviewed
     <span flex></span>
     <md-button class="md-icon-button" ng-click="grade.hidePrintNotification=true" aria-label="close message"><md-icon class="mdi-close"></md-icon></md-button>
   </div>
+
   <div class="section-options" layout-padding>
     <md-input-container>
       <label>Paste CSV data or drop a file</label>
       <textarea ng-model="grade.pasteData" id="dropbox"></textarea>
     </md-input-container>
-    <md-button class="md-primary" ng-click="grade.parsePasteData()">Append data to Students</md-button>
-    <md-button class="md-primary" ng-click="grade.parseAsNewFile()">Add as new file</md-button>
-
+    <div layout="row" layout-sm="column">
+      <md-button class="md-primary" ng-click="grade.parsePasteData()">Append data to Students</md-button>
+      <md-button class="md-primary" ng-click="grade.parseAsNewFile()">Add as new file</md-button>
+      <span flex></span>
+      <md-button class="md-warn" ng-click="grade.export()">export</md-button>
+    </div>
   </div>
+
   <md-tabs flex md-selected="grade.tabIndex">
     <md-tab label="Students">
       <section class="grades">
@@ -112,6 +117,7 @@ highlight impossible? missing? confirm reviewed
                   {{grade.avgTotalStudent(col) | number: 2}}
                 </th>
                 <th class="text-right">{{grade.avgTotalStudent('FinalGrade') | number: 2}}</th>
+                <th class="text-right">{{grade.avgTotalStudent('Grade') | number: 2}}</th>
                 <th class="text-right">{{grade.avgTotal()}}</th>
                 <th class="text-right"
                     ng-repeat="(qtitle, value) in grade.questions track by $index">
