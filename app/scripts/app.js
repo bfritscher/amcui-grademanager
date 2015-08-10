@@ -83,7 +83,7 @@ angular.forEach([
     var ngAttrName = pair.ngAttrName;
     var attrName = pair.attrName;
 
-    angular.module('grademanagerApp').directive(ngAttrName, function (IeHelperSrv) {
+    angular.module('grademanagerApp').directive(ngAttrName, ['IeHelperSrv', function (IeHelperSrv) {
         return {
             priority: 99,
             link: function (scope, element, attrs) {
@@ -98,7 +98,7 @@ angular.forEach([
                 });
             }
         };
-    });
+    }]);
 });
 
 var checkForIE = {
