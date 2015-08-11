@@ -231,6 +231,14 @@ tr.active td{
   font-size: 24px;
 }
 
+.section-nowrap span{
+  white-space: nowrap;
+}
+
+.section-nowrap md-checkbox{
+  min-width: auto;
+}
+
 .section-menu .active{
   border: 2px solid lightcoral;
 }
@@ -246,9 +254,19 @@ tr.active td{
   padding: 0;
 }
 
+.no-padding, [layout-padding] > [flex].no-padding {
+  padding: 0;
+  min-height: auto;
+}
+
 .section-header md-input-container .md-input{
   font-weight: bold;
   font-size: 22px;
+}
+
+.section-header .md-button, .printed-bar .md-button{
+  text-overflow: ellipsis;
+  display: block;
 }
 
 .section-header h3{
@@ -688,4 +706,17 @@ code.border .CodeMirror, .code-editor .border{
 }
 .grades .score{
   font-size: 80%;
+}
+
+@media screen and (max-width: 600px){
+  .section-header md-input-container{
+    width: 100px;
+  }
+  md-dialog{
+    max-width: 100%;
+    max-height: 100%;
+  }
+  .myrichtexteditor.page-width-limit {
+    margin: 4px auto;
+  }
 }

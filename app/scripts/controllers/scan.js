@@ -8,9 +8,10 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('ScanCtrl', function ($scope, $http, $state, $stateParams, API, Upload) {
+  .controller('ScanCtrl', function ($scope, $mdMedia, $http, $state, $stateParams, API, Upload) {
     var scan = this;
     API.loadProject($stateParams.project);
+    $scope.$mdMedia = $mdMedia;
 
     scan.orderBy = 'id';
     scan.reverse = false;

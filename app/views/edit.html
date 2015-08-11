@@ -4,58 +4,73 @@
 </div>
 
 <div layout="row" flex class="no-background" ng-if="editor.section">
-  <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left"  md-is-locked-open="$mdMedia('gt-lg')">
+  <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left"  md-is-locked-open="$mdMedia('gt-lg')" layout="column">
     <md-toolbar class="md-accent md-whiteframe-z1" layout="row">
       <div class="md-toolbar-tools">
         <h3>{{editor.examService.exam.course}} - {{editor.examService.exam.session}}</h3>
       </div>
     </md-toolbar>
     <div flex class="scroll-frame">
-    <md-content layout-padding class="scroll-section">
-      <div ui-tree="editor.examMenuOptions">
-        <ol ui-tree-nodes="" ng-model="editor.examService.exam.sections" data-type="section">
-          <li class="section-menu" ng-repeat="section in editor.examService.exam.sections track by section.id" ng:init="parentIndex = $index" ui-tree-node>
-            <div ui-tree-handle layout="row" ng-class="{'active': section == editor.section}">
-              <p ng-if="editor.copyMode"><md-checkbox ng-model="editor.copyCheckbox[section.id]" ng-change="editor.toggleCopy(section)" class="md-primary" data-nodrag>{{section.number}} {{section.title}}</md-checkbox></p>
-              <p ng-if="!editor.copyMode">{{section.number}} {{section.title}}</p>
-              <span flex></span>
-              <md-button aria-label="select section" data-nodrag ng-href="{{editor.linkToQuestion(section)}}" class="md-icon-button"><md-icon class="mdi-eye"></md-icon></md-button>
-            </div>
-            <ol ui-tree-nodes="" ng-model="section.questions" data-type="question">
-              <li class="question-menu" ng-repeat="question in section.questions track by question.id" ui-tree-node>
-                <div ui-tree-handle layout="row">
-                  <div flex>
-                    <strong layout-align="start center">
-                      <md-checkbox  ng-model="editor.copyCheckbox[question.id]" ng-change="editor.toggleCopy(section, question)" ng-if="editor.copyMode" class="md-primary" data-nodrag>
-                        <md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span>
-                      </md-checkbox>
-                      <div ng-if="!editor.copyMode"><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span></div>
-                    </strong>
-                    <em>{{question.content | htmlToPlaintext | limitTo: 50}}</em>
-                  </div>
-                  <md-button aria-label="select section" data-nodrag ng-href="{{editor.linkToQuestion(section, question)}}" class="md-icon-button"><md-icon class="mdi-eye"></md-icon></md-button>
-                </div>
-              </li>
-            </ol>
-          </li>
-        </ol>
-      </div>
-      <md-divider></md-divider>
-      <div>
-        <md-switch class="md-primary" ng-model="editor.copyMode" ng-change="editor.API.getProjectList()" aria-label="copy mode">
-          Activate copy
-        </md-switch>
-        <div ng-if="editor.copyMode">
-          <p>{{editor.copySummary().questions}} question(s) in {{editor.copySummary().sections}} section(s).</p>
-          <p layout="row" layout-align="start center" layout-wrap>
-            <md-select  class="md-primary" placeholder="CopyTo" ng-model="editor.copyToName">
-              <md-option  ng-repeat="item in editor.API.projects" value="{{item.project}}">{{item.project}}</md-option>
-            </md-select>
-            <md-button ng-click="editor.copyTo()" class="md-primary" ng-disabled="editor.copySummary().sections == 0 || !editor.copyTo">Copy</md-button>
-          </p>
+      <md-content layout-padding class="scroll-section">
+        <div class="section-options" hide show-sm layout-padding>
+          <md-button aria-label="print" class="md-warn" ng-click="editor.examService.print()">Print</md-button>
+          <md-input-container>
+            <label>course</label>
+            <input ng-model="editor.examService.exam.course">
+          </md-input-container>
+          <md-input-container>
+            <label>session</label>
+            <input ng-model="editor.examService.exam.session">
+          </md-input-container>
+          <md-input-container>
+            <label>teacher</label>
+            <input ng-model="editor.examService.exam.teacher">
+          </md-input-container>
         </div>
-      </div>
-    </md-content>
+        <div ui-tree="editor.examMenuOptions">
+          <ol ui-tree-nodes="" ng-model="editor.examService.exam.sections" data-type="section">
+            <li class="section-menu" ng-repeat="section in editor.examService.exam.sections track by section.id" ng:init="parentIndex = $index" ui-tree-node>
+              <div ui-tree-handle layout="row" ng-class="{'active': section == editor.section}">
+                <p ng-if="editor.copyMode"><md-checkbox ng-model="editor.copyCheckbox[section.id]" ng-change="editor.toggleCopy(section)" class="md-primary" data-nodrag>{{section.number}} {{section.title}}</md-checkbox></p>
+                <p ng-if="!editor.copyMode">{{section.number}} {{section.title}}</p>
+                <span flex></span>
+                <md-button aria-label="select section" data-nodrag ng-href="{{editor.linkToQuestion(section)}}" class="md-icon-button"><md-icon class="mdi-eye"></md-icon></md-button>
+              </div>
+              <ol ui-tree-nodes="" ng-model="section.questions" data-type="question">
+                <li class="question-menu" ng-repeat="question in section.questions track by question.id" ui-tree-node>
+                  <div ui-tree-handle layout="row">
+                    <div flex>
+                      <strong layout-align="start center">
+                        <md-checkbox  ng-model="editor.copyCheckbox[question.id]" ng-change="editor.toggleCopy(section, question)" ng-if="editor.copyMode" class="md-primary" data-nodrag>
+                          <md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span>
+                        </md-checkbox>
+                        <div ng-if="!editor.copyMode"><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span></div>
+                      </strong>
+                      <em>{{question.content | htmlToPlaintext | limitTo: 50}}</em>
+                    </div>
+                    <md-button aria-label="select section" data-nodrag ng-href="{{editor.linkToQuestion(section, question)}}" class="md-icon-button"><md-icon class="mdi-eye"></md-icon></md-button>
+                  </div>
+                </li>
+              </ol>
+            </li>
+          </ol>
+        </div>
+        <md-divider></md-divider>
+        <div>
+          <md-switch class="md-primary" ng-model="editor.copyMode" ng-change="editor.API.getProjectList()" aria-label="copy mode">
+            Activate copy
+          </md-switch>
+          <div ng-if="editor.copyMode">
+            <p>{{editor.copySummary().questions}} question(s) in {{editor.copySummary().sections}} section(s).</p>
+            <p layout="row" layout-align="start center" layout-wrap>
+              <md-select  class="md-primary" placeholder="CopyTo" ng-model="editor.copyToName">
+                <md-option  ng-repeat="item in editor.API.projects" value="{{item.project}}">{{item.project}}</md-option>
+              </md-select>
+              <md-button ng-click="editor.copyTo()" class="md-primary" ng-disabled="editor.copySummary().sections == 0 || !editor.copyTo">Copy</md-button>
+            </p>
+          </div>
+        </div>
+      </md-content>
     </div>
   </md-sidenav>
 
@@ -78,32 +93,29 @@
       <span flex></span>
     </div>
 
-    <div class="section-options main-toolbar md-whiteframe-z1">
-      <div layout="row" layout-wrap layout-align="center start" layout-sm="column" layout-padding>
+    <md-content class="section-options main-toolbar md-whiteframe-z1" layout="row" layout-align="start center" layout-padding>
         <md-button aria-label="toggle menu" class="md-icon-button" ng-hide="editor.leftNav().isLockedOpen()" ng-click="editor.leftNav().open()">
           <md-icon class="mdi-menu"></md-icon>
         </md-button>
-        <md-input-container>
-          <label>course</label>
-          <input ng-model="editor.examService.exam.course">
-        </md-input-container>
-        <md-input-container>
-          <label>session</label>
-          <input ng-model="editor.examService.exam.session">
-        </md-input-container>
-        <md-input-container>
-          <label>teacher</label>
-          <input ng-model="editor.examService.exam.teacher">
-        </md-input-container>
-    	  <span flex></span>
-        <div>
-          {{editor.lastPreview | date: 'HH:mm:ss'}}
-          <md-button aria-label="preview" ng-class="{'md-warn':  app.api.logs.preview.code>0}" ng-click="editor.showPreviewDialog($event)">{{editor.previewWait ? 'wait' : app.api.logs.preview.code == 0 ? 'Preview' : app.api.logs.preview.code > 0 ? 'error' : 'compiling'}}</md-button>
-          <md-button aria-label="LaTeX options" class="md-primary" ng-class="{'active': editor.isLatexOptionVisible}" ng-click="editor.isLatexOptionVisible = !editor.isLatexOptionVisible">LaTeX options</md-button>
-          <md-button aria-label="print" class="md-warn" ng-click="editor.examService.print()">Print</md-button>
+        <div flex class="no-padding" layout="row">
+          <md-input-container flex  hide-sm>
+            <label>course</label>
+            <input ng-model="editor.examService.exam.course">
+          </md-input-container>
+          <md-input-container flex hide-sm>
+            <label>session</label>
+            <input ng-model="editor.examService.exam.session">
+          </md-input-container>
+          <md-input-container flex hide-sm>
+            <label>teacher</label>
+            <input ng-model="editor.examService.exam.teacher">
+          </md-input-container>
         </div>
-      </div>
-    </div>
+        <span hide-sm>{{editor.lastPreview | date: 'HH:mm:ss'}}</span>
+        <md-button aria-label="preview" ng-class="{'md-warn':  app.api.logs.preview.code>0}" ng-click="editor.showPreviewDialog($event)">{{editor.previewWait ? 'wait' : app.api.logs.preview.code == 0 ? 'Preview' : app.api.logs.preview.code > 0 ? 'error' : 'compiling'}}</md-button>
+        <md-button aria-label="LaTeX options" class="md-primary" ng-class="{'active': editor.isLatexOptionVisible}" ng-click="editor.isLatexOptionVisible = !editor.isLatexOptionVisible">LaTeX options</md-button>
+        <md-button aria-label="print" class="md-warn" ng-click="editor.examService.print()"  hide-sm>Print</md-button>
+    </md-content>
 
   <div flex ng-if="editor.isLatexOptionVisible" layout="column" class="scroll-frame">
     <md-tabs flex id="latex-options" md-selected="editor.selectedSourcePreview">
@@ -165,7 +177,7 @@
           <md-button aria-label="next or new" class="md-primary" ng-click="editor.section = editor.nextSection(true)" ng-bind="editor.nextSection().title"></md-button>
     		</div>
 
-        <div layout="row" class="section-options"  layout-wrap  layout-align="start center">
+        <md-content layout="row" class="section-options section-nowrap"  layout-align="start center">
           <md-select  class="md-primary" placeholder="Level" ng-model="editor.section.level">
             <md-option ng-repeat="(key, value) in {'Level 1': 0, 'Level 2': 1, 'Level 3': 2}" value="{{value}}">{{key}}</md-option>
           </md-select>
@@ -178,7 +190,7 @@
           <md-checkbox class="md-primary" ng-model="editor.section.pageBreakBefore">Page break before</md-checkbox>
           <span flex></span>
           <md-button aria-label="delete section" class="md-warn" ng-click="editor.removeSection(editor.section)"><md-icon class="mdi-delete"></md-icon></md-button>
-        </div>
+        </md-content>
       </div>
       <my-rich-text-editor class="page-width-limit" ng-model="editor.section.content"></my-rich-text-editor>
   </div>
@@ -190,7 +202,7 @@
                   <h3 id="q{{question.number}}"><md-icon class="mdi-alert invalid" ng-hide="question.isValid" title="Need answers"></md-icon>
                    Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span></h3>
                 </div>
-                <div layout="row" layout-wrap class="section-options md-whiteframe-z1" layout-align="start center">
+                <md-content layout="row" class="section-options section-nowrap md-whiteframe-z1" layout-align="start center">
                   <md-select placeholder="Type" ng-model="question.type">
                     <md-option ng-repeat="value in ['SINGLE', 'MULTIPLE', 'OPEN']" value="{{value}}">{{value}}</md-option>
                   </md-select>
@@ -215,7 +227,7 @@
                   <md-button title="copy question" aria-label="copy question" class="md-primary md-icon-button" ng-click="editor.examService.copyQuestion(editor.section, question)"><md-icon class="mdi-content-copy"></md-icon></md-button>
                   <span flex></span>
                   <md-button aria-label="delete question" class="md-warn" ng-click="editor.examService.removeQuestion(editor.section, question)"><md-icon class="mdi-delete"></md-icon></md-button>
-                </div>
+                </md-content>
               </div>
 
               <my-rich-text-editor ng-model="question.content"></my-rich-text-editor>

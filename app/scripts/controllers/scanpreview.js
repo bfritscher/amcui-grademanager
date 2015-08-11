@@ -8,7 +8,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('ScanPreviewCtrl', function ($http, $stateParams, $sce, API, auth) {
+  .controller('ScanPreviewCtrl', function ($http, $mdMedia, $mdSidenav, $stateParams, $sce, API, auth) {
 
     var preview = this;
     $http.get(API.URL + '/project/' + $stateParams.project + '/capture/' + $stateParams.student + '/' + $stateParams.page + ':' + $stateParams.copy)
@@ -19,6 +19,10 @@ angular.module('grademanagerApp')
     .success(function(data){
       preview.zones = data;
     });
+
+    if($mdMedia('sm')){
+      $mdSidenav('right').open();
+    }
 
     this.pageSrc = function(){
       if(preview.page && preview.page.layout_image){
