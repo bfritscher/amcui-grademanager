@@ -261,7 +261,7 @@ angular.module('grademanagerApp')
 
     grade.minMaxRoundGrade = function(g, minGrade, maxGrade, roundingFormula, roundingUnit){
       return Math.max(minGrade, Math.min(maxGrade,
-        Math[roundingFormula]( g / roundingUnit ) * roundingUnit ));
+        Math[roundingFormula]( g * (1 / roundingUnit) ) * roundingUnit ));
     };
 
     //handle value save?
