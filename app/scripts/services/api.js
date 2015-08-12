@@ -34,7 +34,7 @@ angular.module('grademanagerApp')
       return $http.get(self.URL + '/project/list')
       .success(function(list){
             list.sort(function(a, b){
-              return b.project < a.project;
+              return a.project > b.project ? 1 : -1;
             });
             self.projects = list.map(function(item){
                 item.short = item.project.split('-')[0];
