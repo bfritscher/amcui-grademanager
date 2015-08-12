@@ -235,12 +235,12 @@
               <div ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" layout="{{question.layout == 'HORIZONTAL' ? 'row' : 'column'}}"  layout-padding
                   layout-align="{{question.layout == 'HORIZONTAL' ? 'center start' : ''}}" ng-class="{'answer-horizontal': question.layout == 'HORIZONTAL'}">
                 <div ng-repeat="answer in question.answers track by answer.id" class="answer" layout="row">
-                    <label layout-padding class="answer-toggle"><input type="checkbox" ng-model="answer.correct"><md-icon ng-class="{'mdi-close': !answer.correct, 'mdi-check': answer.correct}"></md-icon></label>
+                    <md-checkbox ng-model="answer.correct" class="answer-toggle" ng-class="{'mdi-close': !answer.correct, 'mdi-check': answer.correct}" aria-label="question correct"></md-checkbox>
                     <my-rich-text-editor ng-model="answer.content" flex></my-rich-text-editor>
                     <md-button aria-label="delete answer" class="md-warn" ng-click="editor.examService.removeAnswer(question, answer)"><md-icon class="mdi-delete"></md-icon></md-button>
                 </div>
                 <div class="answer" layout="row" ng-if="question.type == 'MULTIPLE'">
-                  <label layout-padding class="answer-toggle"><input type="checkbox"><md-icon ng-class="{'mdi-close': !editor.questionIsNoneCorrect(question), 'mdi-check': editor.questionIsNoneCorrect(question)}"></md-icon></label>
+<md-checkbox class="answer-toggle" ng-class="{'mdi-close': !editor.questionIsNoneCorrect(question), 'mdi-check': editor.questionIsNoneCorrect(question)}" aria-label="question correct"></md-checkbox>
                   <div flex layout-padding class="myrichtexteditor answer-none">None of the above</div>
                   <md-button aria-label="delete answer" class="md-warn" ng-disabled="'true'"><md-icon class="mdi-delete"></md-icon></md-button>
                 </div>

@@ -343,26 +343,48 @@ md-input-container.question-scoring{
   width: 50px;
 }
 
-.answer-toggle md-icon{
+.answer-toggle .md-container{
+  width: 24px;
+  height: 24px;
+}
+.answer-toggle .md-icon{
+  width: 24px;
+  height: 24px;
+  border-width: 0;
   transition: all linear 0.3s;
-  font-size: 20px;
-  line-height: 24px;
   text-align: center;
   cursor: pointer;
+  font: normal normal normal 24px/1 MaterialDesignIcons;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
 }
-
-.answer-toggle input[type=checkbox]{
+md-checkbox.md-checked.answer-toggle .md-icon:after{
   display: none;
 }
+.answer-toggle.mdi-close::before,
+.answer-toggle.mdi-check::before{
+  content: none;
+}
 
-.answer-toggle md-icon.mdi-close{
+.answer-toggle.mdi-close .md-icon{
   background-color: red;
   color: white;
   font-weight: bold;
   border-radius: 12px;
+
 }
 
-.answer-toggle md-icon.mdi-check{
+.answer-toggle.mdi-close .md-icon::before {
+    content: "\f216";
+}
+
+.answer-toggle.mdi-check .md-icon::before {
+    content: "\f1f1";
+}
+
+.answer-toggle.mdi-check .md-icon{
   background-color: green;
   color: white;
   font-weight: bold;
