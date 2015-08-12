@@ -23,18 +23,19 @@ highlight impossible? missing? confirm reviewed
     <span flex></span>
     <md-button class="md-icon-button" ng-click="grade.hidePrintNotification=true" aria-label="close message"><md-icon class="mdi-close"></md-icon></md-button>
   </div>
-
-  <div class="section-options" layout-padding hide-sm>
-    <md-input-container>
+  <div class="section-options" layout-padding layout="column" style="position: relative">
+    <md-input-container style="max-height:400px"  ng-hide="grade.hideAdd">
       <label>Paste CSV data or drop a file</label>
       <textarea ng-model="grade.pasteData" id="dropbox"></textarea>
     </md-input-container>
-    <div layout="row" layout-sm="column">
-      <md-button class="md-primary" ng-click="grade.parsePasteData()">Append data to Students</md-button>
+    <div layout="row" ng-hide="grade.hideAdd">
+      <md-button class="md-primary" ng-click="grade.parsePasteData()">Add to Students</md-button>
       <md-button class="md-primary" ng-click="grade.parseAsNewFile()">Add as new file</md-button>
       <span flex></span>
       <md-button class="md-warn" ng-click="grade.export()">export</md-button>
     </div>
+    <md-button ng-show="grade.hideAdd" ng-click="grade.hideAdd = !grade.hideAdd">CSV Options</md-button>
+    <md-button ng-hide="grade.hideAdd" ng-click="grade.hideAdd = !grade.hideAdd" class="md-icon-button tab-close"><md-icon class="mdi-close"></md-icon></md-button>
   </div>
 
   <md-tabs flex md-selected="grade.tabIndex">

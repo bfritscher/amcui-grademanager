@@ -9,18 +9,19 @@
 </div>
 <div ng-if="app.api.options.options.auto_capture_mode != -1"  layout="row" flex>
   <div class="scan-pages" layout="column">
-    <div layout-padding>
-      <h3 hide-sm>Upload papers</h3>
-      <md-button hide-sm ngf-drop ngf-select ng-model="scan.files" class="md-raised md-accent drop-box"
+    <div layout-padding class="scan-options">
+      <h4>Upload papers</h4>
+      <p><md-button ngf-drop ngf-select ng-model="scan.files" class="md-raised md-accent drop-box"
           ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true">
-          Drop pdfs or images here or click to upload</md-button>
+          Drop files here or click to upload</md-button>
       <div ngf-no-file-drop>File Drag/Drop is not supported for this browser</div>
+      </p>
       <md-content class="upload-list">
         <p ng-repeat="f in scan.uploads track by $index">{{::f.name}}
           <md-progress-linear md-mode="determinate" value="{{f.progress}}"></md-progress-linear>
         </p>
       </md-content>
-      <h3>Scanned papers</h3>
+      <h4>Scanned papers</h4>
 
       <p>Complete: {{scan.missing.complete}} <span ng-show="scan.missing.incomplete > 0">Incomplete: {{scan.missing.incomplete}}</span></p>
       <div ng-show="scan.missing.missing.length > 0">

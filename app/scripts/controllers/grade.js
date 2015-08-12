@@ -8,7 +8,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('GradeCtrl', function ($scope, $http, $timeout, $stateParams, API, auth, $mdDialog) {
+  .controller('GradeCtrl', function ($scope, $mdMedia, $http, $timeout, $stateParams, API, auth, $mdDialog) {
 
     var grade = this;
 
@@ -17,6 +17,7 @@ angular.module('grademanagerApp')
     grade.project = $stateParams.project;
 
     grade.statsOrder = 'title';
+    grade.hideAdd = $mdMedia('sm');
 
     grade.students = {
       fields: ['id'],

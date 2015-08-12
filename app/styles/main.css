@@ -708,6 +708,18 @@ code.border .CodeMirror, .code-editor .border{
   font-size: 80%;
 }
 
+.scan-options h4{
+  margin: 0;
+}
+
+.scan-options p{
+  margin-top: 4px;
+}
+
+.scan-options md-input-container{
+  padding-bottom: 0;
+}
+
 @media screen and (max-width: 600px){
   .section-header md-input-container{
     width: 100px;
@@ -715,6 +727,8 @@ code.border .CodeMirror, .code-editor .border{
   md-dialog{
     max-width: 100%;
     max-height: 100%;
+    min-width: 100%;
+    min-height: 100%;
   }
   .myrichtexteditor.page-width-limit {
     margin: 4px auto;
