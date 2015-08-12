@@ -14,7 +14,7 @@ angular.module('grademanagerApp')
 
     ctrl.options = API.options;
     ctrl.types = ['none', 'circle', 'mark', 'box'];
-    ctrl.colors = ['#000000', '#FF0000', '#00FF00', '#0000FF'];
+    ctrl.colors = ['#000000', '#ff0000', '#00ff00', '#0000ff'];
 
     ctrl.downloadURL = API.URL + '/project/' + $stateParams.project + '/zip?token=' + auth.getToken();
     ctrl.downloadODSURL = API.URL + '/project/' + $stateParams.project + '/ods?token=' + auth.getToken();
