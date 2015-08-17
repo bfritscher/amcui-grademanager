@@ -15,8 +15,8 @@ angular.module('grademanagerApp')
     }
 
     var self = this;
-    self.URL = 'https://j42.org/amcui';
-    self.SOCKET_URL = 'https://j42.org/';
+    self.URL = 'https://amcui.ig.he-arc.ch';
+    self.SOCKET_URL = 'https://amcui.ig.he-arc.ch/';
     //self.URL = 'http://192.168.56.101:9001';
     //self.SOCKET_URL = 'http://192.168.56.101:9001/';
     self.project = false;
@@ -97,7 +97,7 @@ angular.module('grademanagerApp')
         self.project = project;
         self.PROJECT_URL = self.URL + '/project/' + self.project;
         self.newLog('connecting');
-        self.socket = io.connect(self.SOCKET_URL + '?token='+ getAuth().getToken(), {path:'/amcui/socket.io'}); //
+        self.socket = io.connect(self.SOCKET_URL + '?token='+ getAuth().getToken()); //, {path:'/amcui/socket.io'}
 
         self.loadOptions();
 
