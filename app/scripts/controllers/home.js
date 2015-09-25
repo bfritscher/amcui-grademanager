@@ -49,7 +49,7 @@ angular.module('grademanagerApp')
         home.error = '';
         API.createProject(home.newProjectName)
         .success(function(){
-          home.openProject({project: home.newProjectName});
+          home.openProject({project: home.newProjectName.toLowerCase()});
           home.newProjectName = '';
         })
         .error(function(data){
@@ -76,7 +76,7 @@ angular.module('grademanagerApp')
           .then(function(name){
               API.copyProject(item.project, name)
               .success(function(){
-                  home.openProject({project: name});
+                  home.openProject({project: name.toLowerCase()});
               });
           });
       };
