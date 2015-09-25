@@ -730,6 +730,10 @@ code.border .CodeMirror, .code-editor .border{
   font-size: 80%;
 }
 
+tbody tr:hover {
+  background-color: #E3F3FF;
+}
+
 .scan-options h4{
   margin: 0;
 }
