@@ -108,6 +108,18 @@ angular.module('grademanagerApp')
           API.options.options.final_grade_formula = 'row.Grade';
         }
 
+        grade.test = {
+          getter: function(id){
+            if(grade.scores.hasOwnProperty(id)){
+              return grade.scores[id].total;
+            }
+          },
+          minGrade: API.options.options.note_min,
+          maxGrade: API.options.options.note_max,
+          roundingFormula: 'round',
+          roundingUnit: API.options.options.note_grain
+        };
+
       });
     }
     loadScores();
@@ -266,6 +278,9 @@ angular.module('grademanagerApp')
 
     //handle value save?
     grade.grade = function(rawValue, total, minGrade, maxGrade, roundingFormula, roundingUnit){
+      minGrade = parseFloat(minGrade);
+      maxGrade = parseFloat(maxGrade);
+      roundingUnit = parseFloat(roundingUnit);
       return grade.minMaxRoundGrade(((rawValue / total * (maxGrade - minGrade)) + minGrade), minGrade, maxGrade, roundingFormula, roundingUnit);
     };
 
@@ -306,19 +321,6 @@ angular.module('grademanagerApp')
         return o.questions[col];
       });
     };
-
-    grade.test = {
-      getter: function(id){
-        if(grade.scores.hasOwnProperty(id)){
-          return grade.scores[id].total;
-        }
-      },
-      minGrade: 1,
-      maxGrade: 6,
-      roundingFormula: 'round',
-      roundingUnit: 0.1
-    };
-
 
     grade.dataTable = function(calculatedField){
       //max, avg, pass, remed, fail
