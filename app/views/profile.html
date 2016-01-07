@@ -28,8 +28,17 @@
     <md-card>
 	   <md-card-content>
            <h2>2-Factor Authentication</h2>
+           <md-input-container>
+				<label>Password</label>
+				<input ng-model="profile.u2fPassword" type="password" ng-required="true">
+			</md-input-container>
            <md-button class="md-raised md-primary" ng-disabled="app.getUser().u2f" ng-click="profile.addU2f()">Add u2f Key</md-button>
            <md-button class="md-raised md-warn"  ng-disabled="!app.getUser().u2f" ng-click="profile.removeU2f()">Remove u2f Key</md-button>
+           <div>
+                <ng-messages for="profile.u2ferror" role="alert">
+                        <ng-message when="error">{{profile.u2ferror.error}}</ng-message>
+                </ng-messages>
+            </div>
 	   </md-card-content>
     </md-card>
 

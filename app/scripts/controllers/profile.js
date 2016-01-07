@@ -25,7 +25,7 @@ angular.module('grademanagerApp')
     };
 
     profile.addU2f = function(){
-        auth.u2fRegister()
+        auth.u2fRegister(profile.u2fPassword)
         .error(function(data){
           profile.error = {error: data};
         })
@@ -34,7 +34,7 @@ angular.module('grademanagerApp')
             $window.u2f.register([data.u2f], [], function(answer){
                 auth.u2fReply(answer)
                 .error(function(data){
-                    profile.error = {error: data};
+                    profile.u2ferror = {error: data};
                 });
             });
         });
@@ -42,7 +42,7 @@ angular.module('grademanagerApp')
 
     profile.removeU2f = function(){
         auth.u2fRemove().error(function(data){
-          profile.error = {error: data};
+          profile.u2ferror = {error: data};
         })
         .success(auth.logout);
     };
