@@ -34,7 +34,7 @@ angular.module('grademanagerApp')
             profile.u2ferror = {error: 'Please insert U2F Key!'};
             $window.u2f.register([data.u2f], [], function(answer){
                 profile.u2ferror = {error: 'Thank you!'};
-                auth.u2fReply(answer)
+                auth.u2fReply(auth.getUsername(), answer)
                 .error(function(data){
                     profile.u2ferror = {error: data};
                 });
