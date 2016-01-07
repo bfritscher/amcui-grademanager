@@ -20,7 +20,8 @@ angular
     'ui.router',
     'IeHelper',
     'ngFileUpload',
-    'ui.codemirror'
+    'ui.codemirror',
+    'validation.match'
   ])
   .config(function ($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise('/');
@@ -30,6 +31,12 @@ angular
         templateUrl: 'views/home.html',
         controller: 'HomeCtrl',
         controllerAs: 'home'
+      })
+      .state('profile', {
+        url: '/profile',
+        templateUrl: 'views/profile.html',
+        controller: 'ProfileCtrl',
+        controllerAs: 'profile'
       })
       .state('edit', {
         url: '/:project/edit',

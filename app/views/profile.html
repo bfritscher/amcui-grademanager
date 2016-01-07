@@ -1,0 +1,36 @@
+<md-content layout-padding class="no-background" layout-align="start center" layout="column" flex>
+    <form ng-submit="profile.changePassword()">
+		<md-card>
+			<md-card-content>
+                <h2>Password Manager</h2>
+				<md-input-container>
+					<label>Old Password</label>
+					<input ng-model="profile.oldPassword" type="password" ng-required="true">
+				</md-input-container>
+				<md-input-container>
+					<label>New Password</label>
+					<input ng-model="profile.password" type="password" ng-required="true">
+				</md-input-container>
+                <md-input-container>
+					<label>New Password (repeat)</label>
+					<input ng-model="profile.password2" type="password" match="profile.password" ng-required="true">
+				</md-input-container>
+				<ng-messages for="profile.error" role="alert">
+				  <ng-message when="error">{{profile.error.error}}</ng-message>
+				</ng-messages>
+			</md-card-content>
+			 <div class="md-actions" layout="row" layout-align="end center">
+				<md-button  class="md-primary" ng-disabled="profile.password != profile.password2" ng-click="profile.changePassword()">Change Password</md-button>
+		      </div>
+		</md-card>
+    </form>
+
+    <md-card>
+	   <md-card-content>
+           <h2>2-Factor Authentication</h2>
+           <md-button class="md-raised md-primary" ng-disabled="app.getUser().u2f" ng-click="profile.addU2f()">Add u2f Key</md-button>
+           <md-button class="md-raised md-warn"  ng-disabled="!app.getUser().u2f" ng-click="profile.removeU2f()">Remove u2f Key</md-button>
+	   </md-card-content>
+    </md-card>
+
+</md-content>

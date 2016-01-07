@@ -45,10 +45,46 @@ angular.module('grademanagerApp')
       }
     };
 
+    self.getUser = function(){
+      var token = self.getToken();
+      if(token) {
+        var params = self.parseJwt(token);
+        return params;
+      } else {
+        return {};
+      }
+    };
+
     self.login = function(username, password) {
       return $http.post(API.URL + '/login', {
           username: username,
           password: password
+        });
+    };
+
+    self.u2fReply = function(reply) {
+      return $http.post(API.URL + '/login', {
+          username: self.getUsername(),
+          u2f: reply
+        });
+    };
+
+    self.u2fRegister = function() {
+      return $http.post(API.URL + '/login', {
+          username: self.getUsername(),
+          u2fRegistration: true
+        });
+    };
+
+    self.u2fRegister = function() {
+      return $http.post(API.URL + '/profile/removeU2f', {});
+    };
+
+    self.changePassword = function(username, password, newPassword) {
+      return $http.post(API.URL + '/changePassword', {
+          username: username,
+          password: password,
+          newPassword: newPassword
         });
     };
 

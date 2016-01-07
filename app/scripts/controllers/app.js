@@ -23,6 +23,10 @@ angular.module('grademanagerApp')
       return auth.getUsername();
     };
 
+    this.getUser = function(){
+        return auth.getUser();
+    };
+
     this.isAuthed = function() {
       var authed = auth.isAuthed();
       if(!authed && !$state.is('home')){
@@ -51,7 +55,7 @@ angular.module('grademanagerApp')
     };
 
     $scope.$on('$stateChangeSuccess', function(){
-      _this.hideTabs = $state.includes('home');
+      _this.hideTabs = $state.includes('home') || $state.includes('profile');
       if($state.includes('edit')){
         _this.tabIndex = 0;
       }

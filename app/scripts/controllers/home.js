@@ -9,7 +9,7 @@
  */
 
 angular.module('grademanagerApp')
-  .controller('HomeCtrl', function ($scope, $state, $mdDialog, auth, exam, API) {
+  .controller('HomeCtrl', function ($scope, $state, $mdDialog, $window, auth, exam, API) {
 
       var home = this;
 
@@ -29,7 +29,19 @@ angular.module('grademanagerApp')
         .error(function(data){
           home.error = {error: data};
         })
-        .success(API.getProjectList);
+        .success(function(data){
+            if (data.u2f) {
+                $window.u2f.sign([data.u2f], [], function(answer){
+                    auth.u2fReply(answer)
+                    .error(function(data){
+                        home.error = {error: data};
+                    })
+                    .success(API.getProjectList);
+                });
+            } else {
+                API.getProjectList(data);
+            }
+        });
       };
 
       home.openProject = function(project){

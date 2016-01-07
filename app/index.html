@@ -66,6 +66,11 @@
               </md-button>
             </md-menu-item>
             <md-menu-item>
+              <md-button ng-click="app.go('profile')">
+                Edit profile
+              </md-button>
+            </md-menu-item>
+            <md-menu-item>
               <md-button ng-click="app.logout()">
                 Logout
               </md-button>
@@ -126,6 +131,8 @@
     <script src="bower_components/pdfjs-dist/web/pdf_viewer.js"></script>
     <script src="bower_components/codemirror/lib/codemirror.js"></script>
     <script src="bower_components/angular-ui-codemirror/ui-codemirror.js"></script>
+    <script src="bower_components/angular-validation-match/dist/angular-validation-match.min.js"></script>
+    <script src="bower_components/u2f-api/u2f-api.js"></script>
     <!-- endbower -->
     <script src="bower_components/codemirror/mode/stex/stex.js"></script>
     <script src="bower_components/codemirror/mode/xml/xml.js"></script>
@@ -166,6 +173,7 @@ Raven.config('https://1e8632b672284ea09d094bcf0670addf@j42.org/sentry/6', {
       <script src="scripts/controllers/codeeditor.js"></script>
       <script src="scripts/controllers/editpreview.js"></script>
       <script src="scripts/controllers/graphicsmanager.js"></script>
+      <script src="scripts/controllers/profile.js"></script>
       <script src="scripts/directives/panzoom.js"></script>
       <script src="scripts/directives/myrichtexteditor.js"></script>
       <script src="scripts/directives/mypdfviewer.js"></script>
@@ -177,7 +185,6 @@ Raven.config('https://1e8632b672284ea09d094bcf0670addf@j42.org/sentry/6', {
       <script src="scripts/filters/htmltoplaintext.js"></script>
       <script src="scripts/filters/join.js"></script>
       <script src="scripts/filters/unique.js"></script>
-
       <!-- endbuild -->
       <script>
         PDFJS.workerSrc = 'scripts/pdf.worker.js';
