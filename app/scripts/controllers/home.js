@@ -34,7 +34,7 @@ angular.module('grademanagerApp')
                 home.error = {error: 'Please insert U2F Key!'};
                 $window.u2f.sign([data.u2f], function(answer){
                     home.error = {error: 'Thank you!'};
-                    auth.u2fReply(answer)
+                    auth.u2fReply(home.username, answer)
                     .error(function(data){
                         home.error = {error: data};
                     })

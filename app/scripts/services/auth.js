@@ -62,9 +62,9 @@ angular.module('grademanagerApp')
         });
     };
 
-    self.u2fReply = function(reply) {
+    self.u2fReply = function(username, reply) {
       return $http.post(API.URL + '/login', {
-          username: self.getUsername(),
+          username: username,
           u2f: reply
         });
     };
