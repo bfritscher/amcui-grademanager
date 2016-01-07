@@ -80,7 +80,7 @@ angular.module('grademanagerApp')
       return $http.post(API.URL + '/profile/removeU2f', {});
     };
 
-    self.changePassword = function(username, password, newPassword) {
+    self.changePassword = function(password, newPassword) {
       return $http.post(API.URL + '/changePassword', {
           username: self.getUsername(),
           password: password,
