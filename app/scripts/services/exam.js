@@ -658,7 +658,8 @@ angular.module('grademanagerApp')
 
         return {
             questions_definition: head.join('\n'),
-            questions_layout: body.join('\n')
+            questions_layout: body.join('\n'),
+            json: editor.getJSON()
         };
     };
 
