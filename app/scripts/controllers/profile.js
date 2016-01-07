@@ -12,7 +12,7 @@ angular.module('grademanagerApp')
     var profile = this;
     profile.changePassword = function(){
         profile.error = '';
-        auth.changePassword(profile.username,profile.oldPassword, profile.password)
+        auth.changePassword(profile.oldPassword, profile.password)
         .error(function(data){
           profile.error = {error: data};
         })
