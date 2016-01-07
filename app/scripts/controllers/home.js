@@ -31,7 +31,7 @@ angular.module('grademanagerApp')
         })
         .success(function(data){
             if (data.u2f) {
-                $window.u2f.sign([data.u2f], [], function(answer){
+                $window.u2f.sign([data.u2f], function(answer){
                     auth.u2fReply(answer)
                     .error(function(data){
                         home.error = {error: data};
