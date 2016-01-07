@@ -76,13 +76,13 @@ angular.module('grademanagerApp')
         });
     };
 
-    self.u2fRegister = function() {
+    self.u2fRemove = function() {
       return $http.post(API.URL + '/profile/removeU2f', {});
     };
 
     self.changePassword = function(username, password, newPassword) {
       return $http.post(API.URL + '/changePassword', {
-          username: username,
+          username: self.getUsername(),
           password: password,
           newPassword: newPassword
         });
