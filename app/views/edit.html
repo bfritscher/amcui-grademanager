@@ -156,6 +156,11 @@
             Past AMC Latex code here (amcui layout and question definition), then
             <md-button ng-click="editor.examService.importLatex(editor.importSource)" class="md-raised md-primary">Import</md-button>
           </div>
+          <ui-codemirror class="border" ng-if="editor.selectedSourcePreview == 4" ui-codemirror-opts="editor.jsonImportOptions" ng-model="editor.importJSONSource"></ui-codemirror>
+          <div layout-padding>
+            Past a valid JSON sync object code here to overwrite current (You can loose everything!).
+            <md-button ng-click="editor.examService.importJSON(editor.importJSONSource)" class="md-raised md-warn">DANGER! overwrite!</md-button>
+          </div>
         </md-tab-body>
       </md-tab>
     </md-tabs>

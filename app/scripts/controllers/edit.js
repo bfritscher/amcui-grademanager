@@ -159,6 +159,15 @@ angular.module('grademanagerApp')
 		matchBrackets: true
 	};
 
+    editor.jsonImportOptions = {
+		mode: 'application/json',
+		lineNumbers: true,
+		lineWrapping: true,
+		viewportMargin: Infinity,
+		readOnly: false,
+		matchBrackets: true
+	};
+
 	editor.questionIsNoneCorrect = function(question){
 		return question.answers.every(function(a){
 			return !a.correct;
