@@ -1,3 +1,4 @@
 # grademanager
 
-grunt buildcontrol
+  grunt build
+  grunt buildcontrol
