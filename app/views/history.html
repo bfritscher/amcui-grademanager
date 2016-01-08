@@ -1,0 +1,9 @@
+<div flex class="scroll-frame">
+<md-content layout="column" class="no-background scroll-section options" layout-padding>
+	<h2>History</h2>
+    <div class="commit {{c.type}}" ng-repeat="c in ctrl.logs">
+        <span>{{c.msg}} by {{c.username}} @ {{c.date | date:'dd/MM/yyyy HH:mm'}}</span>
+        <md-button ng-show="c.type == 'commit'" class="md-warn" ng-click="ctrl.restore($event, c)">Restore</md-button>
+    </div>
+</md-content>
+</div>

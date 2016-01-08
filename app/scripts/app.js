@@ -68,6 +68,12 @@ angular
         templateUrl: 'views/options.html',
         controller: 'OptionsCtrl',
         controllerAs: 'ctrl'
+      })
+      .state('history', {
+        url: '/:project/history',
+        templateUrl: 'views/history.html',
+        controller: 'HistoryCtrl',
+        controllerAs: 'ctrl'
       });
   })
   .config(function($mdIconProvider) {

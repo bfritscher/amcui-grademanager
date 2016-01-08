@@ -86,6 +86,7 @@
             <md-tab label="Scan" md-on-select="app.go('scan')" ng-disabled="app.api.options.users.length > 0 && !app.api.options.status.printed"></md-tab>
             <md-tab label="Grade" md-on-select="app.go('grade')"></md-tab>
             <md-tab label="Options" md-on-select="app.go('options')"></md-tab>
+            <md-tab label="History" md-on-select="app.go('history')"></md-tab>
         </md-tabs>
         <div layout="row" ng-hide="app.hideTabs">
           <div class="user-online" ng-repeat="(id, user) in app.api.connected">
@@ -174,6 +175,7 @@ Raven.config('https://1e8632b672284ea09d094bcf0670addf@j42.org/sentry/6', {
       <script src="scripts/controllers/editpreview.js"></script>
       <script src="scripts/controllers/graphicsmanager.js"></script>
       <script src="scripts/controllers/profile.js"></script>
+      <script src="scripts/controllers/history.js"></script>
       <script src="scripts/directives/panzoom.js"></script>
       <script src="scripts/directives/myrichtexteditor.js"></script>
       <script src="scripts/directives/mypdfviewer.js"></script>

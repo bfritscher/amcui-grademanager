@@ -82,6 +82,7 @@ angular.module('grademanagerApp')
         }
 		//handleCopy
 		handleCopy();
+        handleImport();
 	});
 
 	editor.leftNav = function (){
@@ -326,6 +327,17 @@ angular.module('grademanagerApp')
 				$mdToast.show($mdToast.simple().content('Content has been copied!').position('top right'));
 				localStorage.removeItem('copy');
 			}
+		}
+	}
+
+    function handleImport(){
+		var copy = localStorage.getItem('import');
+		if(copy) {
+            exam.importJSON(copy);
+			localStorage.removeItem('import');
+            $timeout(function(){
+                $state.go('edit', {project: $stateParams.project}, {reload: true});
+            }, 1000);
 		}
 	}
   });

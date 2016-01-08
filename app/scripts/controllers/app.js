@@ -68,5 +68,8 @@ angular.module('grademanagerApp')
       if($state.includes('options')){
         _this.tabIndex = 3;
       }
+      if($state.includes('history')){
+        _this.tabIndex = 4;
+      }
     });
   });

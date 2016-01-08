@@ -17,8 +17,8 @@ angular.module('grademanagerApp')
     var self = this;
     self.URL = 'https://amcui.ig.he-arc.ch';
     self.SOCKET_URL = 'https://amcui.ig.he-arc.ch/';
-    //self.URL = 'http://192.168.99.100:9001';
-    //self.SOCKET_URL = 'http://192.168.99.100:9001/';
+    //self.URL = 'http://127.0.0.1:9001';
+    //self.SOCKET_URL = 'http://127.0.0.1:9001/';
     self.project = false;
     self.options = {
       users: [],
@@ -338,6 +338,16 @@ angular.module('grademanagerApp')
 
     self.setPageAuto = function(project, page){
       return $http.post(self.URL + '/project/' + project + '/capture/setauto', page);
+    };
+
+    self.loadHistory = function(){
+      return $http.get(self.URL + '/project/' + self.project + '/gitlogs');
+    };
+
+    self.revertGit = function(sha){
+      return $http.post(self.URL + '/project/' + self.project + '/revert', {
+          sha: sha
+      });
     };
 
 

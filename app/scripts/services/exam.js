@@ -68,8 +68,10 @@ angular.module('grademanagerApp')
         client.initialize();
     };
 
-    editor.importJSON = function(json){
-        var obj = JSON.parse(json);
+    editor.importJSON = function(obj){
+        if (typeof obj === 'string'){
+            obj = JSON.parse(obj);
+        }
         angular.copy(obj, editor.exam);
     };
 
