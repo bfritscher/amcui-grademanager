@@ -55,21 +55,26 @@ angular.module('grademanagerApp')
     };
 
     $scope.$on('$stateChangeSuccess', function(){
-      _this.hideTabs = $state.includes('home') || $state.includes('profile');
+      _this.hideTabs = true;
       if($state.includes('edit')){
         _this.tabIndex = 0;
+        _this.hideTabs = false;
       }
       if($state.includes('scan')){
         _this.tabIndex = 1;
+        _this.hideTabs = false;
       }
       if($state.includes('grade')){
         _this.tabIndex = 2;
+        _this.hideTabs = false;
       }
       if($state.includes('options')){
         _this.tabIndex = 3;
+        _this.hideTabs = false;
       }
       if($state.includes('history')){
         _this.tabIndex = 4;
+        _this.hideTabs = false;
       }
     });
   });

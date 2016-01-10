@@ -74,6 +74,12 @@ angular
         templateUrl: 'views/history.html',
         controller: 'HistoryCtrl',
         controllerAs: 'ctrl'
+      })
+      .state('admin_stats', {
+        url: '/admin/stats',
+        templateUrl: 'views/admin/stats.html',
+        controller: 'AdminStatsCtrl',
+        controllerAs: 'ctrl'
       });
   })
   .config(function($mdIconProvider) {

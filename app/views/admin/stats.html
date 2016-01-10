@@ -1,0 +1,22 @@
+<md-content layout-padding class="no-background" layout-align="space-around start" layout="row" flex>
+    <div flex="50">
+        <h2>Projects ({{ctrl.stats.roles.length}})</h2>
+        <ul>
+            <li ng-repeat="p in ctrl.stats.roles | orderBy:'+'">
+                <p><b>{{p}} ({{ctrl.stats.projects[p].length}})</b><br/>
+                    <span ng-repeat="u in ctrl.stats.projects[p]">{{u}}<span ng-hide="$last">, </span></span>
+                </p>
+            </li>
+        </ul>
+    </div>
+    <div flex="50">
+        <h2>Users ({{ctrl.keys(ctrl.stats.users).length}})</h2>
+        <ul>
+            <li ng-repeat="(u, projects) in ctrl.stats.users">
+                <p><b>{{u}} ({{projects.length}})</b><br/>
+                    <span ng-repeat="p in projects">{{p}}<span ng-hide="$last">, </span></span>
+                </p>
+            </li>
+        </ul>
+    </div>
+</md-content>
