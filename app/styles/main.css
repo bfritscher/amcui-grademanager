@@ -53,6 +53,10 @@ md-input-container .mdi{
   background-color: red;
 }
 
+.projects .subheader td {
+    border-bottom: 1px solid rgba(0,0,0,0.3);
+}
+
 path{
   cursor: pointer;
 }
