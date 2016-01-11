@@ -419,7 +419,9 @@ angular.module('grademanagerApp')
         'text/html': 'html',
         'text/css': 'html',
         'text/javascript': 'JavaScript',
-        'text/x-sql': 'SQL'
+        'text/x-sql': 'SQL',
+        'text/x-java': 'java',
+        'text/x-python': 'Python'
     };
 
     function codeNode2Latex(node){

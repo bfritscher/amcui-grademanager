@@ -11,7 +11,7 @@
   <md-dialog-content layout="column">
     <div layout="row" layout-align="start center" class="section-options" layout-wrap>
        <md-select placeholder="Mode" ng-model="ctrl.code.mode" class="md-primary">
-          <md-option ng-repeat="mode in ['text/html', 'text/css', 'text/javascript', 'text/x-sql']" value="{{mode}}">{{mode}}</md-option>
+          <md-option ng-repeat="mode in ['text/html', 'text/css', 'text/javascript', 'text/x-sql', 'text/x-java', 'text/x-python']" value="{{mode}}">{{mode}}</md-option>
        </md-select>
 	     <md-checkbox class="md-primary" ng-model="ctrl.code.numbers">Line numbers</md-checkbox>
        <md-checkbox class="md-primary" ng-model="ctrl.code.border">Border</md-checkbox>
