@@ -39,9 +39,9 @@
               <ol ui-tree-nodes="" ng-model="section.questions" data-type="question">
                 <li class="question-menu" ng-repeat="question in section.questions track by question.id" ui-tree-node>
                   <div ui-tree-handle layout="row">
-                    <div flex>
-                      <strong layout-align="start center">
-                        <md-checkbox  ng-model="editor.copyCheckbox[question.id]" ng-change="editor.toggleCopy(section, question)" ng-if="editor.copyMode" class="md-primary" data-nodrag>
+                    <div flex layout="column" class="question-menu-description">
+                      <strong>
+                        <md-checkbox ng-model="editor.copyCheckbox[question.id]" ng-change="editor.toggleCopy(section, question)" ng-if="editor.copyMode" class="md-primary" data-nodrag>
                           <md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span>
                         </md-checkbox>
                         <div ng-if="!editor.copyMode"><md-icon class="mdi-alert invalid" ng-hide="question.isValid"></md-icon>  Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span></div>
