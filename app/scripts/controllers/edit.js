@@ -147,7 +147,7 @@ angular.module('grademanagerApp')
 		lineNumbers: true,
 		lineWrapping: true,
 		viewportMargin: Infinity,
-		readOnly: 'nocursor',
+		readOnly: true,
 		matchBrackets: true
 	};
 
@@ -156,7 +156,7 @@ angular.module('grademanagerApp')
 		lineNumbers: true,
 		lineWrapping: true,
 		viewportMargin: Infinity,
-		readOnly: 'nocursor',
+		readOnly: true,
 		matchBrackets: true
 	};
 
