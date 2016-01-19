@@ -124,10 +124,12 @@ angular.module('grademanagerApp')
             points: 1,
             dots: false,
             lines: 3,
+            columns: 1,
             answers: []
         };
         if(previous){
             question.type = previous.type;
+            question.columns = previous.columns;
         }
         if(question.type !== 'OPEN'){
             editor.addAnswer(question);
@@ -148,6 +150,7 @@ angular.module('grademanagerApp')
         copy.points = question.points;
         copy.dots = question.dots;
         copy.lines = question.lines;
+        copy.columns = question.columns;
         copy.answers = [];
 
         question.answers.forEach(function(answer){
@@ -444,7 +447,7 @@ angular.module('grademanagerApp')
         return 'CODE\\_NOT\\_FOUND';
     }
 
-    function imgNode2Latex(node){
+    function imgNode2Latex(node, vcenter){
         var img = editor.getGraphics(node.getAttribute('id'));
         if(img){
 
@@ -456,13 +459,16 @@ angular.module('grademanagerApp')
             if(img.border){
                 out = "\\fbox{" + out + "}";
             }
+            if (vcenter) {
+                out = "$\\vcenter{\\hbox{" + out + "}}$";
+            }
             return out;
         }
 
         return 'IMG\\_NOT\\_FOUND';
     }
 
-    function html2Latex(content){
+    function html2Latex(content, isAnswer){
         var div = document.createElement('div');
         div.innerHTML = content;
         function handleNode(node, level){
@@ -493,7 +499,7 @@ angular.module('grademanagerApp')
                             break;
 
                         case 'IMG':
-                            out += imgNode2Latex(child);
+                            out += imgNode2Latex(child, isAnswer);
                             break;
 
                         case 'CODE':
@@ -543,7 +549,7 @@ angular.module('grademanagerApp')
     }
 
     function answerToLatex(answer, head){
-        head.push('      \\' + (answer.correct ? 'bonne' : 'mauvaise') + '{' + html2Latex(answer.content) + '      }');
+        head.push('      \\' + (answer.correct ? 'bonne' : 'mauvaise') + '{' + html2Latex(answer.content, true) + '      }');
     }
 
     function choiceQuestionToLatex(question, type, head){
@@ -558,11 +564,17 @@ angular.module('grademanagerApp')
         if (question.ordered) {
             beginAnswers += '[o]';
         }
+        if (question.columns && question.columns > 1) {
+            head.push('\n    \\begin{multicols}{' + question.columns + '}\\AMCBoxedAnswers');
+        }
         head.push(beginAnswers);
         question.answers.forEach(function(answer){
             answerToLatex(answer, head);
         });
         head.push('    \\end{' + layout + '}');
+        if (question.columns && question.columns > 1) {
+            head.push('    \\end{multicols}');
+        }
         head.push('  \\end{' + type + '}');
     }
 
