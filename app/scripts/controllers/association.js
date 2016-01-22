@@ -40,7 +40,7 @@ angular.module('grademanagerApp')
 
     ctrl.nextUnmatched = function(){
       return ctrl.names.filter(function(item){
-        return !item.auto && !item.manual;
+        return !item.auto && !item.manual && !item.skip;
       }).pop();
     };
 
@@ -61,6 +61,11 @@ angular.module('grademanagerApp')
         }
         ctrl.match = ctrl.nextUnmatched();
       }
+    };
+
+    ctrl.skip = function(){
+        ctrl.match.skip = true;
+        ctrl.match = ctrl.nextUnmatched();
     };
 
     ctrl.closeDialog = function() {
