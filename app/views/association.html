@@ -11,6 +11,7 @@
   </md-toolbar>
   <md-dialog-content>
     <div ng-show="ctrl.match">
+      <img ng-src="{{ctrl.nameSrc()}}">
       <md-autocomplete
         placeholder="Student name"
         md-no-cache="true"
@@ -24,7 +25,6 @@
           No matches found for "{{searchText}}".
         </md-not-found>
       </md-autocomplete>
-      <img ng-src="{{ctrl.nameSrc()}}">
     </div>
     <div ng-hide="ctrl.match">
       Everything has a match.
