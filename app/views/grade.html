@@ -126,7 +126,7 @@ highlight impossible? missing? confirm reviewed
               <tr>
                 <th><md-button class="md-raised md-warn" ng-click="grade.annotateAll()">Annotate All</md-button></th>
                 <th ng-class="{'text-right': col=='id'}" ng-repeat="col in grade.students.fields track by $index">
-                  {{grade.avgTotalStudent(col) | number: 2}}
+                  {{col=='id' ? grade.students.data.length : (grade.avgTotalStudent(col) | number: 2)}}
                 </th>
                 <th class="text-right">{{grade.avgTotalStudent('FinalGrade') | number: 2}}</th>
                 <th class="text-right">{{grade.avgTotalStudent('Grade') | number: 2}}</th>
