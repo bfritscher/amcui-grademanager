@@ -115,7 +115,7 @@ highlight impossible? missing? confirm reviewed
                 <td ng-class="{'text-right': col=='id'}" ng-repeat="col in grade.students.fields track by $index">{{s[col]}}</td>
                 <td class="text-right grade" ng-class="{'grade-fail': s.FinalGrade < 3.5, 'grade-pass': s.FinalGrade >= 4, 'grade-remed': s.FinalGrade >=3.5 && s.FinalGrade < 4}">{{grade.calculate(s, 'FinalGrade', app.api.options.options.final_grade_formula)}}</td>
                 <td class="text-right grade" ng-class="{'grade-fail': s.Grade < 3.5, 'grade-pass': s.Grade >= 4, 'grade-remed': s.Grade >=3.5 && s.Grade < 4}">{{grade.scores[s.id].hasOwnProperty('total') ? grade.valueSaver(s, 'Grade', grade.grade(grade.scores[s.id].total,app.api.options.options.points_max, app.api.options.options.note_min, app.api.options.options.note_max, 'round', app.api.options.options.note_grain)) : 0}}</td>
-                <td class="text-right">{{grade.scores[s.id].total}}</td>
+                <td class="text-right">{{grade.valueSaver(s, 'Total', grade.scores[s.id].total)}}</td>
                 <td class="text-right score why-{{grade.whys[grade.scores[s.id].key + ':' + value.question]}}"
                   ng-repeat="(qtitle, value) in grade.questions track by $index">
                   <a ng-href="#/{{grade.project}}/scan/{{grade.scores[s.id].student}}/{{value.page}}:{{grade.scores[s.id].copy}}">
