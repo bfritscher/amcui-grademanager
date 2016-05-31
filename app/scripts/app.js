@@ -20,7 +20,8 @@ angular
     'IeHelper',
     'ngFileUpload',
     'ui.codemirror',
-    'validation.match'
+    'validation.match',
+    'duScroll'
   ])
   .config(function ($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise('/');
@@ -91,7 +92,9 @@ angular
   })
   .config(function($httpProvider) {
     $httpProvider.interceptors.push('authInterceptor');
-  });
+  })
+  .value('duScrollGreedy', true)
+  .value('duScrollBottomSpy', true);
 
  //http://stackoverflow.com/questions/15895483/angular-ng-href-and-svg-xlink
 angular.forEach([

@@ -148,15 +148,6 @@ tr.active td{
   content: '▼'
 }
 
-.angular-ui-tree-handle {
-  border: 2px solid #fff;
-}
-
-.angular-ui-tree-handle:hover {
-    color: #438eb9;
-    background: #f4f6f7;
-    border-color: #dce2e8;
-}
 
 .angular-ui-tree-placeholder {
     background: #f0f9ff;
@@ -176,6 +167,23 @@ tr.active td{
 
 .section-menu .md-button.md-icon-button {
     min-width: 48px;
+}
+
+.section-menu > a {
+  text-decoration: none;
+  color: inherit;
+  font-weight: 700;
+  box-sizing: border-box;
+  min-height: 20px;
+  line-height: 20px;
+}
+.question-menu > a {
+  text-decoration: none;
+  color: inherit;
+  font-weight: 700;
+  box-sizing: border-box;
+  min-height: 20px;
+  line-height: 20px;
 }
 
 .question-menu strong{
@@ -277,8 +285,12 @@ tr.active td{
   min-width: auto;
 }
 
+.section-menu.active {
+  background-color: #f7f7f7;
+}
+
 .section-menu .active{
-  border: 2px solid lightcoral;
+  color: #283593;
 }
 
 .section-options {
@@ -325,9 +337,6 @@ tr.active td{
   margin: 0;
 }
 
-.question-header .md-button{
-
-}
 
 .two-columns{
 
@@ -342,6 +351,10 @@ tr.active td{
 
 .question .invalid, .question-menu .invalid{
   color: #fbb450;
+}
+
+.question-menu {
+  padding: 2px;
 }
 
 .question{

@@ -43,6 +43,7 @@ module.exports = function(config) {
       'bower_components/angular-ui-codemirror/ui-codemirror.js',
       'bower_components/angular-validation-match/dist/angular-validation-match.min.js',
       'bower_components/u2f-api/u2f-api.js',
+      'bower_components/angular-scroll/angular-scroll.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       "app/scripts/**/*.js",

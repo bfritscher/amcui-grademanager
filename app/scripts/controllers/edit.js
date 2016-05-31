@@ -12,6 +12,7 @@ angular.module('grademanagerApp')
 	var editor = this;
 	editor.examService = exam;
 	editor.API = API;
+	editor.location = $location;
 
 	//TODO automate
 	API.loadProject($stateParams.project);

@@ -10,7 +10,7 @@
         <h3>{{editor.examService.exam.course}} - {{editor.examService.exam.session}}</h3>
       </div>
     </md-toolbar>
-    <div flex class="scroll-frame">
+    <div flex class="scroll-frame" du-scroll-container="main-content">
       <md-content layout-padding class="scroll-section">
         <div class="section-options" hide-gt-xs layout-padding>
           <md-button aria-label="print" class="md-warn" ng-click="editor.examService.print()">Print</md-button>
@@ -29,16 +29,16 @@
         </div>
         <div ui-tree="editor.examMenuOptions">
           <ol ui-tree-nodes="" ng-model="editor.examService.exam.sections" data-type="section">
-            <li class="section-menu" ng-repeat="section in editor.examService.exam.sections track by section.id" ng:init="parentIndex = $index" ui-tree-node>
-              <div ui-tree-handle layout="row" ng-class="{'active': section == editor.section}">
+            <li class="section-menu" ng-repeat="section in editor.examService.exam.sections track by section.id" ng:init="parentIndex = $index" ui-tree-node ng-class="{'active': section == editor.section}">
+              <a layout="row" ng-href="{{editor.linkToQuestion(section)}}">
                 <p ng-if="editor.copyMode"><md-checkbox ng-model="editor.copyCheckbox[section.id]" ng-change="editor.toggleCopy(section)" class="md-primary" data-nodrag>{{section.number}} {{section.title}}</md-checkbox></p>
                 <p ng-if="!editor.copyMode">{{section.number}} {{section.title}}</p>
                 <span flex></span>
-                <md-button aria-label="select section" data-nodrag ng-href="{{editor.linkToQuestion(section)}}" class="md-icon-button"><md-icon class="mdi-eye"></md-icon></md-button>
-              </div>
+                <md-icon class="mdi-cursor-move" ui-tree-handle></md-icon>
+              </a>
               <ol ui-tree-nodes="" ng-model="section.questions" data-type="question">
-                <li class="question-menu" ng-repeat="question in section.questions track by question.id" ui-tree-node>
-                  <div ui-tree-handle layout="row">
+                <li class="question-menu" ng-repeat="question in section.questions track by question.id" ui-tree-node  du-scrollspy="q{{question.number}}">
+                  <a  ng-href="{{editor.linkToQuestion(section, question)}}" layout="row">
                     <div flex layout="column" class="question-menu-description">
                       <strong>
                         <md-checkbox ng-model="editor.copyCheckbox[question.id]" ng-change="editor.toggleCopy(section, question)" ng-if="editor.copyMode" class="md-primary" data-nodrag>
@@ -48,8 +48,8 @@
                       </strong>
                       <em>{{question.content | htmlToPlaintext | limitTo: 50}}</em>
                     </div>
-                    <md-button aria-label="select section" data-nodrag ng-href="{{editor.linkToQuestion(section, question)}}" class="md-icon-button"><md-icon class="mdi-eye"></md-icon></md-button>
-                  </div>
+                    <md-icon class="mdi-cursor-move" ui-tree-handle></md-icon>
+                  </a>
                 </li>
               </ol>
             </li>
@@ -167,7 +167,7 @@
     <md-button aria-label="close" class="tab-close md-icon-button" ng-click="editor.isLatexOptionVisible = false"><md-icon class="mdi-close"></md-icon></md-button>
   </div>
 <div flex class="scroll-frame" ng-hide="editor.isLatexOptionVisible">
-<md-content class="section scroll-section" layout-padding>
+<md-content id="main-content" class="section scroll-section" layout-padding>
 <div class="page-width-limit">
   <div class="md-whiteframe-z1">
       <div class="md-whiteframe-z1" id="q0">
