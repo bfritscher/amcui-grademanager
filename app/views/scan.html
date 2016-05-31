@@ -49,7 +49,7 @@
                 <md-icon class="mdi-help-circle">
                   <md-tooltip>Student/Page/Copy green=auto blue=manual</md-tooltip></md-icon>
               </th>
-              <th hide-sm ng-class="{'sort-asc': scan.orderBy == 'timestamp_auto' && !scan.reverse, 'sort-desc': scan.orderBy == 'timestamp_auto' && scan.reverse}" ng-click="scan.sort('timestamp_auto')">Updated</th>
+              <th hide-xs ng-class="{'sort-asc': scan.orderBy == 'timestamp_auto' && !scan.reverse, 'sort-desc': scan.orderBy == 'timestamp_auto' && scan.reverse}" ng-click="scan.sort('timestamp_auto')">Updated</th>
               <th ng-class="{'sort-asc': scan.orderBy == 'mse' && !scan.reverse, 'sort-desc': scan.orderBy == 'mse' && scan.reverse}" ng-click="scan.sort('mse')">MSD
                 <md-icon class="mdi-help-circle">
                   <md-tooltip>The value MSD (mean square deviation) is an indication
@@ -66,7 +66,7 @@
           <tbody>
             <tr ng-repeat="p in scan.pages | filter:{id:scan.filter} | orderBy: (scan.reverse?'-':'') + scan.orderBy" ng-click="scan.loadPage(p)" ng-class="{active: scan.page.student == p.student && scan.page.page == p.page && scan.page.copy == p.copy}">
               <td ng-class="::{'manual': p.timestamp_manual > 0, 'auto': p.timestamp_auto > 0}">{{::p.student}}/{{::p.page}}<span ng-show="::p.copy > 0">:{{::p.copy}}</span> <md-icon class="mdi-close scan-delete" ng-click="scan.delete(p)"></md-icon></td>
-              <td hide-sm>{{::(p.timestamp_manual || p.timestamp_auto)*1000 | date:'yyyy-MM-dd HH:mm'}}</td>
+              <td hide-xs>{{::(p.timestamp_manual || p.timestamp_auto)*1000 | date:'yyyy-MM-dd HH:mm'}}</td>
               <td class="text-right" ng-class="::{'s-threshold': p.mse >=3}">{{::p.tm > 0 && '(' || ''}}{{::p.mse.toFixed(1)}}{{::p.tm > 0 && ')' || ''}}</td>
               <td class="text-right" ng-class="::{'s-threshold': p.s >= 8}">{{::p.s.toFixed(1)}}</td>
             </tr>
@@ -79,7 +79,7 @@
         </table>
     </md-content>
   </div>
-  <div ng-if="$mdMedia('gt-sm')" ui-view="" class="scan-preview" flex layout="column" layout-padding hide-sm>
+  <div ng-if="$mdMedia('gt-sm')" ui-view="" class="scan-preview" flex layout="column" layout-padding hide-xs>
     <div flex layout="column"  layout-align="center center">
       <h1>No page selected for preview</h1>
     </div>

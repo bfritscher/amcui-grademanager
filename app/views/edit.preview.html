@@ -22,7 +22,7 @@
         <ui-codemirror ui-codemirror-opts="ctrl.logOptions" ng-model="ctrl.api.logs.preview.log"></ui-codemirror>
     </div>
   </md-dialog-content>
-  <div class="md-actions" layout="row">
+  <md-dialog-actions layout="row">
     <span ng-if="ctrl.api.logs.preview.code == 0">{{ctrl.pdfViewer.currentPageNumber}} / {{ctrl.pdfViewer.pagesCount}}</span>
     <md-button class="md-primary" ng-if="ctrl.api.logs.preview.code == 0" ng-href="{{ctrl.previewSrc()}}">download</md-button>
     <md-button ng-click="isLogVisible = !isLogVisible">log</md-button>
@@ -30,5 +30,5 @@
     <md-button ng-click="ctrl.closeDialog()" class="md-primary">
      close
     </md-button>
-  </div>
+  </md-dialog-actions>
 </md-dialog>

@@ -4,7 +4,7 @@
 </div>
 
 <div layout="row" flex class="no-background" ng-if="editor.section">
-  <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left"  md-is-locked-open="$mdMedia('gt-lg')" layout="column">
+  <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left"  md-is-locked-open="$mdMedia('gt-md')" layout="column">
     <md-toolbar class="md-accent md-whiteframe-z1" layout="row">
       <div class="md-toolbar-tools">
         <h3>{{editor.examService.exam.course}} - {{editor.examService.exam.session}}</h3>
@@ -12,7 +12,7 @@
     </md-toolbar>
     <div flex class="scroll-frame">
       <md-content layout-padding class="scroll-section">
-        <div class="section-options" hide show-sm layout-padding>
+        <div class="section-options" hide-gt-xs layout-padding>
           <md-button aria-label="print" class="md-warn" ng-click="editor.examService.print()">Print</md-button>
           <md-input-container>
             <label>course</label>
@@ -93,28 +93,28 @@
       <span flex></span>
     </div>
 
-    <md-content class="section-options main-toolbar md-whiteframe-z1" layout="row" layout-align="start center" layout-padding>
+    <md-content class="section-options main-toolbar md-whiteframe-z1 no-error-input-container" layout="row" layout-align="start center" layout-padding>
         <md-button aria-label="toggle menu" class="md-icon-button" ng-hide="editor.leftNav().isLockedOpen()" ng-click="editor.leftNav().open()">
           <md-icon class="mdi-menu"></md-icon>
         </md-button>
         <div flex class="no-padding" layout="row">
-          <md-input-container flex  hide-sm>
+          <md-input-container flex  hide-xs>
             <label>course</label>
             <input ng-model="editor.examService.exam.course">
           </md-input-container>
-          <md-input-container flex hide-sm>
+          <md-input-container flex hide-xs>
             <label>session</label>
             <input ng-model="editor.examService.exam.session">
           </md-input-container>
-          <md-input-container flex hide-sm>
+          <md-input-container flex hide-xs>
             <label>teacher</label>
             <input ng-model="editor.examService.exam.teacher">
           </md-input-container>
         </div>
-        <span hide-sm>{{editor.lastPreview | date: 'HH:mm:ss'}}</span>
+        <span hide-xs>{{editor.lastPreview | date: 'HH:mm:ss'}}</span>
         <md-button aria-label="preview" ng-class="{'md-warn':  app.api.logs.preview.code>0}" ng-click="editor.showPreviewDialog($event)">{{editor.previewWait ? 'wait' : app.api.logs.preview.code == 0 ? 'Preview' : app.api.logs.preview.code > 0 ? 'error' : 'compiling'}}</md-button>
         <md-button aria-label="LaTeX options" class="md-primary" ng-class="{'active': editor.isLatexOptionVisible}" ng-click="editor.isLatexOptionVisible = !editor.isLatexOptionVisible">LaTeX options</md-button>
-        <md-button aria-label="print" class="md-warn" ng-click="editor.examService.print()"  hide-sm>Print</md-button>
+        <md-button aria-label="print" class="md-warn" ng-click="editor.examService.print()"  hide-xs>Print</md-button>
     </md-content>
 
   <div flex ng-if="editor.isLatexOptionVisible" layout="column" class="scroll-frame">
@@ -171,11 +171,11 @@
 <div class="page-width-limit">
   <div class="md-whiteframe-z1">
       <div class="md-whiteframe-z1" id="q0">
-    		<div layout="row" class="section-header" layout-align="space-around center">
+    		<div layout="row" class="section-header no-error-input-container" layout-align="space-around center">
           <md-button aria-label="previous" class="md-primary" ng-show="editor.previousSection()" ng-click="editor.section = editor.previousSection()" ng-bind="editor.previousSection().title"></md-button>
           <span flex></span>
           <h3>{{editor.section.number}}</h3>
-          <md-input-container md-no-float>
+          <md-input-container md-no-float class="md-block">
               <input type="text" ng-model="editor.section.title" placeholder="Section title"/>
             </md-input-container>
           <span flex></span>
@@ -207,7 +207,7 @@
                   <h3 id="q{{question.number}}"><md-icon class="mdi-alert invalid" ng-hide="question.isValid" title="Need answers"></md-icon>
                    Question {{question.number}} <span ng-show="question.type == 'MULTIPLE'">♣</span></h3>
                 </div>
-                <md-content layout="row" class="section-options section-nowrap md-whiteframe-z1" layout-align="start center">
+                <md-content layout="row" class="section-options section-nowrap md-whiteframe-z1 no-error-input-container fix-input" layout-align="start center">
                   <md-select placeholder="Type" ng-model="question.type">
                     <md-option ng-repeat="value in ['SINGLE', 'MULTIPLE', 'OPEN']" value="{{value}}">{{value}}</md-option>
                   </md-select>

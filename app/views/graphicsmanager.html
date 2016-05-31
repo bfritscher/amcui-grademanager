@@ -14,7 +14,7 @@
               ngf-drag-over-class="dragover" ngf-multiple="true" ngf-allow-dir="true">
               Drop pdfs or images here or click to upload</md-button>
         <div ngf-no-file-drop>File Drag/Drop is not supported for this browser</div>
-        <md-input-container>
+        <md-input-container class="md-block">
 			<label>Search</label>
 			<input ng-model="ctrl.search">
 		</md-input-container>
@@ -36,10 +36,10 @@
         </div>
     </md-dialog-content>
 
-    <div class="md-actions" layout="row">
+    <md-dialog-actions layout="row">
         <span flex></span>
         <md-button ng-click="ctrl.closeDialog()" class="md-primary">
          close
         </md-button>
-    </div>
+    </md-dialog-actions>
 </md-dialog>

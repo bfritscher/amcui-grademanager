@@ -9,13 +9,13 @@
     </div>
   </md-toolbar>
   <md-dialog-content>
-	{{ctrl.options.content}}
-	<md-input-container>
+	      <p>{{ctrl.options.content}}</p>
+	      <md-input-container class="md-block">
           <label>{{ctrl.options.label}}</label>
           <input ng-model="ctrl.options.value">
         </md-input-container>
   </md-dialog-content>
-  <div class="md-actions" layout="row">
+  <md-dialog-actions layout="row">
     <span flex></span>
     <md-button ng-click="ctrl.closeDialog()" class="md-primary">
      Cancel
@@ -23,5 +23,5 @@
     <md-button ng-click="ctrl.saveDialog()" class="md-primary">
      Save
     </md-button>
-  </div>
+  </md-dialog-actions>
 </md-dialog>

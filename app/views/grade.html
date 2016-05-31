@@ -24,7 +24,7 @@ highlight impossible? missing? confirm reviewed
     <md-button class="md-icon-button" ng-click="grade.hidePrintNotification=true" aria-label="close message"><md-icon class="mdi-close"></md-icon></md-button>
   </div>
   <div class="section-options" layout-padding layout="column" style="position: relative">
-    <md-input-container style="max-height:400px"  ng-hide="grade.hideAdd">
+    <md-input-container class="no-error-input-container" style="max-height:400px;overflow:auto;"  ng-hide="grade.hideAdd">
       <label>Paste CSV data or drop a file</label>
       <textarea ng-model="grade.pasteData" id="dropbox"></textarea>
     </md-input-container>
@@ -78,13 +78,13 @@ highlight impossible? missing? confirm reviewed
                   </div>
                 </th>
                 <th class="text-left">
-                  <md-input-container>
+                  <md-input-container  class="md-block no-error-input-container" style="width:185px;">
                     <label>Final grade formula</label>
                     <input ng-blur="app.api.saveOptions()" ng-model="app.api.options.options.final_grade_formula" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }">
                   </md-input-container>
                 </th>
                 <th class="text-left grade-max">
-                  <md-input-container>
+                  <md-input-container class="md-block no-error-input-container">
                     <label>Points</label>
                     <input string-to-number class="text-right" ng-blur="app.api.saveOptions()" ng-model="app.api.options.options.points_max" ng-change="grade.dataTable({variable: app.api.options.options.points_max, formula: grade.test})" min="0" type="number">
                   </md-input-container>
@@ -146,7 +146,7 @@ highlight impossible? missing? confirm reviewed
     </md-tab>
 
     <md-tab label="Stats">
-      <div class="section-options md-whiteframe-z1">
+      <div class="section-options md-whiteframe-z1" layout="row">
         <md-button aria-label="sort title" class="md-primary" ng-click="grade.statsOrder='title'">order by question</md-button>
         <md-button aria-label="sort mean"  class="md-primary" ng-click="grade.statsOrder='avg'">order by mean</md-button>
         <md-button aria-label="catalog"  class="md-primary" ng-href="{{app.linkTo('catalog.pdf')}}">Download Catalog.pdf</md-button>
@@ -163,7 +163,7 @@ highlight impossible? missing? confirm reviewed
     </md-tab>
     <md-tab label="{{file.name.substring(0,20)}}" ng-repeat="file in grade.files">
       <md-content ng-if="grade.tabIndex == $index + 2">
-        <div class="section-options" layout-padding>
+        <div class="section-options no-error-input-container" layout-padding>
           <div layout="row" layout-sm="column">
           <md-input-container flex>
             <label>StudentLookup</label>
@@ -186,10 +186,10 @@ highlight impossible? missing? confirm reviewed
         <table>
         	<thead>
         		<tr>
-              <th>Student Match</th>
-              <th>Lookup Value</th>
+              <th class="no-wrap">Student Match</th>
+              <th class="no-wrap">Lookup Value</th>
         			<th ng-repeat="key in file.meta.fields track by $index">
-                <div layout="row">
+                <div layout="row" class="no-wrap">
                   <md-checkbox class="md-primary" ng-model="file.meta.selected[$index]" ng-change="grade.save()" >{{key}}</md-checkbox>
                   <md-button class="button-remove"aria-label="rename column" ng-click="grade.renameColumn($event, file.meta.fields, $index, file.data)"><md-icon class="mdi-pencil"></md-icon></md-button>
                   <md-button aria-label="remove column" ng-click="file.meta.fields.splice($index, 1);grade.save();" class="md-warn button-remove" ng-hide="col == 'id'"><md-icon class="mdi-close"></md-icon></md-button>

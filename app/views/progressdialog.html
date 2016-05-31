@@ -21,10 +21,10 @@
           <pre ng-if="log.command != 'prepare' && log.code > 0">{{log.err}}</pre>
       </div>
   </md-dialog-content>
-  <div class="md-actions" layout="row">
+  <md-dialog-actions layout="row">
     <span flex></span>
     <md-button ng-disabled="ctrl.api.options.status.locked!=0" ng-click="ctrl.closeDialog()" class="md-primary">
      close
     </md-button>
-  </div>
+  </md-dialog-actions>
 </md-dialog>

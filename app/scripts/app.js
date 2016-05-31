@@ -14,7 +14,6 @@ angular
     'ngMessages',
     'ngRoute',
     'ngSanitize',
-    'ngTouch',
     'ngMaterial',
     'ui.tree',
     'ui.router',

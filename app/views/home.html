@@ -2,39 +2,39 @@
 	<form ng-hide="home.isAuthed()" ng-submit="home.login()">
 		<md-card>
 			<md-card-content>
-				<md-input-container>
+				<md-input-container class="md-block">
 					<label>Username</label>
 					<input ng-model="home.username" ng-required="true">
 				</md-input-container>
-				<md-input-container>
+				<md-input-container  class="md-block">
 					<label>Password</label>
 					<input ng-model="home.password" type="password" ng-required="true">
 				</md-input-container>
-				<ng-messages for="home.error" role="alert">
+				<ng-messages for="home.error" role="alert"  class="md-block">
 				  <ng-message when="error">{{home.error.error}}</ng-message>
 				</ng-messages>
 			</md-card-content>
-			 <div class="md-actions" layout="row" layout-align="end center">
+			 <md-card-actions layout="row" layout-align="end center">
 		        <md-button type="submit" class="md-primary">Login</md-button>
 				<md-button type="submit">Create</md-button>
-		      </div>
+		     </md-card-actions>
 		</md-card>
 	</form>
 	<div ng-show="home.isAuthed()" class="projects">
 		<md-card>
 			<md-card-content>
 				<form ng-submit="home.createProject()" layout="row" layout-align="center center">
-					<md-input-container>
+					<md-input-container class="md-block">
 						<label>Project name</label>
 						<input ng-model="home.newProjectName" ng-required="true">
 					</md-input-container>
-					<ng-messages for="home.error" role="alert">
+					<ng-messages for="home.error" role="alert" class="md-block">
 					  <ng-message when="error">{{home.error.error}}</ng-message>
 					</ng-messages>
 					<md-button class="md-primary md-raised">Create Project</md-button>
 				</form>
 				<h2>Projects</h2>
-				<md-input-container>
+				<md-input-container class="md-block">
 					<label>Search</label>
 					<input ng-model="home.search">
 				</md-input-container>

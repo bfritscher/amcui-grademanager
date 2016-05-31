@@ -15,6 +15,31 @@ body {
   padding: 0;
 }
 
+
+md-dialog md-dialog-content {
+  padding: 24px;
+}
+
+
+
+.no-wrap, .no-wrap * {
+  white-space: nowrap;
+}
+
+
+.no-error-input-container .md-errors-spacer {
+  display: none;
+}
+.no-error-input-container md-input-container,
+md-input-container.no-error-input-container {
+  margin-bottom: 0;
+}
+
+.section-options.no-error-input-container md-input-container,
+.section-header.no-error-input-container md-input-container {
+  margin-top: 0;
+}
+
 md-tooltip {
   max-width: 300px;
 }
@@ -113,10 +138,6 @@ tr.active td{
 
 .text-right{
   text-align: right;
-}
-
-.no-wrap{
-  white-space: nowrap;
 }
 
 .sort-asc::after{
@@ -265,6 +286,13 @@ tr.active td{
 }
 .section-options md-select {
   padding: 4px;
+  margin: 0;
+}
+
+.section-options md-checkbox {
+  display: block;
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
 
 .section-header md-input-container{
@@ -371,7 +399,7 @@ md-input-container.question-scoring{
   transition: all linear 0.3s;
   text-align: center;
   cursor: pointer;
-  font: normal normal normal 24px/1 MaterialDesignIcons;
+  font: normal normal normal 24px/1 "Material Design Icons";
     text-rendering: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -394,11 +422,11 @@ md-checkbox.md-checked.answer-toggle .md-icon:after{
 }
 
 .answer-toggle.mdi-close .md-icon::before {
-    content: "\f216";
+    content: "\f156";
 }
 
 .answer-toggle.mdi-check .md-icon::before {
-    content: "\f1f1";
+    content: "\f12c";
 }
 
 .answer-toggle.mdi-check .md-icon{
@@ -508,6 +536,10 @@ md-checkbox.md-checked.answer-toggle .md-icon:after{
   position: absolute;
   background-color: rgba(200, 200, 200, 0.8);
   min-width: 350px;
+}
+
+.myrichtexteditor .graphics-toolbar md-checkbox {
+  margin: 0;
 }
 
 .myrichtexteditor .graphics-toolbar .options {
@@ -652,12 +684,19 @@ my-pdf-viewer{
   margin-bottom: 1px;
 }
 
-.section-options md-input-container{
-  padding: 0 0 10px 0;
+.fix-input md-input-container.md-input-focused label:not(.md-no-float),
+.fix-input md-input-container.md-input-has-placeholder label:not(.md-no-float),
+.fix-input md-input-container.md-input-has-value label:not(.md-no-float) {
+  transform: translate3d(0, 11px, 0) scale(0.75);
 }
 
 .main-toolbar md-input-container{
   padding: 0 0 0 0;
+}
+
+.main-toolbar button {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .main-toolbar > div{

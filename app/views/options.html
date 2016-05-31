@@ -109,7 +109,7 @@
    		Display all options
   	</md-switch>
 	<div ng-if="showAllOptions">
-		<md-input-container ng-repeat="(key, value) in ctrl.options.options">
+		<md-input-container ng-repeat="(key, value) in ctrl.options.options" class="md-block">
 			<label>{{::key}}</label>
 			<input ng-model="ctrl.options.options[key]" ng-if="::key !='verdict' && key != 'email_text'">
 			<textarea ng-model="ctrl.options.options[key]" ng-if="::key =='verdict' || key =='email_text'"></textarea>
