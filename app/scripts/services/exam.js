@@ -471,6 +471,17 @@ angular.module('grademanagerApp')
     function html2Latex(content, isAnswer){
         var div = document.createElement('div');
         div.innerHTML = content;
+
+        function nodeHasAnyChildOfType(node, type){
+            var childs = node.childNodes;
+            for(var i=0; i < childs.length; i++){
+                if (childs[i].nodeName === type.toUpperCase()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         function handleNode(node, level){
             if (node.hasChildNodes()) {
                 var childs = node.childNodes;
@@ -521,7 +532,10 @@ angular.module('grademanagerApp')
                             break;
 
                         case 'UL':
-                            out += '\\begin{itemize}\n' + handleNode(child, level + 1) + '\\end{itemize}\n';
+                            // LaTeX does not support empty itemize sections
+                            if (nodeHasAnyChildOfType(child, 'LI')) {
+                                out += '\\begin{itemize}\n' + handleNode(child, level + 1) + '\\end{itemize}\n';
+                            }
                             break;
 
                         case 'LI':
