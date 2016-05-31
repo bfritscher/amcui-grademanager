@@ -285,6 +285,10 @@ tr.active td{
   min-width: auto;
 }
 
+.section-menu {
+  padding: 4px;
+}
+
 .section-menu.active {
   background-color: #f7f7f7;
 }
@@ -354,7 +358,7 @@ tr.active td{
 }
 
 .question-menu {
-  padding: 2px;
+  padding: 2px 0 2px 2px;
 }
 
 .question{
