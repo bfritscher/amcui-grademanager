@@ -673,6 +673,9 @@ angular.module('grademanagerApp')
                 };
             }
             wrap(function(){
+                if(section.content && section.content.length > 0 && section.content !== '<p></p>'){
+                    body.push('\\vspace{\\baselineskip}');
+                }
                 body.push('\\restituegroupe{' + section.id + '}');
             });
         }
