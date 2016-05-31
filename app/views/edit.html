@@ -197,7 +197,7 @@
           <md-button aria-label="delete section" class="md-warn" ng-click="editor.removeSection(editor.section)"><md-icon class="mdi-delete"></md-icon></md-button>
         </md-content>
       </div>
-      <my-rich-text-editor class="page-width-limit" ng-model="editor.section.content"></my-rich-text-editor>
+      <my-rich-text-editor ng-class="{'empty': editor.section.content == '' || editor.section.content == '<p></p>'}" class="page-width-limit" ng-model="editor.section.content"></my-rich-text-editor>
   </div>
 
       <div ng-class="{'two-columns': editor.section.columns == 2}">

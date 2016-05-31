@@ -480,8 +480,18 @@ md-checkbox.md-checked.answer-toggle .md-icon:after{
   border: 1px solid #000;
 }
 
+.myrichtexteditor {
+  position: relative;
+}
+
 .myrichtexteditor .toolbar{
   margin-bottom: 8px;
+  position: absolute;
+  top: -44px;
+  left: 8px;
+  right: 8px;
+  background-color: #fff;
+  z-index: 999;
 }
 
 .myrichtexteditor {
@@ -657,6 +667,10 @@ my-pdf-viewer{
   border: none;
   margin: 50px 100px 50px 100px;
   padding-bottom: 100px;
+}
+
+.myrichtexteditor.page-width-limit.empty{
+  border: 1px solid #eee;
 }
 
 .user-online{
