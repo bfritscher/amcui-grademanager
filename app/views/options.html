@@ -39,16 +39,25 @@
 	</p>
 
 	<h3>Annotation</h3>
-	<md-input-container>
+	<md-input-container class="md-block no-error-input-container">
 		<label>Annotation filename pattern</label>
 		<input ng-model="ctrl.options.options.modele_regroupement" ng-blur="ctrl.saveOptions()">
 	</md-input-container>
-	<p>(N) is replaced by the student's name. (ID) is replaced by the student number. (<i>COL</i>) any other column in the student.csv</p>
+	<p>(ID) is replaced by the student's name.<br/>
+		(N) is replaced by the student number.<br/>
+		(<i>COL</i>) any other column in the student.csv</p>
 
-	<md-input-container class="no-padding">
+	<md-input-container class="no-padding md-block no-error-input-container">
 		<label>Annotation</label>
 		<textarea ng-model="ctrl.options.options.verdict" ng-blur="ctrl.saveOptions()"></textarea>
 	</md-input-container>
+	<p>
+		%(ID) is replaced by the student's name.<br/>
+		%(COL) is replaced by the value of column COL in the students list for the current student.<br/>
+		%S is replaced by the student's total score.<br/>
+		%M is replaced by the maximum total score.<br/>
+		%s is replaced by the student's mark.<br/>
+		%m is replaced by the maximum mark.</p>
 
 	<h4>Annotation marks</h4>
 	<table>
