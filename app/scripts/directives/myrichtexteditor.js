@@ -267,7 +267,6 @@ angular.module('grademanagerApp')
             // Sync view -> model
             editor.on('change', function(){
               $timeout(function(){
-                  console.log('change');
                   ngModel.$setViewValue(editor.getValue(true));
               });
             });

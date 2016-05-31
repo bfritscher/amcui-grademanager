@@ -65,7 +65,6 @@ angular.module('grademanagerApp')
                 }
             }).progress(function (evt) {
                 file.progress = (100.0 * evt.loaded / evt.total) * 0.8;
-                console.log(file.progress);
             }).success(function () {
                 $timeout(function(){
                     file.progress = 100;
