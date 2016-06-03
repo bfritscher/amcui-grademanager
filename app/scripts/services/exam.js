@@ -531,6 +531,13 @@ angular.module('grademanagerApp')
 
                             break;
 
+                        case 'OL':
+                            // LaTeX does not support empty itemize sections
+                            if (nodeHasAnyChildOfType(child, 'LI')) {
+                                out += '\\begin{enumerate}\n' + handleNode(child, level + 1) + '\\end{enumerate}\n';
+                            }
+                            break;
+
                         case 'UL':
                             // LaTeX does not support empty itemize sections
                             if (nodeHasAnyChildOfType(child, 'LI')) {

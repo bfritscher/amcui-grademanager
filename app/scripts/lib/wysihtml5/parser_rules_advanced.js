@@ -52,6 +52,7 @@ var wysihtml5ParserRules = {
     i:      {},
     hr:     {},
     ul:     {},
+    ol:     {},
     li:     {},
     p:      {},
     tt:     {},
