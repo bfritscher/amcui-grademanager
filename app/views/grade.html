@@ -28,7 +28,7 @@ highlight impossible? missing? confirm reviewed
       <label>Paste CSV data or drop a file</label>
       <textarea ng-model="grade.pasteData" id="dropbox"></textarea>
     </md-input-container>
-    <div layout="row" ng-hide="grade.hideAdd">
+    <div layout="row" class="no-padding" ng-hide="grade.hideAdd">
       <md-button class="md-primary" ng-click="grade.parsePasteData()">Add to Students</md-button>
       <md-button class="md-primary" ng-click="grade.parseAsNewFile()">Add as new file</md-button>
       <span flex></span>
@@ -37,8 +37,8 @@ highlight impossible? missing? confirm reviewed
     <md-button ng-show="grade.hideAdd" ng-click="grade.hideAdd = !grade.hideAdd">CSV Options</md-button>
     <md-button ng-hide="grade.hideAdd" ng-click="grade.hideAdd = !grade.hideAdd" aria-label="close" class="md-icon-button tab-close"><md-icon class="mdi-close"></md-icon></md-button>
   </div>
-
-  <md-tabs flex md-selected="grade.tabIndex">
+  <md-progress-linear ng-if="grade.isLoading" md-mode="indeterminate"></md-progress-linear>
+  <md-tabs flex md-selected="grade.tabIndex" ng-if="!grade.isLoading">
     <md-tab label="Students">
       <section class="grades">
         <div ng-if="grade.students.data.length > 0 && grade.table">
@@ -91,8 +91,9 @@ highlight impossible? missing? confirm reviewed
                 </th>
                 <th>Total<br/>
                   <span class="question-max">(max:{{grade.maxPoints}})</span>
+                  <md-button ng-class="{'md-raised': grade.displayQuestions}" ng-click="grade.displayQuestions = !grade.displayQuestions">show all</md-button>
                 </th>
-                <th class="score" ng-repeat="(qtitle, value) in grade.questions track by $index">
+                <th class="score" ng-if="grade.displayQuestions" ng-repeat="(qtitle, value) in grade.questions track by $index">
                   {{qtitle}}<br/><span class="question-max">(max:{{value.max}})</span></th>
           		</tr>
           	</thead>
@@ -116,7 +117,7 @@ highlight impossible? missing? confirm reviewed
                 <td class="text-right grade" ng-class="{'grade-fail': s.FinalGrade < 3.5, 'grade-pass': s.FinalGrade >= 4, 'grade-remed': s.FinalGrade >=3.5 && s.FinalGrade < 4}">{{grade.calculate(s, 'FinalGrade', app.api.options.options.final_grade_formula)}}</td>
                 <td class="text-right grade" ng-class="{'grade-fail': s.Grade < 3.5, 'grade-pass': s.Grade >= 4, 'grade-remed': s.Grade >=3.5 && s.Grade < 4}">{{grade.scores[s.id].hasOwnProperty('total') ? grade.valueSaver(s, 'Grade', grade.grade(grade.scores[s.id].total,app.api.options.options.points_max, app.api.options.options.note_min, app.api.options.options.note_max, 'round', app.api.options.options.note_grain)) : 0}}</td>
                 <td class="text-right">{{grade.valueSaver(s, 'Total', grade.scores[s.id].total)}}</td>
-                <td class="text-right score why-{{grade.whys[grade.scores[s.id].key + ':' + value.question]}}"
+                <td ng-if="grade.displayQuestions" class="text-right score why-{{grade.whys[grade.scores[s.id].key + ':' + value.question]}}"
                   ng-repeat="(qtitle, value) in grade.questions track by $index">
                   <a ng-href="#/{{grade.project}}/scan/{{grade.scores[s.id].student}}/{{value.page}}:{{grade.scores[s.id].copy}}">
                   {{grade.scores[s.id].questions[qtitle]}}</a></td>
@@ -131,7 +132,7 @@ highlight impossible? missing? confirm reviewed
                 <th class="text-right">{{grade.avgTotalStudent('FinalGrade') | number: 2}}</th>
                 <th class="text-right">{{grade.avgTotalStudent('Grade') | number: 2}}</th>
                 <th class="text-right">{{grade.avgTotal()}}</th>
-                <th class="text-right score"
+                <th ng-if="grade.displayQuestions" class="text-right score"
                     ng-repeat="(qtitle, value) in grade.questions track by $index">
                     {{grade.avgQuestion(qtitle) / value.max * 100 | number: 0}}%</th>
               </tr>

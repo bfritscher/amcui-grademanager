@@ -8,7 +8,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('GradeCtrl', function ($scope, $mdMedia, $http, $timeout, $stateParams, API, auth, $mdDialog) {
+  .controller('GradeCtrl', function ($scope, $q, $mdMedia, $http, $timeout, $stateParams, API, auth, $mdDialog) {
 
     var grade = this;
 
@@ -45,6 +45,8 @@ angular.module('grademanagerApp')
             //reload data if auto-assoc has added info
         }, 1000);
     }
+
+    grade.isLoading = true;
 
     $http.get(API.URL + '/project/' + $stateParams.project + '/csv')
     .success(function(csv){
@@ -119,7 +121,7 @@ angular.module('grademanagerApp')
           roundingFormula: 'round',
           roundingUnit: API.options.options.note_grain
         };
-
+        grade.isLoading = false;
       });
     }
     loadScores();

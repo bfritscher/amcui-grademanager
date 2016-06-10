@@ -27,6 +27,10 @@ md-dialog md-dialog-content {
 }
 
 
+div.no-padding {
+  padding: 0;
+}
+
 .no-error-input-container .md-errors-spacer {
   display: none;
 }
