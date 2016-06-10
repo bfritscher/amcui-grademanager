@@ -732,6 +732,10 @@ my-pdf-viewer{
   margin-bottom: 1px;
 }
 
+.msg-warn {
+  color: orange;
+}
+
 .fix-input md-input-container.md-input-focused label:not(.md-no-float),
 .fix-input md-input-container.md-input-has-placeholder label:not(.md-no-float),
 .fix-input md-input-container.md-input-has-value label:not(.md-no-float) {

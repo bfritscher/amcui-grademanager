@@ -66,6 +66,9 @@ highlight impossible? missing? confirm reviewed
             </tr>
           </table>
         </div>
+        <div layout-padding ng-if="grade.students.fields.indexOf('name') < 0" class="msg-warn">
+          Warning: It is recommanded to have a name column.
+        </div>
         <table>
           	<thead>
           		<tr>
