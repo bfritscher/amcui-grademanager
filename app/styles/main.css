@@ -662,6 +662,10 @@ my-pdf-viewer{
   color: #fff;
 }
 
+.printed-bar .md-button{
+  padding: 0;
+}
+
 #main-view{
   position: relative;
 }
