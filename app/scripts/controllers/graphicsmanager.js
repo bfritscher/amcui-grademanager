@@ -55,6 +55,7 @@ angular.module('grademanagerApp')
                 ctrl.uploads.splice(index, 1);
             }
             ctrl.uploads.unshift(graphics);
+            file.progress = 0;
             ctrl.progress[graphics.id] = file;
             buildList();
             Upload.upload({
@@ -64,7 +65,7 @@ angular.module('grademanagerApp')
                     id: graphics.id
                 }
             }).progress(function (evt) {
-                file.progress = (100.0 * evt.loaded / evt.total) * 0.8;
+                file.progress = 80.0 * evt.loaded / evt.total;
             }).success(function () {
                 $timeout(function(){
                     file.progress = 100;
