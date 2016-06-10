@@ -171,7 +171,7 @@ angular.module('grademanagerApp')
             });
         };
 
-        scope.close = function($event) {
+        scope.close = function() {
             if (editor) {
                 editor.currentView.element.blur();
             }
