@@ -16,13 +16,14 @@
         placeholder="Student name"
         md-no-cache="true"
         md-selected-item-change="ctrl.selectedItemChange(item)"
-        md-search-text="searchText"
-        md-items="item in ctrl.students.data.filter(ctrl.filterUnmatched) | filter: searchText" md-item-text="item.display">
+        md-search-text="ctrl.searchText"
+        md-item-text="item.name"
+        md-items="item in ctrl.students.data.filter(ctrl.filterUnmatched) | filter: ctrl.searchText" md-item-text="item.display">
         <md-item-template>
-          <span md-highlight-text="searchText" md-highlight-flags="^i">{{item.name}}</span>
+          <span md-highlight-text="ctrl.searchText" md-highlight-flags="^i">{{item.name}}</span>
         </md-item-template>
         <md-not-found>
-          No matches found for "{{searchText}}".
+          No matches found for "{{ctrl.searchText}}".
         </md-not-found>
       </md-autocomplete>
     </div>

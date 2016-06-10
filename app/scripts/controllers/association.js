@@ -60,6 +60,8 @@ angular.module('grademanagerApp')
           });
         }
         ctrl.match = ctrl.nextUnmatched();
+        ctrl.searchText = '';
+        ctrl.selectedItem= undefined;
       }
     };
 
