@@ -36,6 +36,7 @@ angular.module('grademanagerApp')
 	        dynamicTyping: true,
           skipEmptyLines: true
       });
+      ctrl.fields = result.meta.fields.sort();
     });
 
 
