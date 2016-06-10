@@ -52,12 +52,22 @@ angular.module('grademanagerApp')
     .success(function(csv){
       grade.parseCSV(csv);
       $scope.$watch('grade.students', debounceSave, true);
+      loadScores();
     });
 
     $http.get(API.URL + '/project/' + $stateParams.project + '/stats')
     .success(function(stats){
       grade.stats = stats;
     });
+
+    function studentIdExists(id) {
+      for (var i=0; i < grade.students.data.length; i++){
+        if (String(grade.students.data[i].id) === String(id)) {
+          return true;
+        }
+      }
+      return false;
+    }
 
     function loadScores(){
       $http.get(API.URL + '/project/' + $stateParams.project + '/scores')
@@ -72,11 +82,13 @@ angular.module('grademanagerApp')
           var key = row.student + ':' +  row.copy;
           var id = key;
           var target = 'unmatched';
-          if (row.id){
+          if (row.id && studentIdExists(row.id)){
             id = row.id;
             target = 'scores';
           }
           //TODO: if id and not exists in students? add it to students?
+          // or reset match?
+
           if (!grade[target].hasOwnProperty(id)) {
             grade[target][id] = {
               id: row.id,
@@ -124,7 +136,6 @@ angular.module('grademanagerApp')
         grade.isLoading = false;
       });
     }
-    loadScores();
 
 
     this.getStudentById = function(id){
