@@ -38,6 +38,8 @@ angular.module('grademanagerApp')
       ctrl.match = find(names, row) || ctrl.nextUnmatched();
     });
 
+    ctrl.unmatchedRemaining = Object.keys(ctrl.unmatched).length;
+
     ctrl.nextUnmatched = function(){
       return ctrl.names.filter(function(item){
         return !item.auto && !item.manual && !item.skip;
@@ -62,6 +64,7 @@ angular.module('grademanagerApp')
         ctrl.match = ctrl.nextUnmatched();
         ctrl.searchText = '';
         ctrl.selectedItem= undefined;
+        ctrl.unmatchedRemaining = Object.keys(ctrl.unmatched).length;
       }
     };
 
