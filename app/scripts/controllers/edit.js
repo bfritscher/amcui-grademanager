@@ -325,6 +325,7 @@ angular.module('grademanagerApp')
 				angular.extend(exam.exam.graphics, copy.graphics);
 				angular.extend(exam.exam.codes, copy.codes);
 				API.copyGraphics(copy.src, copy.dest);
+				API.copyCodes(copy.src, copy.dest);
 				$mdToast.show($mdToast.simple().content('Content has been copied!').position('top right'));
 				localStorage.removeItem('copy');
 			}
