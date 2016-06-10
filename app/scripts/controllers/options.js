@@ -28,6 +28,19 @@ angular.module('grademanagerApp')
       });
     };
 
+    //TODO: #121 refactor into service, mabe get only meta from server not full csv!
+    $http.get(API.URL + '/project/' + $stateParams.project + '/csv')
+    .success(function(csv){
+      var result = Papa.parse(csv, {
+          header: true,
+	        dynamicTyping: true,
+          skipEmptyLines: true
+      });
+    });
+
+
+
+
     $scope.$watch('ctrl.options.users', function(newValues, oldValues){
       var listRemoved = oldValues.filter(function(item){
         return newValues.indexOf(item) < 0;

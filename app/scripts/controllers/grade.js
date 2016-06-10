@@ -48,6 +48,7 @@ angular.module('grademanagerApp')
 
     grade.isLoading = true;
 
+    //TODO: refactor into service used also in options
     $http.get(API.URL + '/project/' + $stateParams.project + '/csv')
     .success(function(csv){
       grade.parseCSV(csv);
@@ -86,8 +87,6 @@ angular.module('grademanagerApp')
             id = row.id;
             target = 'scores';
           }
-          //TODO: if id and not exists in students? add it to students?
-          // or reset match?
 
           if (!grade[target].hasOwnProperty(id)) {
             grade[target][id] = {
@@ -154,6 +153,7 @@ angular.module('grademanagerApp')
     // source server CSV local paste data or csv.
     // match by id key
     grade.parseCSV = function(csv){
+      //TODO: refactor into service used also in options
       var result = Papa.parse(csv, {
           header: true,
 	        dynamicTyping: true,

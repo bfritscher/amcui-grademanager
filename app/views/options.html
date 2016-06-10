@@ -47,7 +47,9 @@
 		(N) is replaced by the student number.<br/>
 		(<i>COL</i>) any other column in the student.csv</p>
 
-	<md-input-container class="no-padding md-block no-error-input-container">
+	<div><md-chips><md-chip ng-repeat="col in ctrl.fields">{{col}}</md-chip></md-chips></div>
+
+	<md-input-container class="no-padding md-block no-error-input-container" style="margin-top: 3em;">
 		<label>Annotation</label>
 		<textarea ng-model="ctrl.options.options.verdict" ng-blur="ctrl.saveOptions()"></textarea>
 	</md-input-container>
