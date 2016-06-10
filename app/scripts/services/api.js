@@ -17,8 +17,8 @@ angular.module('grademanagerApp')
     var self = this;
     self.URL = 'https://amcui.ig.he-arc.ch';
     self.SOCKET_URL = 'https://amcui.ig.he-arc.ch/';
-    //self.URL = 'http://127.0.0.1:9001';
-    //self.SOCKET_URL = 'http://127.0.0.1:9001/';
+    //self.URL = 'http://192.168.99.100:9001';
+    //self.SOCKET_URL = 'http://192.168.99.100:9001/';
     self.project = false;
     self.options = {
       users: [],
@@ -317,6 +317,15 @@ angular.module('grademanagerApp')
 
     self.copyGraphics = function(src, dest){
         return $http.post(self.URL + '/project/' + src + '/copy/graphics', {
+            project: dest
+        })
+        .error(function(msg){
+            $mdToast.show($mdToast.simple().content(msg).position('top right'));
+        });
+    };
+
+    self.copyCodes = function(src, dest){
+        return $http.post(self.URL + '/project/' + src + '/copy/codes', {
             project: dest
         })
         .error(function(msg){
