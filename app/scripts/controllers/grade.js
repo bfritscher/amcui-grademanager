@@ -275,7 +275,7 @@ angular.module('grademanagerApp')
         grade.students.fields.push(field);
       }
       if(value && !isNaN(value)){
-        value = parseFloat(value.toPrecision(2));
+        value = parseFloat(value.toPrecision(3));
         if(row[field] !== value){
           row[field] = value;
         }
