@@ -208,6 +208,10 @@ tr.active td{
   white-space: nowrap;
 }
 
+.answer-stat.layout-row > .flex{
+  min-width: inherit;
+}
+
 .grade-pass{
   color: rgb(69, 134, 22);
 }
