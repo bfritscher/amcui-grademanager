@@ -33,13 +33,10 @@ angular.module('grademanagerApp')
         ctrl.promise = $http.get(API.URL + '/admin/stats')
         .then(function(res){
             ctrl.stats = res.data;
-            ctrl.stats.projects = {};
-            ctrl.stats.roles.forEach(function(p){
-                var project = {
-                    name: p,
-                    users: []
-                };
-                ctrl.stats.projects[p] = project;
+            Object.keys(ctrl.stats.projects).forEach(function(k){
+                var project = ctrl.stats.projects[k];
+                project.name = k;
+                project.users = [];
                 ctrl.projects.push(project);
             });
 
@@ -52,8 +49,8 @@ angular.module('grademanagerApp')
                     projects: ctrl.stats.users[u].sort()
                 });
             });
-            ctrl.stats.roles.forEach(function(p){
-                ctrl.stats.projects[p].users.sort();
+            ctrl.projects.forEach(function(p){
+                p.users.sort();
             });
             return $http.get(API.URL + '/admin/du')
             .then(function(res){

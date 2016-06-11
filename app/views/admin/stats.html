@@ -13,6 +13,8 @@
                 <tr md-row>
                     <th md-column md-order-by="name"><span>Name</span></th>
                     <th md-column md-numeric md-order-by="size" style="width:200px"><span>Size (Mb)</span></th>
+                    <th md-column md-numeric md-order-by="commits"><span>Commits</span></th>
+                    <th md-column md-numeric md-order-by="students"><span>Students</span></th>
                     <th md-column md-numeric md-order-by="users.length"><span>Nb</span></th>
                     <th md-column>Users</th>
                 </tr>
@@ -30,6 +32,8 @@
                         </div>
                         <span ng-if="p.error == ctrl.ERROR_NO_FOLDER">{{ctrl.ERROR_NO_FOLDER}}</span>
                     </td>
+                    <td md-cell>{{p.commits}}</td>
+                    <td md-cell>{{p.students}}</td>
                     <td md-cell>{{p.users.length}}</td>
                     <td md-cell><span ng-repeat="u in p.users">{{u}}<span ng-hide="$last">, </span></span>
                         <span ng-if="p.error == ctrl.ERROR_NOT_IN_DB">{{ctrl.ERROR_NOT_IN_DB}}
