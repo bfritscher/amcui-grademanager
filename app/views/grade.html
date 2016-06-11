@@ -19,7 +19,7 @@ highlight impossible? missing? confirm reviewed
 <div class="no-background" flex layout="column">
   <div ng-if="app.api.options.status.annotated && !grade.hidePrintNotification" class="printed-bar" layout-padding layout="row" layout-align="center center">
     This project has been annotaed on {{app.api.options.status.annotated | date: 'yyyy-MM-dd HH:mm'}}.
-    <md-button class="md-raised md-primary"  ng-href="{{app.api.getAnnotateZipURL()}}">Download Zip with annotated PDFs</md-button>
+    <md-button class="md-raised md-primary"  ng-href="{{app.api.getAnnotateZipURL()}}">Download <small>(Zip with annotated PDFs)</small></md-button>
     <span flex></span>
     <md-button class="md-icon-button" ng-click="grade.hidePrintNotification=true" aria-label="close message"><md-icon class="mdi-close"></md-icon></md-button>
   </div>

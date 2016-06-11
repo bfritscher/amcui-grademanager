@@ -688,7 +688,7 @@ my-pdf-viewer{
 }
 
 .printed-bar .md-button{
-  padding: 0;
+  
 }
 
 #main-view{
@@ -818,6 +818,7 @@ code.border .CodeMirror, .code-editor .border{
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 16px;
 }
 
 .grades .legend{
