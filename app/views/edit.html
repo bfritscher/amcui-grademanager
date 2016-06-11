@@ -110,6 +110,10 @@
             <label>teacher</label>
             <input ng-model="editor.examService.exam.teacher">
           </md-input-container>
+          <md-input-container>
+            <label>Search <span ng-show="editor.searchQuery">{{ editor.searchResults.length }} résults</span></label>
+            <input type="text" ng-change="editor.search()" ng-model="editor.searchQuery" ng-model-options="{ updateOn: 'default blur', debounce: { 'default': 500, 'blur': 0 } }"/>
+          </md-input-container>
         </div>
         <span hide-xs>{{editor.lastPreview | date: 'HH:mm:ss'}}</span>
         <md-button aria-label="preview" ng-class="{'md-warn':  app.api.logs.preview.code>0}" ng-click="editor.showPreviewDialog($event)">{{editor.previewWait ? 'wait' : app.api.logs.preview.code == 0 ? 'Preview' : app.api.logs.preview.code > 0 ? 'error' : 'compiling'}}</md-button>
@@ -167,11 +171,29 @@
     <md-button aria-label="close" class="tab-close md-icon-button" ng-click="editor.isLatexOptionVisible = false"><md-icon class="mdi-close"></md-icon></md-button>
   </div>
 <div flex class="scroll-frame" ng-hide="editor.isLatexOptionVisible">
-<md-content id="main-content" class="section scroll-section" layout-padding>
+<md-content id="main-content" class="section scroll-section">
+        <md-subheader ng-if="editor.searchResults.length > 0" class="search-result md-whiteframe-z1">
+          <div>
+            <md-button style="float:right" class="md-icon-button" ng-click="editor.searchQuery='';editor.searchResults=[];" aria-label="close message"><md-icon class="mdi-close"></md-icon></md-button>
+            <div ng-repeat="r in editor.searchResults">
+              <div ng-repeat="(s, obj1) in r.chain">
+                  <b>{{editor.examService.exam.sections[s].number}} {{editor.examService.exam.sections[s].title}}</b>
+                  <span ng-if="obj1.title"><b>: </b><a ng-href="{{editor.linkToQuestion(editor.examService.exam.sections[s])}}">{{editor.highlightSearch(obj1.title) | htmlToPlaintext}}</a></span>
+                  <span ng-if="obj1.content"><b>: </b><a ng-href="{{editor.linkToQuestion(editor.examService.exam.sections[s])}}">{{editor.highlightSearch(obj1.content) | htmlToPlaintext}}</a></span>
+                  <span ng-repeat="(q, obj2) in obj1.questions">
+                    <b>> Question {{editor.examService.exam.sections[s].questions[q].number}}</b>
+                    <span ng-if="obj2.content"><b>: </b><a ng-href="{{editor.linkToQuestion(editor.examService.exam.sections[s], editor.examService.exam.sections[s].questions[q])}}">{{editor.highlightSearch(obj2.content) | htmlToPlaintext}}</a></span>
+                    <span ng-repeat="(a, obj3) in obj2.answers"><b>> Answer:</b>
+                      <a ng-href="{{editor.linkToQuestion(editor.examService.exam.sections[s], editor.examService.exam.sections[s].questions[q])}}">{{editor.highlightSearch(obj3.content) | htmlToPlaintext}}</a></span>
+                  </span>
+              </div>
+            </div>
+          </div>
+        </md-subheader>
 <div class="page-width-limit">
   <div class="md-whiteframe-z1">
       <div class="md-whiteframe-z1" id="q0">
-    		<div layout="row" class="section-header no-error-input-container" layout-align="space-around center">
+        <div layout="row" class="section-header no-error-input-container" layout-align="space-around center">
           <md-button aria-label="previous" class="md-primary" ng-show="editor.previousSection()" ng-click="editor.section = editor.previousSection()" ng-bind="editor.previousSection().title"></md-button>
           <span flex="20" ng-hide="editor.previousSection()"></span>
           <h3>{{editor.section.number}}</h3>

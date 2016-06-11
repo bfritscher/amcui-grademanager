@@ -187,6 +187,50 @@ angular.module('grademanagerApp')
 	      });
 	};
 
+	editor.highlightSearch = function (text) {
+		if (editor.searchQuery.length < 3) {
+			return '';
+		}
+		var re = new RegExp(editor.searchQuery, 'i');
+		var ch = text.search(re);
+		var wordLength = editor.searchQuery.length;
+		var margin = 10;
+		var result = '';
+		if(ch > margin) {
+			result += '...';
+		}
+		while ( ch > -1 ) {
+			result += text.substr(Math.max(0, ch - margin), Math.min(wordLength + 2*margin, text.length)) + '...';
+			text = text.slice(ch + editor.searchQuery.length);
+			ch = text.search(re);
+		}
+		return result;
+	};
+
+	editor.search = function () {
+		if (editor.searchQuery.length < 3) {
+			editor.searchResults = [];
+		} else {
+			try {
+				editor.searchResults = JSON.search(editor.examService.exam.sections, new RegExp(editor.searchQuery, 'i'));
+				var keys = [];
+				editor.searchResults = editor.searchResults.filter(function(item){
+					if (item.inKey) {
+						return false;
+					}
+					var key = JSON.stringify(item.chain);
+					if (keys.indexOf(key) < 0) {
+						keys.push(key);
+						return true;
+					}
+					return false;
+				});
+			} catch(e) {
+				editor.searchResults = [];
+			}
+		}
+	};
+
 	editor.examMenuOptions = {
 		accept: function(sourceNode, destNodes) {
         var data = sourceNode.$modelValue;

@@ -156,6 +156,14 @@ tr.active td{
   content: '▼'
 }
 
+.search-result a {
+  color: rgb(33,150,243);
+  text-decoration: none;
+}
+
+.search-result a:hover {
+  text-decoration: underline;
+}
 
 .angular-ui-tree-placeholder {
     background: #f0f9ff;
@@ -688,7 +696,7 @@ my-pdf-viewer{
 }
 
 .printed-bar .md-button{
-  
+
 }
 
 #main-view{
@@ -712,6 +720,7 @@ my-pdf-viewer{
 .page-width-limit{
   max-width: 1000px;
   margin: 0 auto;
+  padding: 8px;
 }
 .myrichtexteditor.page-width-limit{
   max-width: 800px;
