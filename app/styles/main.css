@@ -514,7 +514,7 @@ md-checkbox.md-checked.answer-toggle .md-icon:after{
   position: relative;
 }
 
-.myrichtexteditor .toolbar{
+.myrichtexteditor .toolbar {
   margin-bottom: 8px;
   position: absolute;
   top: -44px;
@@ -522,6 +522,13 @@ md-checkbox.md-checked.answer-toggle .md-icon:after{
   right: 8px;
   background-color: #fff;
   z-index: 999;
+}
+
+.myrichtexteditor .toolbar-menu {
+  position: absolute;
+  background-color: #fff;
+  top: 48px;
+  left: 180px;
 }
 
 .myrichtexteditor {
@@ -590,7 +597,13 @@ md-checkbox.md-checked.answer-toggle .md-icon:after{
   padding: 0 4px;
   color: rgba(0, 0, 0, 0.87);
   text-decoration: none;
+  cursor: pointer;
 }
+
+.myrichtexteditor .toolbar a:hover {
+  background-color: #E0E0E0;
+}
+
 .myrichtexteditor .toolbar .mdi{
   width: 32px;
   height: 32px;

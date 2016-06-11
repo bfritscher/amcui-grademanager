@@ -557,6 +557,18 @@ angular.module('grademanagerApp')
                             out += '\\newpage\n';
                             break;
 
+                        case 'H1':
+                            out += '\\section*{' + handleNode(child, level + 1) + '}\n';
+                            break;
+
+                        case 'H2':
+                            out += '\\subsection*{' + handleNode(child, level + 1) + '}\n';
+                            break;
+
+                        case 'H3':
+                            out += '\\subsubsection*{' + handleNode(child, level + 1) + '}\n';
+                            break;
+
                         default:
                             break;
                     }

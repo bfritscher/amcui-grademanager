@@ -4,6 +4,14 @@
         <a data-wysihtml5-command="italic" title="CTRL+I"><md-icon class="mdi-format-italic"></md-icon></a>
         <a data-wysihtml5-command="formatInline" title="Monospace CTRL+M" data-wysihtml5-command-value="tt"><md-icon class="mdi-format-text"></md-icon></a>
         <a data-wysihtml5-command="formatInline" title="Latex Source not escaped CTRL+L" data-wysihtml5-command-value="var">LaTeX</a>
+
+        <a ng-mousedown="$event.preventDefault();ctrl.showStyle=!ctrl.showStyle" href="javascript:;"><md-icon class="mdi-format-size"></md-icon></a>
+        <div class="md-whiteframe-z2 toolbar-menu" ng-if="ctrl.showStyle" layout="column">
+            <a data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="p" title="p" ng-click="$event.stopPropagation();cmd('formatBlock', 'p');ctrl.showStyle=false"><md-icon class="mdi-format-paragraph"></md-icon></a>
+            <a data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="h1" title="h1" ng-click="$event.stopPropagation();cmd('formatBlock', 'h1');ctrl.showStyle=false"><md-icon class="mdi-format-header-1"></md-icon></a>
+            <a data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="h2" title="h2" ng-click="$event.stopPropagation();cmd('formatBlock', 'h2');ctrl.showStyle=false"><md-icon class="mdi-format-header-2"></md-icon></a>
+            <a data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="h3" title="h3" ng-click="$event.stopPropagation();cmd('formatBlock', 'h3');ctrl.showStyle=false"><md-icon class="mdi-format-header-3"></md-icon></a>
+        </div>
         <a data-wysihtml5-command="insertUnorderedList"><md-icon class="mdi-format-list-bulleted"></md-icon></a>
         <a data-wysihtml5-command="insertOrderedList"><md-icon class="mdi-format-list-numbers"></md-icon></a>
         <a data-wysihtml5-command="justifyCenter"><md-icon class="mdi-format-align-center"></md-icon></a>

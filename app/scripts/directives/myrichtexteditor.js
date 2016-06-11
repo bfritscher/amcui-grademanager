@@ -177,6 +177,12 @@ angular.module('grademanagerApp')
             }
         };
 
+        scope.cmd = function(name, value) {
+            if (editor) {
+                editor.composer.commands.exec(name, value);
+            }
+        }
+
         function findParentCode(element){
             if(element.tagName === 'CODE') {
                 return element;

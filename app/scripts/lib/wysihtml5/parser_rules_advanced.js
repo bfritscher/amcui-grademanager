@@ -49,7 +49,12 @@ var wysihtml5ParserRules = {
   },
   tags: {
     b:      {},
+    h1:     {},
+    h2:     {},
+    h3:     {},
+    strong: { rename_tag: "b" },
     i:      {},
+    em:     { rename_tag: "i" },
     hr:     {},
     ul:     {},
     ol:     {},
@@ -68,6 +73,8 @@ var wysihtml5ParserRules = {
       "check_attributes": {
           "id": "any"
       }
-    }
+    },
+    comment: { remove: 1 },
+    style:   { remove: 1 }
   }
 };
