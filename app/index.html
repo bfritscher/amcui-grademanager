@@ -27,6 +27,11 @@
 <meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<style>
+  [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+    display: none !important;
+  }
+</style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic">
     <!-- build:css(.) styles/vendor.css -->
@@ -36,6 +41,7 @@
     <link rel="stylesheet" href="bower_components/mdi/css/materialdesignicons.min.css" />
     <link rel="stylesheet" href="bower_components/pdfjs-dist/web/pdf_viewer.css" />
     <link rel="stylesheet" href="bower_components/codemirror/lib/codemirror.css" />
+    <link rel="stylesheet" href="bower_components/angular-material-data-table/dist/md-data-table.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
@@ -43,13 +49,13 @@
     <!-- endbuild -->
 
   </head>
-  <body ng-app="grademanagerApp" ng-controller="AppCtrl as app" layout="column">
+  <body ng-cloak ng-app="grademanagerApp" ng-controller="AppCtrl as app" layout="column">
     <!--[if lte IE 8]>
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
 
     <!-- Add your site or application content here -->
-    <md-toolbar md-scroll-shrink>
+    <md-toolbar md-scroll-shrink class="md-whiteframe-1dp">
       <div class="md-toolbar-tools">
         <h3>
           <a class="navbar-brand" href="#/">
@@ -136,6 +142,7 @@
     <script src="bower_components/angular-validation-match/dist/angular-validation-match.min.js"></script>
     <script src="bower_components/u2f-api/u2f-api.js"></script>
     <script src="bower_components/angular-scroll/angular-scroll.js"></script>
+    <script src="bower_components/angular-material-data-table/dist/md-data-table.js"></script>
     <!-- endbower -->
     <script src="bower_components/codemirror/mode/stex/stex.js"></script>
     <script src="bower_components/codemirror/mode/xml/xml.js"></script>

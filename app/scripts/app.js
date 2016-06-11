@@ -21,7 +21,8 @@ angular
     'ngFileUpload',
     'ui.codemirror',
     'validation.match',
-    'duScroll'
+    'duScroll',
+    'md.data.table'
   ])
   .config(function ($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise('/');
