@@ -383,7 +383,7 @@ angular.module('grademanagerApp')
     };
 
     grade.editCell = function($event, student, col) {
-      if(['Total', 'FinalGrade'].indexOf(col) < 0 ) {
+      if(['Total', 'FinalGrade', 'Grade'].indexOf(col) < 0 ) {
         var value = student[col];
         $mdDialog.show({
               clickOutsideToClose: false,
