@@ -116,7 +116,7 @@ highlight impossible? missing? confirm reviewed
                   <md-button aria-label="remove student" ng-click="grade.removeStudent(s)" class="md-warn button-remove"><md-icon class="mdi-close"></md-icon></md-button>
                   <md-button ng-show="grade.scores[s.id]" aria-label="view annotated" ng-click="grade.annotateScore(grade.scores[s.id])" class="md-accent button-remove"><md-icon class="mdi-eye"></md-icon></md-button>
                 </td>
-                <td ng-class="{'text-right': col=='id'}" ng-repeat="col in grade.students.fields track by $index">{{s[col]}}</td>
+                <td ng-class="{'text-right': col=='id'}" ng-repeat="col in grade.students.fields track by $index" ng-click="grade.editCell($event, s, col)">{{s[col]}}</td>
                 <td class="text-right grade" ng-class="{'grade-fail': s.FinalGrade < 3.5, 'grade-pass': s.FinalGrade >= 4, 'grade-remed': s.FinalGrade >=3.5 && s.FinalGrade < 4}">{{grade.calculate(s, 'FinalGrade', app.api.options.options.final_grade_formula)}}</td>
                 <td class="text-right grade" ng-class="{'grade-fail': s.Grade < 3.5, 'grade-pass': s.Grade >= 4, 'grade-remed': s.Grade >=3.5 && s.Grade < 4}">{{grade.scores[s.id].hasOwnProperty('total') ? grade.valueSaver(s, 'Grade', grade.grade(grade.scores[s.id].total,app.api.options.options.points_max, app.api.options.options.note_min, app.api.options.options.note_max, 'round', app.api.options.options.note_grain)) : 0}}</td>
                 <td class="text-right">{{grade.valueSaver(s, 'Total', grade.scores[s.id].total)}}</td>

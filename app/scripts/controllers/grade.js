@@ -382,6 +382,33 @@ angular.module('grademanagerApp')
       grade.table = table;
     };
 
+    grade.editCell = function($event, student, col) {
+      if(['Total', 'FinalGrade'].indexOf(col) < 0 ) {
+        var value = student[col];
+        $mdDialog.show({
+              clickOutsideToClose: false,
+              targetEvent: $event,
+              templateUrl: 'views/promptdialog.html',
+              controller: 'PromptDialogCtrl',
+              controllerAs: 'ctrl',
+              locals: {
+                  options: {
+                      title: 'Edit value',
+                      content: '',
+                      label: 'Value ' + col + ' for ' + student.name,
+                      value: value
+                  }
+              }
+          })
+          .then(function(newVal){
+              if (newVal && newVal !== value){
+                  student[col] = newVal;
+                  grade.save();
+              }
+          });
+      }
+    };
+
     /* DND */
     var dropbox;
     var self = this;
