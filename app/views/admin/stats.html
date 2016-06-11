@@ -1,4 +1,4 @@
-<md-tabs md-dynamic-height md-selected="1">
+<md-tabs md-dynamic-height>
     <md-tab label="Projects">
         <md-content>
             <md-card>
@@ -12,15 +12,32 @@
                 <thead md-head md-order="ctrl.tables.projects.order">
                 <tr md-row>
                     <th md-column md-order-by="name"><span>Name</span></th>
+                    <th md-column md-numeric md-order-by="size" style="width:200px"><span>Size (Mb)</span></th>
                     <th md-column md-numeric md-order-by="users.length"><span>Nb</span></th>
                     <th md-column>Users</th>
                 </tr>
                 </thead>
                 <tbody md-body>
-                <tr md-row ng-repeat="p in ctrl.projects | orderBy: ctrl.tables.projects.order | limitTo : ctrl.tables.projects.limit : ctrl.tables.projects.limit * (ctrl.tables.projects.page-1)">
+                <tr ng-class="{'admin-error': p.error}" md-row ng-repeat="p in ctrl.projects | orderBy: ctrl.tables.projects.order | limitTo : ctrl.tables.projects.limit : ctrl.tables.projects.limit * (ctrl.tables.projects.page-1)">
                     <td md-cell>{{p.name}}</td>
+                    <td md-cell ng-click="p.detail = !p.detail">{{p.size/1024 | number:1}}
+                        <div ng-if="p.detail" layout="column">
+                            <div ng-repeat="f in p.folders">
+                                <div ng-repeat="(k,v) in f" layout="row">
+                                    <span flex style="text-align:left;">{{k}}</span> <span>{{v/1024 | number:1}}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span ng-if="p.error == ctrl.ERROR_NO_FOLDER">{{ctrl.ERROR_NO_FOLDER}}</span>
+                    </td>
                     <td md-cell>{{p.users.length}}</td>
-                    <td md-cell><span ng-repeat="u in p.users">{{u}}<span ng-hide="$last">, </span></span></td>
+                    <td md-cell><span ng-repeat="u in p.users">{{u}}<span ng-hide="$last">, </span></span>
+                        <span ng-if="p.error == ctrl.ERROR_NOT_IN_DB">{{ctrl.ERROR_NOT_IN_DB}}
+                            <md-button ng-click="ctrl.importProject(p)">Import</md-button>
+                        </span>
+                        <md-button ng-if="p.users.indexOf(app.getUsername()) < 0" ng-click="ctrl.addToProject(p)">add self</md-button>
+                        <md-button  ng-if="p.users.indexOf(app.getUsername()) > -1" ng-click="ctrl.removeFromProject(p)">remove self</md-button>
+                    </td>
                 </tr>
                 </tbody>
             </table>
