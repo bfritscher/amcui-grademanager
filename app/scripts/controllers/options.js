@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @ngdoc function
  * @name grademanagerApp.controller:OptionsCtrl
@@ -8,61 +6,63 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('OptionsCtrl', function ($scope, $stateParams, $http, $mdToast, auth, API) {
-    var ctrl = this;
-    API.loadProject($stateParams.project);
+    .controller('OptionsCtrl', function ($scope, $stateParams, $http, $mdToast, auth, API) {
+        'use strict';
 
-    ctrl.options = API.options;
-    ctrl.types = ['none', 'circle', 'mark', 'box'];
-    ctrl.colors = ['#000000', '#ff0000', '#00ff00', '#0000ff'];
+        var ctrl = this;
+        API.loadProject($stateParams.project);
 
-    ctrl.downloadURL = API.URL + '/project/' + $stateParams.project + '/zip?token=' + auth.getToken();
-    ctrl.downloadODSURL = API.URL + '/project/' + $stateParams.project + '/ods?token=' + auth.getToken();
-    ctrl.downloadCSVURL = API.URL + '/project/' + $stateParams.project + '/static/students.csv?token=' + auth.getToken();
-    ctrl.scoringURL = API.URL + '/project/' + $stateParams.project + '/scoring?token=' + auth.getToken();
-    ctrl.markURL = API.URL + '/project/' + $stateParams.project + '/mark?token=' + auth.getToken();
-    ctrl.resetLockURL = API.URL + '/project/' + $stateParams.project + '/reset/lock?token=' + auth.getToken();
+        ctrl.options = API.options;
+        ctrl.types = ['none', 'circle', 'mark', 'box'];
+        ctrl.colors = ['#000000', '#ff0000', '#00ff00', '#0000ff'];
 
-    ctrl.saveOptions = function(){
-      API.saveOptions(ctrl.options.options)
-      .success(function(){
-         $mdToast.show($mdToast.simple().content('Options saved!').position('top right'));
-      });
-    };
+        ctrl.downloadURL = API.URL + '/project/' + $stateParams.project + '/zip?token=' + auth.getToken();
+        ctrl.downloadODSURL = API.URL + '/project/' + $stateParams.project + '/ods?token=' + auth.getToken();
+        ctrl.downloadCSVURL = API.URL + '/project/' + $stateParams.project + '/static/students.csv?token=' + auth.getToken();
+        ctrl.scoringURL = API.URL + '/project/' + $stateParams.project + '/scoring?token=' + auth.getToken();
+        ctrl.markURL = API.URL + '/project/' + $stateParams.project + '/mark?token=' + auth.getToken();
+        ctrl.resetLockURL = API.URL + '/project/' + $stateParams.project + '/reset/lock?token=' + auth.getToken();
 
-    //TODO: #121 refactor into service, mabe get only meta from server not full csv!
-    $http.get(API.URL + '/project/' + $stateParams.project + '/csv')
-    .success(function(csv){
-      var result = Papa.parse(csv, {
-          header: true,
-	        dynamicTyping: true,
-          skipEmptyLines: true
-      });
-      ctrl.fields = result.meta.fields.sort();
+        ctrl.saveOptions = function () {
+            API.saveOptions(ctrl.options.options)
+                .success(function () {
+                    $mdToast.show($mdToast.simple().content('Options saved!').position('top right'));
+                });
+        };
+
+        //TODO: #121 refactor into service, mabe get only meta from server not full csv!
+        $http.get(API.URL + '/project/' + $stateParams.project + '/csv')
+            .success(function (csv) {
+                var result = Papa.parse(csv, {
+                    header: true,
+                    dynamicTyping: true,
+                    skipEmptyLines: true
+                });
+                ctrl.fields = result.meta.fields.sort();
+            });
+
+
+
+
+        $scope.$watch('ctrl.options.users', function (newValues, oldValues) {
+            var listRemoved = oldValues.filter(function (item) {
+                return newValues.indexOf(item) < 0;
+            });
+            listRemoved.forEach(function (username) {
+                if (username !== auth.getUsername()) {
+                    API.removeUser(username, $stateParams.project);
+                } else {
+                    ctrl.options.users.push(auth.getUsername());
+                }
+            });
+            var listAdded = newValues.filter(function (item) {
+                return oldValues.indexOf(item) < 0;
+            });
+            listAdded.forEach(function (username) {
+                if (username !== auth.getUsername()) {
+                    API.addUser(username, $stateParams.project);
+                }
+            });
+        }, true);
+
     });
-
-
-
-
-    $scope.$watch('ctrl.options.users', function(newValues, oldValues){
-      var listRemoved = oldValues.filter(function(item){
-        return newValues.indexOf(item) < 0;
-      });
-      listRemoved.forEach(function(username){
-        if(username !== auth.getUsername()){
-          API.removeUser(username, $stateParams.project);
-        } else {
-          ctrl.options.users.push(auth.getUsername());
-        }
-      });
-      var listAdded = newValues.filter(function(item){
-        return oldValues.indexOf(item) < 0;
-      });
-      listAdded.forEach(function(username){
-        if(username !== auth.getUsername()){
-          API.addUser(username, $stateParams.project);
-        }
-      });
-    }, true);
-
-  });

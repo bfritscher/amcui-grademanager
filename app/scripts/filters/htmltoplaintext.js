@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @ngdoc filter
  * @name grademanagerApp.filter:htmlToPlaintext
@@ -9,8 +7,9 @@
  * Filter in the grademanagerApp.
  */
 angular.module('grademanagerApp')
-  .filter('htmlToPlaintext', function () {
-    return function(text) {
-      return String(text).replace(/<[^>]+>/gm, '').replace(/&nbsp;/gm, ' ');
-    };
-  });
+    .filter('htmlToPlaintext', function () {
+        'use strict';
+        return function (text) {
+            return String(text).replace(/<[^>]+>/gm, '').replace(/&nbsp;/gm, ' ');
+        };
+    });

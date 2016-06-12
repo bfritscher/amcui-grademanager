@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @ngdoc function
  * @name grademanagerApp.controller:ProgressdialogCtrl
@@ -8,11 +6,12 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-  .controller('ProgressDialogCtrl', function ($mdDialog, API) {
-    var ctrl = this;
-    ctrl.api = API;
+    .controller('ProgressDialogCtrl', function ($mdDialog, API) {
+        'use strict';
+        var ctrl = this;
+        ctrl.api = API;
 
-    ctrl.closeDialog = function() {
-          $mdDialog.hide();
-      };
-  });
+        ctrl.closeDialog = function () {
+            $mdDialog.hide();
+        };
+    });

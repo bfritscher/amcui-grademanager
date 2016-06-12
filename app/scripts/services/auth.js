@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @ngdoc service
  * @name grademanagerApp.auth
@@ -8,88 +6,90 @@
  * Service in the grademanagerApp.
  */
 angular.module('grademanagerApp')
-  .service('auth', function ($window, API, $http) {
-    var self = this;
+    .service('auth', function ($window, API, $http) {
+        'use strict';
 
-    self.parseJwt = function(token) {
-      var base64Url = token.split('.')[1];
-      var base64 = base64Url.replace('-', '+').replace('_', '/');
-      return JSON.parse($window.atob(base64));
-    };
+        var self = this;
 
-    self.saveToken = function(token) {
-      $window.localStorage.setItem('jwtToken', token);
-    };
+        self.parseJwt = function (token) {
+            var base64Url = token.split('.')[1];
+            var base64 = base64Url.replace('-', '+').replace('_', '/');
+            return JSON.parse($window.atob(base64));
+        };
 
-    self.getToken = function() {
-      return $window.localStorage.getItem('jwtToken');
-    };
+        self.saveToken = function (token) {
+            $window.localStorage.setItem('jwtToken', token);
+        };
 
-    self.isAuthed = function() {
-      var token = self.getToken();
-      if(token) {
-        var params = self.parseJwt(token);
-        return Math.round(new Date().getTime() / 1000) <= params.exp;
-      } else {
-        return false;
-      }
-    };
+        self.getToken = function () {
+            return $window.localStorage.getItem('jwtToken');
+        };
 
-    self.getUsername = function(){
-      var token = self.getToken();
-      if(token) {
-        var params = self.parseJwt(token);
-        return params.username;
-      } else {
-        return '';
-      }
-    };
+        self.isAuthed = function () {
+            var token = self.getToken();
+            if (token) {
+                var params = self.parseJwt(token);
+                return Math.round(new Date().getTime() / 1000) <= params.exp;
+            } else {
+                return false;
+            }
+        };
 
-    self.getUser = function(){
-      var token = self.getToken();
-      if(token) {
-        var params = self.parseJwt(token);
-        return params;
-      } else {
-        return {};
-      }
-    };
+        self.getUsername = function () {
+            var token = self.getToken();
+            if (token) {
+                var params = self.parseJwt(token);
+                return params.username;
+            } else {
+                return '';
+            }
+        };
 
-    self.login = function(username, password) {
-      return $http.post(API.URL + '/login', {
-          username: username,
-          password: password
-        });
-    };
+        self.getUser = function () {
+            var token = self.getToken();
+            if (token) {
+                var params = self.parseJwt(token);
+                return params;
+            } else {
+                return {};
+            }
+        };
 
-    self.u2fReply = function(username, reply) {
-      return $http.post(API.URL + '/login', {
-          username: username,
-          u2f: reply
-        });
-    };
+        self.login = function (username, password) {
+            return $http.post(API.URL + '/login', {
+                username: username,
+                password: password
+            });
+        };
 
-    self.u2fRegister = function(password) {
-      return $http.post(API.URL + '/login', {
-          username: self.getUsername(),
-          password: password,
-          u2fRegistration: true
-        });
-    };
+        self.u2fReply = function (username, reply) {
+            return $http.post(API.URL + '/login', {
+                username: username,
+                u2f: reply
+            });
+        };
 
-    self.u2fRemove = function() {
-      return $http.post(API.URL + '/profile/removeU2f', {});
-    };
+        self.u2fRegister = function (password) {
+            return $http.post(API.URL + '/login', {
+                username: self.getUsername(),
+                password: password,
+                u2fRegistration: true
+            });
+        };
 
-    self.changePassword = function(password, newPassword) {
-      return $http.post(API.URL + '/changePassword', {
-          username: self.getUsername(),
-          password: password,
-          newPassword: newPassword
-        });
-    };
+        self.u2fRemove = function () {
+            return $http.post(API.URL + '/profile/removeU2f', {});
+        };
 
-    self.logout = function() {
-      $window.localStorage.removeItem('jwtToken');
-    };
-  });
+        self.changePassword = function (password, newPassword) {
+            return $http.post(API.URL + '/changePassword', {
+                username: self.getUsername(),
+                password: password,
+                newPassword: newPassword
+            });
+        };
+
+        self.logout = function () {
+            $window.localStorage.removeItem('jwtToken');
+        };
+    });

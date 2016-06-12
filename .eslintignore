@@ -1,0 +1,4 @@
+app/scripts/lib/diffsync.js
+app/scripts/pdf.worker.js
+app/scripts/lib/json-search.js
+app/scripts/lib/wysihtml5/parse.js
