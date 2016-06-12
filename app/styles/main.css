@@ -11,6 +11,10 @@
   box-sizing: border-box;
 }
 
+ng-messages {
+  color: rgb(255, 71, 19);
+}
+
 .admin-error td {
   color: rgb(255, 71, 19) !important;
 }
