@@ -86,13 +86,13 @@ angular.module('grademanagerApp')
                 }
             })
                 .then(function (name) {
+                    name = name.trim().toLowerCase().replace(/[^\-a-z0-9\_]/g, '');
                     API.copyProject(item.project, name)
                         .success(function () {
-                            home.openProject({ project: name.toLowerCase() });
+                            home.openProject({ project: name });
                         });
                 });
         };
-
 
         if (home.isAuthed()) {
             API.getProjectList();
