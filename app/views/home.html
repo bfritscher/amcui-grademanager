@@ -25,7 +25,7 @@
 			<md-card-content>
 				<form name="newprojectform" ng-submit="home.createProject()" layout="row" layout-align="center center">
 					<div>
-						<md-input-container class="md-block">
+						<md-input-container class="md-block" style="margin-bottom: 0;">
 							<label>Project name</label>
 							<input ng-model="home.newProjectName" name="name" ng-required="true" ng-pattern="/^[-0-9a-z\_]+$/">
 						</md-input-container>
@@ -46,7 +46,7 @@
 				<table ng-show="home.API.projects.length > 0">
 					<thead>
 						<tr>
-							<th colspan="2">Name</th>
+							<th colspan="2" class="text-left">Name</th>
 							<th>Status</th>
 							<th>Collaborators</th>
 							<th class="text-right">Action</th>
@@ -54,7 +54,7 @@
 					</thead>
 					<tbody>
 						<tr class="subheader" ng-show="item.short != (home.API.projects | filter: {'project': home.search})[$index-1].short" ng-repeat-start="item in home.API.projects | filter: {'project': home.search}">
-							<td colspan="5">{{item.short}}</td>
+							<td colspan="5" class="md-whiteframe-1dp">{{item.short}}</td>
 						</tr>
 						<tr class="project" ng-repeat-end ng-click="home.openProject(item)">
 							<td>

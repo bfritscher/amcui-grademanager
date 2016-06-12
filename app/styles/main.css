@@ -95,8 +95,15 @@ md-input-container .mdi {
   background-color: red;
 }
 
+.projects .subheader {
+  background-color: #2196f3;
+  color: white;
+}
+
 .projects .subheader td {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+  padding: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
 }
 
 .project md-checkbox {
