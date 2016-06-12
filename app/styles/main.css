@@ -99,6 +99,10 @@ md-input-container .mdi {
   border-bottom: 1px solid rgba(0, 0, 0, 0.3);
 }
 
+.project md-checkbox {
+  margin: 0;
+}
+
 path {
   cursor: pointer;
 }
