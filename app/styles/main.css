@@ -69,6 +69,10 @@ md-tooltip .md-content {
     white-space: normal;
     height: inherit;
   }
+
+  #properties-manager {
+    min-width: 600px;
+  }
 }
 
 md-input-container .mdi {

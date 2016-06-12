@@ -14,6 +14,22 @@ angular.module('grademanagerApp')
         ctrl.graphics = [];
         ctrl.progress = {};
 
+        function buildList() {
+            var items = [];
+            for (var key in ctrl.examService.exam.graphics) {
+                if (ctrl.examService.exam.graphics.hasOwnProperty(key)) {
+                    //add only not new uploads
+                    if (ctrl.uploads.indexOf(ctrl.examService.exam.graphics[key]) === -1) {
+                        items.push(ctrl.examService.exam.graphics[key]);
+                    }
+                }
+            }
+            items.sort(function (a, b) {
+                return a.name > b.name ? 1 : -1;
+            });
+            ctrl.graphics = ctrl.uploads.slice(0).concat(items);
+        }
+
         ctrl.deleteGraphics = function (item) {
             ctrl.examService.deleteGraphics(item);
             if (ctrl.uploads.indexOf(item) > -1) {
@@ -80,23 +96,6 @@ angular.module('grademanagerApp')
                 }
             }
         });
-
-        function buildList() {
-            var items = [];
-            for (var key in ctrl.examService.exam.graphics) {
-                if (ctrl.examService.exam.graphics.hasOwnProperty(key)) {
-                    //add only not new uploads
-                    if (ctrl.uploads.indexOf(ctrl.examService.exam.graphics[key]) === -1) {
-                        items.push(ctrl.examService.exam.graphics[key]);
-                    }
-                }
-            }
-            items.sort(function (a, b) {
-                return a.name > b.name ? 1 : -1;
-            });
-            ctrl.graphics = ctrl.uploads.slice(0).concat(items);
-        }
-
 
         $scope.$watch('ctrl.examService.exam.graphics', buildList, true);
 

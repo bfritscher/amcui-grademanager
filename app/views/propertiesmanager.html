@@ -1,0 +1,30 @@
+<md-dialog aria-label="Document Properties Manager" id="properties-manager">
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2>Document Properties Manager</h2>
+            <span flex></span>
+            <md-button class="md-icon-button" ng-click="ctrl.closeDialog()">
+                <md-icon class="mdi-close" aria-label="Close dialog"></md-icon>
+            </md-button>
+        </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+        <div ng-repeat="key in ctrl.getProperties()" layout="row">
+            <md-input-container class="md-block" flex>
+                <label>{{key}}</label>
+                <input ng-model="ctrl.examService.exam.properties[key]">
+            </md-input-container>
+            <md-button class="md-icon-button md-warn" aria-label="delete" ng-click="ctrl.removeProperty(key)">
+                <md-icon class="mdi-delete"></md-icon>
+            </md-button>
+        </div>
+    </md-dialog-content>
+
+    <md-dialog-actions layout="row">
+        <span flex>Display any <tt>\AMC<i>property_name</i></tt> from source.tex</span>
+        <md-button ng-click="ctrl.closeDialog()" class="md-primary">
+         close
+        </md-button>
+    </md-dialog-actions>
+</md-dialog>

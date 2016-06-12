@@ -335,9 +335,6 @@ angular.module('grademanagerApp')
 
         function parseDefinition(latex) {
             sections = {};
-            editor.exam.course = latex.match(/\\newcommand{\\ACMUImatiere}{(.*?)}/)[1];
-            editor.exam.session = latex.match(/\\newcommand{\\ACMUIsession}{(.*?)}/)[1];
-            editor.exam.teacher = latex.match(/\\newcommand{\\ACMUIteacher}{(.*?)}/)[1];
             forEachMatch(/\\element{(.*?)}[\s\S]*?\\begin{(question|questionmult)}{(.*?)}([\s\S]*?)\\end{\2}/g, latex, function (m) {
                 if (!sections.hasOwnProperty(m[1])) {
                     sections[m[1]] = [];
@@ -708,13 +705,45 @@ angular.module('grademanagerApp')
             }
         }
 
+        function migrateTemplateToProperties () {
+            editor.exam.properties.course = editor.exam.course;
+            editor.exam.properties.session = editor.exam.session;
+            editor.exam.properties.teacher = editor.exam.teacher;
+            delete editor.exam.course;
+            delete editor.exam.session;
+            delete editor.exam.teacher;
+            editor.exam.source = editor.exam.source.replace(/\\ACMUImatiere/g, '\\AMCUIcourse');
+            editor.exam.source = editor.exam.source.replace(/\\ACMUIsession/g, '\\AMCUIsession');
+            editor.exam.source = editor.exam.source.replace(/\\ACMUIteacher/g, '\\AMCUIteacher');
+        }
+
+        function updatePropertiesFromLatexLayout () {
+            if (!editor.exam.properties) {
+                editor.exam.properties = {};
+            }
+            if (editor.exam.course || editor.exam.session || editor.exam.teacher) {
+                migrateTemplateToProperties();
+            }
+            var re = /\\AMCUI([\w]+)/g;
+            var match = re.exec(editor.exam.source);
+            while (match !== null) {
+                var key = match[1];
+                if (!editor.exam.properties.hasOwnProperty(key)) {
+                    editor.exam.properties[key] = '';
+                }
+                match = re.exec(editor.exam.source);
+            }
+        }
+
         editor.toLatex = function () {
             var head = [];
             var body = [];
             if (editor.exam && editor.exam.sections) {
-                head.push('\\newcommand{\\ACMUImatiere}{' + html2Latex(editor.exam.course || '') + '}');
-                head.push('\\newcommand{\\ACMUIsession}{' + html2Latex(editor.exam.session || '') + '}');
-                head.push('\\newcommand{\\ACMUIteacher}{' + html2Latex(editor.exam.teacher || '') + '}\n');
+                updatePropertiesFromLatexLayout();
+                Object.keys(editor.exam.properties).forEach(function (key) {
+                    head.push('\\newcommand{\\AMCUI' + key + '}{' + html2Latex(editor.exam.properties[key] || '') + '}');
+                });
+
 
                 editor.exam.sections.forEach(function (section) {
                     sectionToLatex(section, head, body);

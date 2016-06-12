@@ -62,6 +62,47 @@ angular.module('grademanagerApp')
             }
         }
 
+        function handleCopy() {
+            var copy = localStorage.getItem('copy');
+            if (copy) {
+                copy = angular.fromJson(copy);
+                if (copy.dest === $stateParams.project) {
+                    for (var key in copy.sections) {
+                        if (copy.sections.hasOwnProperty(key)) {
+                            //handle duplicate id
+                            if (exam.getSection(copy.sections[key].id)) {
+                                copy.sections[key].id = GUID();
+                            }
+                            exam.exam.sections.push(copy.sections[key]);
+                        }
+                    }
+                    if (!exam.exam.graphics) {
+                        exam.exam.graphics = {};
+                    }
+                    if (!exam.exam.codes) {
+                        exam.exam.codes = {};
+                    }
+                    angular.extend(exam.exam.graphics, copy.graphics);
+                    angular.extend(exam.exam.codes, copy.codes);
+                    API.copyGraphics(copy.src, copy.dest);
+                    API.copyCodes(copy.src, copy.dest);
+                    $mdToast.show($mdToast.simple().content('Content has been copied!').position('top right'));
+                    localStorage.removeItem('copy');
+                }
+            }
+        }
+
+        function handleImport() {
+            var copy = localStorage.getItem('import');
+            if (copy) {
+                exam.importJSON(copy);
+                localStorage.removeItem('import');
+                $timeout(function () {
+                    $state.go('edit', { project: $stateParams.project }, { reload: true });
+                }, 1000);
+            }
+        }
+
         /* Socket collab data */
         exam.load(function (client) {
             $scope.$watch('editor.examService.exam', function () {
@@ -184,6 +225,16 @@ angular.module('grademanagerApp')
                 templateUrl: 'views/edit.preview.html',
                 targetEvent: $event,
                 controller: 'EditPreviewCtrl',
+                controllerAs: 'ctrl'
+            });
+        };
+
+        editor.showPropertiesManager = function ($event) {
+            $mdDialog.show({
+                clickOutsideToClose: true,
+                templateUrl: 'views/propertiesmanager.html',
+                targetEvent: $event,
+                controller: 'PropertiesManagerCtrl',
                 controllerAs: 'ctrl'
             });
         };
@@ -347,45 +398,4 @@ angular.module('grademanagerApp')
             localStorage.setItem('copy', angular.toJson(copy));
             $state.go('edit', { project: name }, { reload: true });
         };
-
-        function handleCopy() {
-            var copy = localStorage.getItem('copy');
-            if (copy) {
-                copy = angular.fromJson(copy);
-                if (copy.dest === $stateParams.project) {
-                    for (var key in copy.sections) {
-                        if (copy.sections.hasOwnProperty(key)) {
-                            //handle duplicate id
-                            if (exam.getSection(copy.sections[key].id)) {
-                                copy.sections[key].id = GUID();
-                            }
-                            exam.exam.sections.push(copy.sections[key]);
-                        }
-                    }
-                    if (!exam.exam.graphics) {
-                        exam.exam.graphics = {};
-                    }
-                    if (!exam.exam.codes) {
-                        exam.exam.codes = {};
-                    }
-                    angular.extend(exam.exam.graphics, copy.graphics);
-                    angular.extend(exam.exam.codes, copy.codes);
-                    API.copyGraphics(copy.src, copy.dest);
-                    API.copyCodes(copy.src, copy.dest);
-                    $mdToast.show($mdToast.simple().content('Content has been copied!').position('top right'));
-                    localStorage.removeItem('copy');
-                }
-            }
-        }
-
-        function handleImport() {
-            var copy = localStorage.getItem('import');
-            if (copy) {
-                exam.importJSON(copy);
-                localStorage.removeItem('import');
-                $timeout(function () {
-                    $state.go('edit', { project: $stateParams.project }, { reload: true });
-                }, 1000);
-            }
-        }
     });
