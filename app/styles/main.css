@@ -70,7 +70,8 @@ md-tooltip .md-content {
     height: inherit;
   }
 
-  #properties-manager {
+  #properties-manager,
+  .projects {
     min-width: 600px;
   }
 }
@@ -93,6 +94,10 @@ md-input-container .mdi {
 
 .correct-3 {
   background-color: red;
+}
+
+.projects table {
+  width: 100%;
 }
 
 .projects .subheader {

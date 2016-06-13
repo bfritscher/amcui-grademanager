@@ -22,8 +22,13 @@
 	</form>
 	<div ng-show="home.isAuthed()" class="projects">
 		<md-card>
+			<md-card-title>
+			<md-card-title-text>
+				<span class="md-headline">New Project</span>
+			</md-card-title-text>
+			</md-card-title>
 			<md-card-content>
-				<form name="newprojectform" ng-submit="home.createProject()" layout="row" layout-align="center center">
+				<form name="newprojectform" ng-submit="home.API.projectsRecent" layout="row" layout-align="center center">
 					<div>
 						<md-input-container class="md-block" style="margin-bottom: 0;">
 							<label>Project name</label>
@@ -38,12 +43,60 @@
 					</div>
 					<md-button ng-disabled="newprojectform.name.$error.pattern" class="md-primary md-raised" type="submit">Create Project</md-button>
 				</form>
-				<h2>Projects</h2>
+			</md-card-content>
+		</md-card>
+
+		<md-card>
+			<md-card-title>
+				<md-card-title-text>
+					<span class="md-headline">Existing Projects</span>
+				</md-card-title-text>
+			</md-card-title>
+			<md-card-content>
 				<md-input-container class="md-block">
 					<label>Search</label>
 					<input ng-model="home.search">
 				</md-input-container>
+				<md-tabs md-dynamic-height md-border-bottom md-selected="home.selectedTab">
+				<md-tab label="Recent">
+        		<md-content>
 				<table ng-show="home.API.projects.length > 0">
+					<thead>
+						<tr>
+							<th colspan="2" class="text-left">Name</th>
+							<th>Status</th>
+							<th>Collaborators</th>
+							<th class="text-right">Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="project" ng-repeat="item in home.API.projectsRecent" ng-click="home.openProject(item)">
+							<td>
+								<md-checkbox aria-label="{{item.project}}"></md-checkbox>
+							</td>
+							<td><b>{{item.project}}</b></td>
+							<td>
+								<span ng-show="item.status.printed && !item.status.annotated">printed</span>
+								<span ng-show="item.status.annotated">annotated</span>
+							</td>
+							<td>{{item.users | join: ', '}}</td>
+							<td class="text-right">
+								<md-button ng-click="home.openProject(item);$event.stopPropagation();" title="open" class="md-primary md-icon-button" aria-label="copy project">
+									<md-icon class="mdi-eye"></md-icon>
+								</md-button>
+								<md-button ng-click="home.copyProject($event, item);$event.stopPropagation();" title="copy" class="md-primary md-icon-button"
+									aria-label="copy project">
+									<md-icon class="mdi-content-copy"></md-icon>
+								</md-button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+        		</md-content>
+				</md-tab>
+				<md-tab label="All">
+        		<md-content>
+				<table ng-show="home.API.projects.length > 0" >
 					<thead>
 						<tr>
 							<th colspan="2" class="text-left">Name</th>
@@ -78,7 +131,9 @@
 						</tr>
 					</tbody>
 				</table>
-
+        		</md-content>
+				</md-tab>
+				</md-tabs>
 				<md-list ng-hide="home.API.projects.length > 0">
 					<md-list-item>No projects found!</md-list-item>
 				</md-list>

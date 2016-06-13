@@ -27,6 +27,8 @@ angular.module('grademanagerApp')
         self.logs = {};
         self.sortedLogs = [];
         self.projects = [];
+        self.projectsRecent = [];
+        self.projectsIndex = {};
 
         self.getProjectList = function () {
             return $http.get(self.URL + '/project/list')
@@ -36,7 +38,17 @@ angular.module('grademanagerApp')
                     });
                     self.projects = list.map(function (item) {
                         item.short = item.project.split('-')[0];
+                        self.projectsIndex[item.project] = item;
                         return item;
+                    });
+                    $http.get(self.URL + '/project/recent')
+                    .success(function (list) {
+                        self.projectsRecent = [];
+                        list.forEach(function (key) {
+                            if (self.projectsIndex.hasOwnProperty(key)) {
+                                self.projectsRecent.push(self.projectsIndex[key]);
+                            }
+                        });
                     });
                 });
         };

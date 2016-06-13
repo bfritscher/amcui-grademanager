@@ -94,6 +94,13 @@ angular.module('grademanagerApp')
                 });
         };
 
+        $scope.$watch('home.search', function () {
+            console.log(home.search);
+            if (home.search) {
+                home.selectedTab = 1;
+            }
+        });
+
         if (home.isAuthed()) {
             API.getProjectList();
         }
