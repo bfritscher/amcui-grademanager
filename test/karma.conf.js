@@ -35,7 +35,6 @@ module.exports = function(config) {
       'bower_components/svg-pan-zoom/dist/svg-pan-zoom.js',
       'bower_components/angular-ui-router/release/angular-ui-router.js',
       'bower_components/ng-file-upload/ng-file-upload.js',
-      'bower_components/google-diff-match-patch/diff_match_patch.js',
       'bower_components/pdfjs-dist/build/pdf.js',
       'bower_components/pdfjs-dist/web/compatibility.js',
       'bower_components/pdfjs-dist/web/pdf_viewer.js',
@@ -45,6 +44,7 @@ module.exports = function(config) {
       'bower_components/u2f-api/u2f-api.js',
       'bower_components/angular-scroll/angular-scroll.js',
       'bower_components/angular-material-data-table/dist/md-data-table.js',
+      'bower_components/google-diff-match-patch/diff_match_patch_uncompressed.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       "app/scripts/**/*.js",
