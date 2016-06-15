@@ -107,6 +107,9 @@ angular.module('grademanagerApp')
                 self.project = project;
                 self.PROJECT_URL = self.URL + '/project/' + self.project;
                 self.newLog('connecting');
+                if (self.socket) {
+                    self.socket.disconnect();
+                }
                 self.socket = io.connect(self.SOCKET_URL + '?token=' + getAuth().getToken()); //, {path:'/amcui/socket.io'}
 
                 self.loadOptions();
