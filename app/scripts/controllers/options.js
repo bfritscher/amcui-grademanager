@@ -40,10 +40,10 @@ angular.module('grademanagerApp')
         };
 
         ctrl.renameProject = function () {
-            var name = $window.prompt('New name?');
+            var name = $window.prompt('Rename project to', API.project);
             if (name) {
-                API.renameProject(name).then(function () {
-                    $state.go('home');
+                API.renameProject(name).then(function (res) {
+                    $state.go('options', { project: res.data }, { reload: true });
                 });
             }
         };
