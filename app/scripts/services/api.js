@@ -15,8 +15,8 @@ angular.module('grademanagerApp')
         var self = this;
         self.URL = 'https://amcui.ig.he-arc.ch';
         self.SOCKET_URL = 'https://amcui.ig.he-arc.ch/';
-        //self.URL = 'http://192.168.99.100:9001';
-        //self.SOCKET_URL = 'http://192.168.99.100:9001/';
+        //self.URL = 'http://localhost:9001';
+        //self.SOCKET_URL = 'http://localhost:9001/';
         self.project = false;
         self.options = {
             users: [],
@@ -344,6 +344,14 @@ angular.module('grademanagerApp')
                 .error(function (msg) {
                     $mdToast.show($mdToast.simple().content(msg).position('top right'));
                 });
+        };
+
+        self.deleteProject = function () {
+            return $http.post(self.URL + '/project/' + self.project + '/delete');
+        };
+
+        self.renameProject = function (name) {
+            return $http.post(self.URL + '/project/' + self.project + '/rename', { name: name });
         };
 
         self.addUser = function (username, project) {

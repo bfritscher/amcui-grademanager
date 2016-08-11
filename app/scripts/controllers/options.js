@@ -6,7 +6,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-    .controller('OptionsCtrl', function ($scope, $stateParams, $http, $mdToast, auth, API) {
+    .controller('OptionsCtrl', function ($scope, $state, $stateParams, $http, $mdToast, auth, API, $window) {
         'use strict';
 
         var ctrl = this;
@@ -29,6 +29,23 @@ angular.module('grademanagerApp')
                 .success(function () {
                     $mdToast.show($mdToast.simple().content('Options saved!').position('top right'));
                 });
+        };
+
+        ctrl.deleteProject = function () {
+            if ($window.confirm('Are you sure you want to delete all data of ' + API.project + ' ?')) {
+                API.deleteProject().then(function () {
+                    $state.go('home');
+                });
+            }
+        };
+
+        ctrl.renameProject = function () {
+            var name = $window.prompt('New name?');
+            if (name) {
+                API.renameProject(name).then(function () {
+                    $state.go('home');
+                });
+            }
         };
 
         //TODO: #121 refactor into service, mabe get only meta from server not full csv!
