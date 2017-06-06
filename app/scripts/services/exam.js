@@ -618,19 +618,25 @@ angular.module('grademanagerApp')
             var beginQuestion = '  \\begin{question}{Q' + ('00' + question.number).slice(-2) + '}';
             head.push(beginQuestion);
             head.push('\n  ' + html2Latex(question.content));
+            if (question.lineup) {
+                head.push('\n {\\setlength{\\fboxsep}{0pt}\\setlength{\\fboxrule}{1pt}\\fbox{\\begin{minipage}[t]['+ question.lines + 'cm]{\\textwidth}\\hfill\\vfill\\end{minipage}}} \n');
+            }
             var amcOpen = '    \\AMCOpen{';
             amcOpen += 'lines=' + question.lines;
+            if (question.lineup) {
+                amcOpen += ',lineup=true';
+            }
             amcOpen += ',dots=' + (question.dots ? 'true' : 'false');
             amcOpen += '}{';
             head.push(amcOpen);
-            head.push('      \\wrongchoice[W]{0pt}\\scoring{0}');
+            head.push('      \\wrongchoice[0]{0pt}\\scoring{0}');
 
             for (var i = 1; i <= question.points; i++) {
                 var answerType = 'wrongchoice';
-                var label = 'P' + i;
+                var label = i;
                 if (i === question.points) {
                     answerType = 'correctchoice';
-                    label = 'C';
+                    //label = 'C';
                 }
                 head.push('      \\' + answerType + '[' + label + ']{' + i + (i > 1 ? 'pts' : 'pt') + '}\\scoring{' + i + '}');
             }
