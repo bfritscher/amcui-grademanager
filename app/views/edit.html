@@ -247,7 +247,7 @@
                   <md-checkbox ng-if="question.type == 'OPEN'" class="md-primary" ng-model="question.lineup">Lineup</md-checkbox>
                   <md-input-container ng-if="question.type == 'OPEN'">
                     <label>lines</label>
-                    <input ng-model="question.lines" type="number" min="1">
+                    <input ng-model="question.lines" type="number" min="0">
                   </md-input-container>
                   <md-input-container ng-if="question.type == 'OPEN'">
                     <label>Points</label>

@@ -618,7 +618,7 @@ angular.module('grademanagerApp')
             var beginQuestion = '  \\begin{question}{Q' + ('00' + question.number).slice(-2) + '}';
             head.push(beginQuestion);
             head.push('\n  ' + html2Latex(question.content));
-            if (question.lineup) {
+            if (question.lineup && question.lines > 0) {
                 head.push('\n {\\setlength{\\fboxsep}{0pt}\\setlength{\\fboxrule}{1pt}\\fbox{\\begin{minipage}[t]['+ question.lines + 'cm]{\\textwidth}\\hfill\\vfill\\end{minipage}}} \n');
             }
             var amcOpen = '    \\AMCOpen{';
