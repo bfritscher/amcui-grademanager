@@ -44,9 +44,11 @@
 	</md-input-container>
 	<p>(ID) is replaced by the student's name.<br/>
 		(N) is replaced by the student number.<br/>
-		(<i>COL</i>) any other column in the student.csv</p>
+		(<i>COLNAME</i>) any other column name in the student.csv</p>
 
-	<div><md-chips><md-chip ng-repeat="col in ctrl.fields">{{col}}</md-chip></md-chips></div>
+	<div>
+		Click to add:
+		<md-chips md-on-select="ctrl.addColToFilename($chip)" md-removable="false" ng-model="ctrl.fields"></md-chips></div>
 
 	<md-input-container class="no-padding md-block no-error-input-container" style="margin-top: 3em;">
 		<label>Annotation</label>
@@ -54,11 +56,15 @@
 	</md-input-container>
 	<p>
 		%(ID) is replaced by the student's name.<br/>
-		%(COL) is replaced by the value of column COL in the students list for the current student.<br/>
+		%(COLNAME) is replaced by the value of column COLNAME in the students list for the current student.<br/>
 		%S is replaced by the student's total score.<br/>
 		%M is replaced by the maximum total score.<br/>
 		%s is replaced by the student's mark.<br/>
 		%m is replaced by the maximum mark.</p>
+
+    <div>
+		Click to add:
+		<md-chips md-on-select="ctrl.addColToAnnotation($chip)" md-removable="false" ng-model="ctrl.fields"></md-chips></div>
 
 	<h4>Annotation marks</h4>
 	<table>

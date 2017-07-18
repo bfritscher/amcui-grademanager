@@ -48,6 +48,14 @@ angular.module('grademanagerApp')
             }
         };
 
+        ctrl.addColToFilename = function (name) {
+            ctrl.options.options.modele_regroupement += ' (' + name + ')';
+        };
+
+        ctrl.addColToAnnotation = function (name) {
+            ctrl.options.options.verdict += ' %(' + name + ')';
+        };
+
         //TODO: #121 refactor into service, mabe get only meta from server not full csv!
         $http.get(API.URL + '/project/' + $stateParams.project + '/csv')
             .then(function (r) {
