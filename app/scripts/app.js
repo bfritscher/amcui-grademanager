@@ -20,7 +20,8 @@ angular
         'ui.codemirror',
         'validation.match',
         'duScroll',
-        'md.data.table'
+        'md.data.table',
+        'ngRaven'
     ])
     .config(function ($stateProvider, $urlRouterProvider) {
         'use strict';
