@@ -244,7 +244,9 @@
                     <md-icon class="mdi-help-circle"></md-icon>
                   </md-button>
                   <md-checkbox ng-if="question.type == 'OPEN'" class="md-primary" ng-model="question.dots">Dots</md-checkbox>
-                  <md-checkbox ng-if="question.type == 'OPEN'" class="md-primary" ng-model="question.lineup">Lineup</md-checkbox>
+                  <md-checkbox ng-if="question.type == 'OPEN'" class="md-primary" ng-model="question.lineup" title="If true, the answering area and the scoring boxes will be on the same line.
+If false (this is default), the answering area is enclosed in a frame and placed below the scoring boxes.
+Used for open questions and separate answer sheet)">Lineup</md-checkbox>
                   <md-input-container ng-if="question.type == 'OPEN'">
                     <label>lines</label>
                     <input ng-model="question.lines" type="number" min="0">
