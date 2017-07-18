@@ -9,6 +9,7 @@ angular.module('grademanagerApp')
         'use strict';
         return {
             require: 'ngModel',
+            priority: 1,
             link: function (scope, element, attrs, ngModel) {
                 ngModel.$parsers.push(function (value) {
                     return '' + value;

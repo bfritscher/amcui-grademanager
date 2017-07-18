@@ -328,6 +328,7 @@ md-input-container .md-input.dragover {
 
 .mdi {
   font-size: 24px;
+  line-height: 24px;
 }
 
 .section-nowrap span {

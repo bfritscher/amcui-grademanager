@@ -92,7 +92,9 @@ angular
         'use strict';
         $mdThemingProvider.theme('default')
             .primaryPalette('blue')
-            .accentPalette('grey');
+            .accentPalette('grey', {
+                default: '200'
+            });
     })
     .config(function ($httpProvider) {
         'use strict';
