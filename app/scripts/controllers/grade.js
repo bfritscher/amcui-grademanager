@@ -39,7 +39,7 @@ angular.module('grademanagerApp')
                     },
                     data: Papa.unparse(angular.copy(grade.students))
                 })
-                    .success(loadScores);
+                    .then(loadScores);
                 //reload data if auto-assoc has added info
             }, 1000);
         }
@@ -48,15 +48,15 @@ angular.module('grademanagerApp')
 
         //TODO: refactor into service used also in options
         $http.get(API.URL + '/project/' + $stateParams.project + '/csv')
-            .success(function (csv) {
-                grade.parseCSV(csv);
+            .then(function (r) {
+                grade.parseCSV(r.data);
                 $scope.$watch('grade.students', debounceSave, true);
                 loadScores();
             });
 
         $http.get(API.URL + '/project/' + $stateParams.project + '/stats')
-            .success(function (stats) {
-                grade.stats = stats;
+            .then(function (r) {
+                grade.stats = r.data;
             });
 
         function studentIdExists(id) {
@@ -70,14 +70,14 @@ angular.module('grademanagerApp')
 
         function loadScores() {
             $http.get(API.URL + '/project/' + $stateParams.project + '/scores')
-                .success(function (data) {
+                .then(function (r) {
                     //pivot data
                     grade.scores = {};
                     grade.unmatched = {};
                     grade.questions = {};
                     grade.whys = {};
                     grade.maxPoints = 0;
-                    data.forEach(function (row) {
+                    r.data.forEach(function (row) {
                         var key = row.student + ':' + row.copy;
                         var id = key;
                         var target = 'unmatched';
@@ -421,8 +421,8 @@ angular.module('grademanagerApp')
         var self = this;
 
         $http.get(API.URL + '/project/' + $stateParams.project + '/gradefiles')
-            .success(function (data) {
-                self.files = data || [];
+            .then(function (r) {
+                self.files = r.data || [];
             });
 
         self.save = function () {

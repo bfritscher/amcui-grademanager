@@ -34,7 +34,8 @@ angular.module('grademanagerApp')
         }
 
         $http.get(API.URL + '/project/' + $stateParams.project + '/names')
-            .success(function (names) {
+            .then(function (r) {
+                var names = r.data;
                 ctrl.names = names;
                 ctrl.match = find(names, row) || ctrl.nextUnmatched();
             });

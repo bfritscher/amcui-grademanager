@@ -26,7 +26,7 @@ angular.module('grademanagerApp')
 
         ctrl.saveOptions = function () {
             API.saveOptions(ctrl.options.options)
-                .success(function () {
+                .then(function () {
                     $mdToast.show($mdToast.simple().content('Options saved!').position('top right'));
                 });
         };
@@ -50,8 +50,8 @@ angular.module('grademanagerApp')
 
         //TODO: #121 refactor into service, mabe get only meta from server not full csv!
         $http.get(API.URL + '/project/' + $stateParams.project + '/csv')
-            .success(function (csv) {
-                var result = Papa.parse(csv, {
+            .then(function (r) {
+                var result = Papa.parse(r.data, {
                     header: true,
                     dynamicTyping: true,
                     skipEmptyLines: true

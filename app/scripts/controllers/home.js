@@ -26,19 +26,19 @@ angular.module('grademanagerApp')
                 .error(function (data) {
                     home.error = { error: data };
                 })
-                .success(function (data) {
-                    if (data.u2f) {
+                .then(function (r) {
+                    if (r.data.u2f) {
                         home.error = { error: 'Please insert U2F Key!' };
-                        $window.u2f.sign([data.u2f], function (answer) {
+                        $window.u2f.sign([r.data.u2f], function (answer) {
                             home.error = { error: 'Thank you!' };
                             auth.u2fReply(home.username, answer)
                                 .error(function (data) {
                                     home.error = { error: data };
                                 })
-                                .success(API.getProjectList);
+                                .then(API.getProjectList);
                         });
                     } else {
-                        API.getProjectList(data);
+                        API.getProjectList(r.data);
                     }
                 });
         };
@@ -60,8 +60,8 @@ angular.module('grademanagerApp')
             home.error = '';
             home.newProjectName = home.newProjectName.trim().toLowerCase();
             API.createProject(home.newProjectName)
-                .success(function (project) {
-                    home.openProject({ project: project });
+                .then(function (r) {
+                    home.openProject({ project: r.data });
                     home.newProjectName = '';
                 })
                 .error(function (data) {
@@ -88,7 +88,7 @@ angular.module('grademanagerApp')
                 .then(function (name) {
                     name = name.trim().toLowerCase().replace(/[^\-a-z0-9\_]/g, '');
                     API.copyProject(item.project, name)
-                        .success(function () {
+                        .then(function () {
                             home.openProject({ project: name });
                         });
                 });

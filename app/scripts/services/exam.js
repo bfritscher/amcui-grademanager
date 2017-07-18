@@ -77,7 +77,7 @@ angular.module('grademanagerApp')
 
         editor.loadTemplate = function (name) {
             API.loadTemplate(name)
-                .success(function (source) {
+                .then(function (source) {
                     if (editor.exam) {
                         editor.exam.source = source;
                     }
@@ -203,7 +203,7 @@ angular.module('grademanagerApp')
 
         editor.deleteGraphics = function (graphics) {
             API.deleteGraphics(graphics)
-                .success(function () {
+                .then(function () {
                     delete editor.exam.graphics[graphics.id];
                 });
         };

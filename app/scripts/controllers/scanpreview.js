@@ -10,12 +10,12 @@ angular.module('grademanagerApp')
         'use strict';
         var preview = this;
         $http.get(API.URL + '/project/' + $stateParams.project + '/capture/' + $stateParams.student + '/' + $stateParams.page + ':' + $stateParams.copy)
-            .success(function (data) {
-                preview.page = data;
+            .then(function (r) {
+                preview.page = r.data;
             });
         $http.get(API.URL + '/project/' + $stateParams.project + '/zones/' + $stateParams.student + '/' + $stateParams.page + ':' + $stateParams.copy)
-            .success(function (data) {
-                preview.zones = data;
+            .then(function (r) {
+                preview.zones = r.data;
             });
 
         if ($mdMedia('sm')) {

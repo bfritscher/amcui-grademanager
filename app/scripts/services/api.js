@@ -32,7 +32,8 @@ angular.module('grademanagerApp')
 
         self.getProjectList = function () {
             return $http.get(self.URL + '/project/list')
-                .success(function (list) {
+                .then(function (r) {
+                    var list = r.data;
                     list.sort(function (a, b) {
                         return a.project > b.project ? 1 : -1;
                     });
@@ -42,7 +43,8 @@ angular.module('grademanagerApp')
                         return item;
                     });
                     $http.get(self.URL + '/project/recent')
-                    .success(function (list) {
+                    .then(function (r) {
+                        var list = r.data;
                         self.projectsRecent = [];
                         list.forEach(function (key) {
                             if (self.projectsIndex.hasOwnProperty(key)) {
@@ -281,10 +283,11 @@ angular.module('grademanagerApp')
 
         self.loadOptions = function () {
             $http.get(self.URL + '/project/' + self.project + '/options')
-                .success(self.handleOptions);
+                .then(self.handleOptions);
         };
 
-        self.handleOptions = function (data) {
+        self.handleOptions = function (r) {
+            var data = r.data;
             self.options.users = data.users || [];
             self.options.users.sort();
             self.options.options = data.options || {};

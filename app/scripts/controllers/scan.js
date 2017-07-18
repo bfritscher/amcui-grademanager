@@ -31,7 +31,7 @@ angular.module('grademanagerApp')
 
         this.delete = function (page) {
             $http.post(API.URL + '/project/' + $stateParams.project + '/capture/delete', page)
-                .success(function () {
+                .then(function () {
                     scan.pages.splice(scan.pages.indexOf(page), 1);
                 });
         };
@@ -44,7 +44,7 @@ angular.module('grademanagerApp')
                     file: file
                 }).progress(function (evt) {
                     file.progress = 100.0 * evt.loaded / evt.total;
-                }).success(function () {
+                }).then(function () {
                     //TODO: better way #47
                     loadData();
                 });
@@ -60,7 +60,8 @@ angular.module('grademanagerApp')
         function loadData() {
             //TODO move to service? #47
             $http.get(API.URL + '/project/' + $stateParams.project + '/capture')
-                .success(function (data) {
+                .then(function (r) {
+                    var data = r.data;
                     scan.pages = data;
                     if ($state.params.student && $state.params.page && $state.params.copy) {
                         for (var i = 0; i < data.length; i++) {
@@ -72,8 +73,8 @@ angular.module('grademanagerApp')
                 });
 
             $http.get(API.URL + '/project/' + $stateParams.project + '/missing')
-                .success(function (data) {
-                    scan.missing = data;
+                .then(function (r) {
+                    scan.missing = r.data;
                 });
         }
         loadData();

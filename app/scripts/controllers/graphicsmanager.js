@@ -41,8 +41,8 @@ angular.module('grademanagerApp')
         //check for new graphics and create them
         //TODO: move somewhere?
         $http.get(API.URL + '/project/' + $stateParams.project + '/graphics/sync')
-            .success(function (filenames) {
-                filenames.forEach(function (filename) {
+            .then(function (r) {
+                r.data.forEach(function (filename) {
                     var id = filename.replace(/(.*)\..*?$/, '$1');
                     if (!exam.exam.hasOwnProperty('graphics')) {
                         exam.exam.graphics = {};
@@ -81,7 +81,7 @@ angular.module('grademanagerApp')
                     }
                 }).progress(function (evt) {
                     file.progress = 80.0 * evt.loaded / evt.total;
-                }).success(function () {
+                }).then(function () {
                     $timeout(function () {
                         file.progress = 100;
                         exam.addGraphics(graphics);
