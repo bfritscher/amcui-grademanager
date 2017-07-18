@@ -132,8 +132,7 @@ angular.module('grademanagerApp')
                         roundingUnit: API.options.options.note_grain
                     };
                     grade.isLoading = false;
-                })
-                .error(function () {
+                }, function () {
                     grade.isLoading = false;
                 });
         }

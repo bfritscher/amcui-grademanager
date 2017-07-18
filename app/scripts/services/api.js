@@ -317,7 +317,7 @@ angular.module('grademanagerApp')
 
         self.print = function (data) {
             return $http.post(self.URL + '/project/' + self.project + '/print', data)
-                .error(function (msg) {
+                .catch(function (msg) {
                     $mdToast.show($mdToast.simple().content(msg).position('top right'));
                 });
         };
@@ -326,7 +326,7 @@ angular.module('grademanagerApp')
             return $http.post(self.URL + '/project/' + src + '/copy/project', {
                 project: dest
             })
-                .error(function (msg) {
+                .catch(function (msg) {
                     $mdToast.show($mdToast.simple().content(msg).position('top right'));
                 });
         };
@@ -335,7 +335,7 @@ angular.module('grademanagerApp')
             return $http.post(self.URL + '/project/' + src + '/copy/graphics', {
                 project: dest
             })
-                .error(function (msg) {
+                .catch(function (msg) {
                     $mdToast.show($mdToast.simple().content(msg).position('top right'));
                 });
         };
@@ -344,7 +344,7 @@ angular.module('grademanagerApp')
             return $http.post(self.URL + '/project/' + src + '/copy/codes', {
                 project: dest
             })
-                .error(function (msg) {
+                .catch(function (msg) {
                     $mdToast.show($mdToast.simple().content(msg).position('top right'));
                 });
         };

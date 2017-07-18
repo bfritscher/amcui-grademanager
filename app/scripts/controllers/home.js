@@ -23,19 +23,16 @@ angular.module('grademanagerApp')
         home.login = function () {
             home.error = '';
             auth.login(home.username, home.password)
-                .error(function (data) {
-                    home.error = { error: data };
-                })
+
                 .then(function (r) {
                     if (r.data.u2f) {
                         home.error = { error: 'Please insert U2F Key!' };
                         $window.u2f.sign([r.data.u2f], function (answer) {
                             home.error = { error: 'Thank you!' };
                             auth.u2fReply(home.username, answer)
-                                .error(function (data) {
+                                .then(API.getProjectList, function (data) {
                                     home.error = { error: data };
-                                })
-                                .then(API.getProjectList);
+                                });
                         });
                     } else {
                         API.getProjectList(r.data);
@@ -63,8 +60,7 @@ angular.module('grademanagerApp')
                 .then(function (r) {
                     home.openProject({ project: r.data });
                     home.newProjectName = '';
-                })
-                .error(function (data) {
+                }, function (data) {
                     home.error = { error: data };
                 });
         };
