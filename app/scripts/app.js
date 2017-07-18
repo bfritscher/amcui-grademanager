@@ -15,6 +15,7 @@ angular
         'ngMaterial',
         'ui.tree',
         'ui.router',
+        'ui.router.state.events',
         'IeHelper',
         'ngFileUpload',
         'ui.codemirror',

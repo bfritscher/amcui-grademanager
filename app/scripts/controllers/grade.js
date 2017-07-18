@@ -422,6 +422,8 @@ angular.module('grademanagerApp')
         $http.get(API.URL + '/project/' + $stateParams.project + '/gradefiles')
             .then(function (r) {
                 self.files = r.data || [];
+            }, function () {
+                self.files = [];
             });
 
         self.save = function () {
