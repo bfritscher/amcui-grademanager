@@ -370,18 +370,21 @@ module.exports = function (grunt) {
                     src: ['generated/*']
                 }, {
                     expand: true,
-                    cwd: 'bower_components/pdfjs-dist/build',
-                    dest: '<%= yeoman.dist %>/scripts',
-                    src: [
-                        'pdf.worker.js'
-                    ]
-                }, {
-                    expand: true,
                     dot: true,
                     cwd: 'bower_components/mdi',
                     dest: '<%= yeoman.dist %>',
                     src: [
                         'fonts/*'
+                    ]
+                }]
+            },
+            static: {
+                files: [{
+                    expand: true,
+                    cwd: 'bower_components/pdfjs-dist/build',
+                    dest: '<%= yeoman.dist %>/scripts',
+                    src: [
+                        'pdf.worker.min.js'
                     ]
                 }]
             },
@@ -479,7 +482,8 @@ module.exports = function (grunt) {
         'uglify',
         'filerev',
         'usemin',
-        'htmlmin'
+        'htmlmin',
+        'copy:static'
     ]);
 
     grunt.registerTask('default', [
