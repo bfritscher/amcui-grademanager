@@ -6,7 +6,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-    .controller('AppCtrl', function ($scope, $state, $stateParams, $timeout, auth, API) {
+    .controller('AppCtrl', function ($scope, $state, $stateParams, $timeout, $window, $location, auth, API) {
         'use strict';
         var _this = this;
         this.tabIndex = 0;
@@ -54,6 +54,9 @@ angular.module('grademanagerApp')
         };
 
         $scope.$on('$stateChangeSuccess', function () {
+            if ($window.ga) {
+                $window.ga('send', 'pageview', $location.path());
+            }
             _this.hideTabs = true;
             if ($state.includes('edit')) {
                 _this.tabIndex = 0;
