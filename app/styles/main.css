@@ -921,6 +921,15 @@ tbody tr:hover {
   padding-bottom: 0;
 }
 
+.git-version {
+  position: fixed;
+  bottom: -4px;
+  right: 20px;
+  color: #999;
+  font-size: 8px;
+  text-decoration: none;
+}
+
 @media screen and (max-width: 600px) {
   .section-header md-input-container {
     width: 100px;

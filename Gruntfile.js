@@ -16,7 +16,9 @@ module.exports = function (grunt) {
         useminPrepare: 'grunt-usemin',
         ngtemplates: 'grunt-angular-templates',
         cdnify: 'grunt-google-cdn',
-        buildcontrol: 'grunt-build-control'
+        buildcontrol: 'grunt-build-control',
+        revision: 'grunt-git-revision',
+        'string-replace': 'grunt-string-replace'
     });
 
     // Configurable paths for the application
@@ -433,6 +435,21 @@ module.exports = function (grunt) {
                     branch: 'production'
                 }
             }
+        },
+        'string-replace': {
+            dist: {
+                files: {
+                    '<%= yeoman.dist %>/scripts/': '<%= yeoman.dist %>/scripts/*.js'
+                },
+                options: {
+                    replacements: [
+                        {
+                            pattern: '__GIT_VERSION__',
+                            replacement: '<%= meta.revision %>'
+                        }
+                    ]
+                }
+            }
         }
     });
 
@@ -468,6 +485,7 @@ module.exports = function (grunt) {
     ]);
 
     grunt.registerTask('build', [
+        'revision',
         'clean:dist',
         'wiredep',
         'useminPrepare',
@@ -483,6 +501,7 @@ module.exports = function (grunt) {
         'filerev',
         'usemin',
         'htmlmin',
+        'string-replace',
         'copy:static'
     ]);
 

@@ -11,6 +11,7 @@ angular.module('grademanagerApp')
         'use strict';
         var home = this;
         home.API = API;
+        home.version = '__GIT_VERSION__';
 
         home.isAuthed = function () {
             return auth.isAuthed();
