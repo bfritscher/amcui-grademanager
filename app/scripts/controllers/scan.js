@@ -49,12 +49,18 @@ angular.module('grademanagerApp')
                     loadData();
                 });
             }
+            // for now disable multiplefiles at once until server has proper queue.
+            if (scan.files) {
+                upload(scan.files);
+            }
+            /*
             if (scan.files && scan.files.length) {
                 var files = scan.files.slice(0);
                 for (var i = 0; i < files.length; i++) {
                     upload(files[i]);
                 }
             }
+            */
         });
 
         function loadData() {
