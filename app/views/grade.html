@@ -108,7 +108,7 @@ highlight impossible? missing? confirm reviewed
                 <td class="text-right">{{grade.unmatched[u.key].total}}</td>
                 <td class="text-right score why-{{grade.whys[grade.unmatched[u.key].key + ':' + value.question]}}"
                     ng-repeat="(qtitle, value) in grade.questions track by $index">
-                    <a ng-href="#/{{grade.project}}/scan/{{grade.unmatched[u.key].student}}/{{value.page}}:{{grade.unmatched[u.key].copy}}">
+                    <a ng-href="#!/{{grade.project}}/scan/{{grade.unmatched[u.key].student}}/{{value.page}}:{{grade.unmatched[u.key].copy}}">
                     {{grade.unmatched[u.key].questions[qtitle]}}</a></td>
               </tr>
               <tr ng-repeat="s in grade.students.data track by $index">
@@ -122,7 +122,7 @@ highlight impossible? missing? confirm reviewed
                 <td class="text-right">{{grade.valueSaver(s, 'Total', grade.scores[s.id].total)}}</td>
                 <td ng-if="grade.displayQuestions" class="text-right score why-{{grade.whys[grade.scores[s.id].key + ':' + value.question]}}"
                   ng-repeat="(qtitle, value) in grade.questions track by $index">
-                  <a ng-href="#/{{grade.project}}/scan/{{grade.scores[s.id].student}}/{{value.page}}:{{grade.scores[s.id].copy}}">
+                  <a ng-href="#!/{{grade.project}}/scan/{{grade.scores[s.id].student}}/{{value.page}}:{{grade.scores[s.id].copy}}">
                   {{grade.scores[s.id].questions[qtitle]}}</a></td>
               </tr>
             </tbody>

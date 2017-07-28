@@ -43,7 +43,7 @@ angular.module('grademanagerApp')
         editor.previewWait = false;
 
         editor.linkToQuestion = function (section, question) {
-            return '#/' + $stateParams.project + '/edit?section=' + exam.exam.sections.indexOf(section) + '#q' + (question ? question.number : '0');
+            return '#!/' + $stateParams.project + '/edit?section=' + exam.exam.sections.indexOf(section) + '#q' + (question ? question.number : '0');
         };
 
         var debounceTimer;
