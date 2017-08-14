@@ -11,6 +11,14 @@
   box-sizing: border-box;
 }
 
+.md-whiteframe-z1 {
+  background-color: #fff;
+}
+
+md-content.md-default-theme, md-content {
+  background-color: #FDFDFD;
+}
+
 ng-messages {
   color: rgb(255, 71, 19);
 }
