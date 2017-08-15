@@ -69,11 +69,12 @@ angular.module('grademanagerApp')
                 if (copy.dest === $stateParams.project) {
                     for (var key in copy.sections) {
                         if (copy.sections.hasOwnProperty(key)) {
-                            //handle duplicate id
-                            if (exam.getSection(copy.sections[key].id)) {
-                                copy.sections[key].id = GUID();
-                            }
-                            exam.exam.sections.push(copy.sections[key]);
+                            var section = copy.sections[key];
+                            section.id = GUID();
+                            section.questions = section.questions.map(function(question) {
+                                return editor.examService.copyQuestion(section, question);
+                            });
+                            exam.exam.sections.push(section);
                         }
                     }
                     if (!exam.exam.graphics) {
