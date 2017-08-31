@@ -6,7 +6,7 @@
  * Service in the grademanagerApp.
  */
 angular.module('grademanagerApp')
-    .service('exam', function ($rootScope, $mdDialog, API, auth) {
+    .service('exam', function ($rootScope, $stateParams, $mdDialog, API, auth) {
         'use strict';
 
         var editor = this;
@@ -761,6 +761,99 @@ angular.module('grademanagerApp')
                 questions_layout: body.join('\n'),
                 json: editor.getJSON()
             };
+        };
+
+        function moodleQuizText(xml, text) {
+            var files = [];
+            text = text.replace(/<img id="(.*?)">/g, function(subString, id) {
+                files.push(id);
+                return '<img src="@@PLUGINFILE@@/' + id +'" alt="" role="presentation" class="img-responsive atto_image_button_text-bottom">';
+            });
+            xml.push('<text><![CDATA[' + text + ']]></text>');
+            files.forEach(function(fileId) {
+                xml.push(fetch(editor.graphicsPreviewURL(fileId)).then(function(response) {
+                    return response.body.getReader().read().then(function(result) {
+                        return btoa(String.fromCharCode.apply(null, result.value));
+                    }).then(function(b64) {
+                        return '<file name="' + fileId + '" path="/" encoding="base64">' + b64 + '</file>';
+                    });
+                }));
+            });
+        }
+
+        function moodleQuizAnswer(xml, answer, fractionCorrect) {
+            xml.push('    <answer fraction="' + (answer.correct ? fractionCorrect : '0') + '" format="html">');
+            moodleQuizText(xml, answer.content);
+            xml.push('      <feedback format="html"><text></text></feedback>');
+            xml.push('    </answer>');
+        }
+
+        function moodleQuizQuestion(xml, question) {
+            xml.push('  <question type="' + (question.type === 'OPEN'? 'essay' : 'multichoice') + '">');
+            xml.push('    <name>');
+            xml.push('      <text>Q' + ('00' + question.number).slice(-2) + '</text>');
+            xml.push('    </name>');
+            xml.push('    <questiontext format="html">');
+            moodleQuizText(xml, question.content);
+            xml.push('    </questiontext>');
+            xml.push('    <generalfeedback format="html"><text></text></generalfeedback><hidden>0</hidden>');
+            if (question.type === 'SINGLE' || question.type === 'MULTIPLE') {
+                xml.push('    <defaultgrade>1.0000000</defaultgrade>');
+                xml.push('    <single>' + (question.type === 'SINGLE' ? 'true' : 'false') + '</single>');
+                xml.push('    <penalty>0.3333333</penalty><shuffleanswers>true</shuffleanswers><answernumbering>abc</answernumbering>');
+                // answers
+                var fractionCorrect = 100 / question.answers.filter(function(answer) {
+                    return answer.correct;
+                }).length;
+                question.answers.forEach(function(answer) {
+
+                    moodleQuizAnswer(xml, answer, fractionCorrect);
+                });
+                if (question.type === 'MULTIPLE') {
+                    moodleQuizAnswer(xml, {content: 'Aucune des réponses', correct: fractionCorrect === Infinity}, 100);
+                }
+            }
+            if (question.type === 'OPEN') {
+                xml.push('    <defaultgrade>' + question.points + '</defaultgrade>');
+                xml.push('    <responseformat>editor</responseformat><responserequired>1</responserequired><responsefieldlines>15</responsefieldlines><attachments>0</attachments><attachmentsrequired>0</attachmentsrequired>');
+                xml.push('    <graderinfo format="html"><text></text></graderinfo><responsetemplate format="html"><text></text></responsetemplate>');
+            }
+            xml.push('  </question>');
+        }
+
+        editor.toMoodleQuiz = function () {
+            var xml = [
+                '<?xml version="1.0" encoding="UTF-8"?>',
+                '<quiz>',
+            ];
+            if (editor.exam && editor.exam.sections) {
+                editor.exam.sections.forEach(function (section) {
+                    xml.push('  <question type="category">');
+                    xml.push('    <category>');
+                    xml.push('      <text><![CDATA[$course$/AMCUI/' + $stateParams.project + '/' + section.title + ']]></text>');
+                    xml.push('    </category>');
+                    xml.push('  </question>');
+                    if (section.content) {
+                        xml.push('  <question type="description"><name><text>Description</text></name><questiontext format="html">');
+                        moodleQuizText(xml, section.content);
+                        xml.push('  </questiontext><generalfeedback format="html"><text></text></generalfeedback><defaultgrade>0.0000000</defaultgrade><penalty>0.0000000</penalty><hidden>0</hidden></question>');
+                    }
+                    section.questions.forEach(function(question) {
+                        moodleQuizQuestion(xml, question);
+                    });
+                });
+            }
+            xml.push('</quiz>');
+            return Promise.all(xml).then(function(xml) {
+                $rootScope.$apply(function() {
+                    var a = window.document.createElement('a');
+                    a.href = window.URL.createObjectURL(new Blob([xml.join('\n')], {type: 'text/xml'}));
+                    a.download = $stateParams.project + '_moodle.xml';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                });
+            });
         };
 
     });

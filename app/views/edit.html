@@ -73,6 +73,7 @@
       layout-align="center center">
       This project has been printed on {{app.api.options.status.printed | date: 'yyyy-MM-dd HH:mm'}}.
       <md-button class="md-raised md-primary" ng-href="{{app.api.getDownloadZipURL()}}">Download <small>(Zip with all PDFs)</small></md-button>
+      <md-button class="md-raised md-primary" ng-click="editor.examService.toMoodleQuiz()">export moodle xml</md-button>
       <span flex></span>
       <md-button class="md-icon-button" ng-click="editor.hidePrintNotification=true" aria-label="close message">
         <md-icon class="mdi-close"></md-icon>

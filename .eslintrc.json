@@ -16,7 +16,8 @@
         "CodeMirror": false,
         "Raven": false,
         "require": false,
-        "module": false
+        "module": false,
+        "Promise": false
     },
     "rules": {
         "indent": [
