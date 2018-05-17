@@ -79,7 +79,7 @@ angular.module('grademanagerApp')
             API.loadTemplate(name)
                 .then(function (source) {
                     if (editor.exam) {
-                        editor.exam.source = source;
+                        editor.exam.source = source.data;
                     }
                 });
         };
