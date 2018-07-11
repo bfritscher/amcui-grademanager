@@ -39,7 +39,7 @@ angular.module('grademanagerApp')
             return zone.black >= API.options.options.seuil * zone.total;
         };
 
-        preview.toggle = function (zone) {
+        preview.toggle = function (zone) {  
             if (zone.manual === 0) {
                 zone.manual = 1;
             } else if (zone.manual === 1) {

@@ -493,7 +493,8 @@ angular.module('grademanagerApp')
             self.save();
         };
 
-        /* import csv by DnD */
+        /* import csv by DnD
+        * L'événement dragenter est déclenché lorsqu'un élément glissé ou une sélection de texte entre dans une cible de drop valide.*/
 
         function dragenter(e) {
             e.stopPropagation();

@@ -14,6 +14,7 @@ angular.module('grademanagerApp')
         self.parseJwt = function (token) {
             var base64Url = token.split('.')[1];
             var base64 = base64Url.replace('-', '+').replace('_', '/');
+            // atob allows to decode a base64 string, the btoa methods encodes a string in base64
             return JSON.parse($window.atob(base64));
         };
 

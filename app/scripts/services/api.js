@@ -13,10 +13,10 @@ angular.module('grademanagerApp')
         }
 
         var self = this;
-        self.URL = 'https://amcui.ig.he-arc.ch';
-        self.SOCKET_URL = 'https://amcui.ig.he-arc.ch/';
-        //self.URL = 'http://localhost:9001';
-        //self.SOCKET_URL = 'http://localhost:9001/';
+    //  self.URL = 'https://amcui.ig.he-arc.ch';
+    //  self.SOCKET_URL = 'https://amcui.ig.he-arc.ch/';
+        self.URL = 'http://localhost:9001';
+        self.SOCKET_URL = 'http://localhost:9001/';
         self.project = false;
         self.options = {
             users: [],

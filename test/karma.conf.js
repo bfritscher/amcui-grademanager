@@ -41,6 +41,7 @@ module.exports = function(config) {
       'bower_components/codemirror/lib/codemirror.js',
       'bower_components/angular-ui-codemirror/ui-codemirror.js',
       'bower_components/angular-validation-match/dist/angular-validation-match.min.js',
+      'bower_components/u2f-api/u2f-api.js',
       'bower_components/angular-scroll/angular-scroll.js',
       'bower_components/angular-material-data-table/dist/md-data-table.js',
       'bower_components/google-diff-match-patch/diff_match_patch_uncompressed.js',

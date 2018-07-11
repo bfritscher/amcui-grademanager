@@ -12,6 +12,7 @@ angular.module('grademanagerApp')
         var editor = this;
         var DiffSyncClient = diffsync.Client;
 
+
         editor.preview = function () {
             var data = editor.toLatex();
             data.source = editor.exam.source;
@@ -79,10 +80,11 @@ angular.module('grademanagerApp')
             API.loadTemplate(name)
                 .then(function (source) {
                     if (editor.exam) {
-                        editor.exam.source = source;
+                        editor.exam.source = source.data;
                     }
                 });
         };
+
 
         editor.newSection = function newSection() {
             return {
