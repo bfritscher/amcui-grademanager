@@ -1,1 +1,7 @@
 .vuepress/dist
+bower_components/
+node_modules/
+.tmp/
+.vscode/
+dist/
+test/
