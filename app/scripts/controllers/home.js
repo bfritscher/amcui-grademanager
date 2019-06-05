@@ -28,7 +28,7 @@ angular.module('grademanagerApp')
                 .then(function (r) {
                     if (r.data.u2f) {
                         home.error = { error: 'Please insert U2F Key!' };
-                        $window.u2f.sign([r.data.u2f], function (answer) {
+                        $window.u2f.sign('https://amcui.ig.he-arc.ch', [r.data.u2f], function (answer) {
                             home.error = { error: 'Thank you!' };
                             auth.u2fReply(home.username, answer)
                                 .then(API.getProjectList, function (data) {

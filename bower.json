@@ -20,7 +20,6 @@
     "codemirror": "~5.27.4",
     "angular-ui-codemirror": "~0.3.0",
     "angular-validation-match": "~1.9.0",
-    "u2f-api": "~0.2.1",
     "angular-scroll": "^1.0.2",
     "angular-material-data-table": "^0.10.10",
     "google-diff-match-patch": "~0.1.0"

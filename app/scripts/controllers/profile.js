@@ -27,7 +27,7 @@ angular.module('grademanagerApp')
                 .then(function (r) {
                     //show add key and validate
                     profile.u2ferror = { error: 'Please insert U2F Key!' };
-                    $window.u2f.register([r.data.u2f], [], function (answer) {
+                    $window.u2f.register('https://amcui.ig.he-arc.ch', [r.data.u2f], [], function (answer) {
                         profile.u2ferror = { error: 'Thank you!' };
                         auth.u2fReply(auth.getUsername(), answer)
                             .catch(function (data) {
