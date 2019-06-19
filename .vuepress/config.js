@@ -7,7 +7,11 @@ module.exports = {
     }
   },
   base: "/docs/",
-  ga: "UA-55173430-7",
+  plugins: [
+    ['@vuepress/google-analytics', {
+      ga: 'UA-55173430-7'
+    }]
+  ],
   themeConfig: {
     // if your docs are in a different repo from your main project:
     docsRepo: "bfritscher/grademanager",
