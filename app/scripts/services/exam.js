@@ -627,7 +627,7 @@ angular.module('grademanagerApp')
                 amcOpen += ',lineup=true';
             }
             amcOpen += ',dots=' + (question.dots ? 'true' : 'false');
-            amcOpen += '}{';
+            amcOpen += '}{ \\hbox{\\parbox{' + (question.lineup ? '5cm' : '13.4cm') + '}{'; // linebreak points
             head.push(amcOpen);
             head.push('      \\wrongchoice[0]{0pt}\\scoring{0}');
 
@@ -640,7 +640,7 @@ angular.module('grademanagerApp')
                 }
                 head.push('      \\' + answerType + '[' + label + ']{' + i + (i > 1 ? 'pts' : 'pt') + '}\\scoring{' + i + '}');
             }
-            head.push('    }');
+            head.push('}}    }');
             head.push('  \\end{question}');
         }
 
