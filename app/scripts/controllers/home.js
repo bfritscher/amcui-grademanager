@@ -38,6 +38,10 @@ angular.module('grademanagerApp')
                     } else {
                         API.getProjectList(r.data);
                     }
+                }, function (err) {
+                    if (err.status === 401) {
+                        home.error = {error: 'Wrong user or password'};
+                    }
                 });
         };
 
