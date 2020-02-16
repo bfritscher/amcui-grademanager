@@ -236,6 +236,7 @@
                   <md-select ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" placeholder="columns" ng-model="question.columns">
                     <md-option ng-repeat="(key, value) in {'1 column': 1, '2 columns': 2, '3 columns': 3}" value="{{value}}">{{key}}</md-option>
                   </md-select>
+                  <md-checkbox ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'" class="md-primary" ng-model="question.boxedAnswers" title="use AMCBoxedAnswers">Boxed</md-checkbox>
                   <md-input-container class="question-scoring" ng-if="question.type == 'SINGLE' || question.type == 'MULTIPLE'">
                     <label>scoring</label>
                     <input ng-model="question.scoring">

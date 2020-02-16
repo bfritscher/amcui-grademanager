@@ -126,6 +126,7 @@ angular.module('grademanagerApp')
                 dots: false,
                 lines: 3,
                 columns: 1,
+                boxedAnswers: false,
                 answers: []
             };
             if (previous) {
@@ -152,6 +153,7 @@ angular.module('grademanagerApp')
             copy.dots = question.dots;
             copy.lines = question.lines;
             copy.columns = question.columns;
+            copy.boxedAnswers = question.boxedAnswers;
             copy.answers = [];
 
             question.answers.forEach(function (answer) {
@@ -599,6 +601,9 @@ angular.module('grademanagerApp')
             var beginAnswers = '\n    \\begin{' + layout + '}';
             if (question.ordered) {
                 beginAnswers += '[o]';
+            }
+            if (question.columns && question.columns === 1 && question.boxedAnswers) {
+                head.push('\n    \\AMCBoxedAnswers');
             }
             if (question.columns && question.columns > 1) {
                 head.push('\n    \\begin{multicols}{' + question.columns + '}\\AMCBoxedAnswers');
