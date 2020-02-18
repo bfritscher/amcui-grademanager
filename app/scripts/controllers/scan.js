@@ -6,7 +6,7 @@
  * Controller of the grademanagerApp
  */
 angular.module('grademanagerApp')
-    .controller('ScanCtrl', function ($scope, $mdMedia, $http, $state, $stateParams, API, Upload) {
+    .controller('ScanCtrl', function ($scope, $mdMedia, $http, $state, $stateParams, API, Upload, $mdDialog) {
         'use strict';
         var scan = this;
         API.loadProject($stateParams.project);
@@ -30,10 +30,26 @@ angular.module('grademanagerApp')
         };
 
         this.delete = function (page) {
-            $http.post(API.URL + '/project/' + $stateParams.project + '/capture/delete', page)
+            return $http.post(API.URL + '/project/' + $stateParams.project + '/capture/delete', page)
                 .then(function () {
                     scan.pages.splice(scan.pages.indexOf(page), 1);
                 });
+        };
+
+        function deleteAll() {
+            if (scan.pages.length > 0) {
+                scan.delete(scan.pages[0]).then(deleteAll);
+            }
+        }
+
+        this.deleteAll = function () {
+            $mdDialog.show($mdDialog.confirm()
+            .title('Warning!')
+            .content('This will remove all scans, grades and matchings. Do you want to continue?')
+            .ok('Delete All')
+            .cancel('Cancel'))
+            .then(deleteAll);
+
         };
 
         $scope.$watch('scan.files', function () {

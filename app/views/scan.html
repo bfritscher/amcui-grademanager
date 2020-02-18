@@ -71,9 +71,10 @@
               <td class="text-right" ng-class="::{'s-threshold': p.s >= 8}">{{::p.s.toFixed(1)}}</td>
             </tr>
           </tbody>
-          <tfoot ng-hide="scan.pages.length > 0">
+          <tfoot>
             <td colspan="4">
-              <md-progress-linear md-mode="indeterminate"></md-progress-linear>
+              <md-button  ng-hide="scan.pages.length == 0" class="md-warn md-raised" ng-click="scan.deleteAll()">delete all scans</md-button>
+              <md-progress-linear  ng-hide="scan.pages.length > 0" md-mode="indeterminate"></md-progress-linear>
             </td>
           </tfoot>
         </table>
