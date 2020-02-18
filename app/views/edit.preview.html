@@ -9,8 +9,17 @@
     </div>
   </md-toolbar>
   <md-dialog-content flex layout="column">
-    <my-pdf-viewer ng-hide="isLogVisible" ng-if="ctrl.api.logs.preview.code == 0" pdf="{{ctrl.previewSrc()}}" viewer="ctrl.pdfViewer" flex></my-pdf-viewer>
-    <div class="latex-errors" ng-show="isLogVisible || ctrl.api.logs.preview.code != 0">
+
+    <object
+      style="width: 819px;height: 1158px;"
+      ng-if="!isLogVisible && ctrl.api.logs.preview.code == 0 && ctrl.api.options.options.native_preview == 1"
+      ng-attr-data="{{ctrl.previewSrc()}}"
+      type="application/pdf">
+      <p>Your browser does not support PDFs.
+        Download the PDF below or do not use native preview.</p>
+    </object>
+    <my-pdf-viewer ng-if="!isLogVisible && ctrl.api.logs.preview.code == 0 && ctrl.api.options.options.native_preview != 1" pdf="{{ctrl.previewSrc()}}" viewer="ctrl.pdfViewer" flex></my-pdf-viewer>
+    <div class="latex-errors" ng-if="isLogVisible || ctrl.api.logs.preview.code != 0">
         <div layout-padding>
           <h3>Error</h3>
           <div class="err" ng-repeat="err in ctrl.getErr() | unique">{{err}}</div>
@@ -23,9 +32,14 @@
     </div>
   </md-dialog-content>
   <md-dialog-actions layout="row">
-    <span ng-if="ctrl.api.logs.preview.code == 0">{{ctrl.pdfViewer.currentPageNumber}} / {{ctrl.pdfViewer.pagesCount}}</span>
+    <span ng-if="ctrl.api.logs.preview.code == 0 && ctrl.api.options.options.native_preview != 1">{{ctrl.pdfViewer.currentPageNumber}} / {{ctrl.pdfViewer.pagesCount}}</span>
     <md-button class="md-primary" ng-if="ctrl.api.logs.preview.code == 0" ng-href="{{ctrl.previewSrc()}}">download</md-button>
     <md-button ng-click="isLogVisible = !isLogVisible">log</md-button>
+    <md-switch class="md-primary" ng-model="ctrl.api.options.options.native_preview"
+      ng-true-value="'1'" ng-false-value="'0'"
+      aria-label="use native preview">
+      use native preview
+   </md-switch>
     <span flex></span>
     <md-button ng-click="ctrl.closeDialog()" class="md-primary">
      close
