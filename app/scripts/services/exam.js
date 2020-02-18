@@ -400,6 +400,8 @@ angular.module('grademanagerApp')
             text = text.replace(/&nbsp;/g, ' ');
             // escape latex code
             var escapeChars = {
+                '\\r\\n': ' ',
+                '\\n': ' ',
                 '&lt;': '<',
                 '&gt;': '>',
                 '\\\\': '\\textbackslash ',
