@@ -196,7 +196,20 @@ angular.module('grademanagerApp')
         };
 
         grade.removeStudent = function (student) {
+            if (grade.scores[student.id]) {
+                grade.unmatchStudent(student);
+            }
             grade.students.data.splice(grade.students.data.indexOf(student), 1);
+
+        };
+
+        grade.unmatchStudent = function (student) {
+            var score = grade.scores[student.id];
+            $http.post(API.URL + '/project/' + $stateParams.project + '/association/manual', {
+                student: score.student,
+                copy: score.copy,
+                id: 'NULL'
+            }).then(loadScores);
         };
 
         grade.removeCol = function (col) {

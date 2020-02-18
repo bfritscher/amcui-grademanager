@@ -113,8 +113,9 @@ highlight impossible? missing? confirm reviewed
               </tr>
               <tr ng-repeat="s in grade.students.data track by $index">
                 <td class="no-wrap">
-                  <md-button aria-label="remove student" ng-click="grade.removeStudent(s)" class="md-warn button-remove"><md-icon class="mdi-close"></md-icon></md-button>
-                  <md-button ng-show="grade.scores[s.id]" aria-label="view annotated" ng-click="grade.annotateScore(grade.scores[s.id])" class="md-accent button-remove"><md-icon class="mdi-eye"></md-icon></md-button>
+                  <md-button title="remove student" aria-label="remove student" ng-click="grade.removeStudent(s)" class="md-warn button-remove"><md-icon class="mdi-close"></md-icon></md-button>
+                  <md-button title="unmatch student" ng-if="grade.scores[s.id]" aria-label="unmatch student" ng-click="grade.unmatchStudent(s)" class="md-accent button-remove"><md-icon class="mdi-link-off"></md-icon></md-button>
+                  <md-button title="view annotated copy" ng-if="grade.scores[s.id]" aria-label="view annotated" ng-click="grade.annotateScore(grade.scores[s.id])" class="md-accent button-remove"><md-icon class="mdi-eye"></md-icon></md-button>
                 </td>
                 <td ng-class="{'text-right': col=='id'}" ng-repeat="col in grade.students.fields track by $index" ng-click="grade.editCell($event, s, col)">{{s[col]}}</td>
                 <td class="text-right grade" ng-class="{'grade-fail': s.FinalGrade < 3.5, 'grade-pass': s.FinalGrade >= 4, 'grade-remed': s.FinalGrade >=3.5 && s.FinalGrade < 4}">{{grade.calculate(s, 'FinalGrade', app.api.options.options.final_grade_formula)}}</td>
