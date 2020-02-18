@@ -632,7 +632,7 @@ angular.module('grademanagerApp')
                 amcOpen += ',lineup=true';
             }
             amcOpen += ',dots=' + (question.dots ? 'true' : 'false');
-            amcOpen += '}{ \\hbox{\\parbox{' + (question.lineup ? '5cm' : '13.4cm') + '}{'; // linebreak points
+            amcOpen += '}{ \\hbox{\\parbox{' + (question.lineup ? '5cm' : '14.4cm') + '}{'; // linebreak points
             head.push(amcOpen);
             head.push('      \\wrongchoice[0]{0pt}\\scoring{0}');
 
