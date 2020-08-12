@@ -105,27 +105,30 @@ angular.module('grademanagerApp')
         }
 
         /* Socket collab data */
-        exam.load(function (client) {
-            $scope.$watch('editor.examService.exam', function () {
-                editor.examService.computeHierarchyNumbers();
-                client.sync();
-                //request preview throttle
-                throttleDebouncePreview();
+        // workaround on first load client in load does not seem to initalize correctly
+        setTimeout(function() {
+            exam.load(function (client) {
+                $scope.$watch('editor.examService.exam', function () {
+                    editor.examService.computeHierarchyNumbers();
+                    client.sync();
+                    //request preview throttle
+                    throttleDebouncePreview();
 
-            }, true);
-            $scope.$on('$destroy', function () {
-                client.removeAllListeners();
+                }, true);
+                $scope.$on('$destroy', function () {
+                    client.removeAllListeners();
+                });
+                if (editor.examService.exam && editor.examService.exam.sections && editor.examService.exam.sections.length > 0) {
+                    editor.section = editor.examService.exam.sections[$location.search().section || 0];
+                } else {
+                    editor.section = editor.examService.newSection();
+                    editor.examService.exam.sections = [editor.section];
+                }
+                //handleCopy
+                handleCopy();
+                handleImport();
             });
-            if (editor.examService.exam && editor.examService.exam.sections && editor.examService.exam.sections.length > 0) {
-                editor.section = editor.examService.exam.sections[$location.search().section || 0];
-            } else {
-                editor.section = editor.examService.newSection();
-                editor.examService.exam.sections = [editor.section];
-            }
-            //handleCopy
-            handleCopy();
-            handleImport();
-        });
+        }, 500);
 
         editor.leftNav = function () {
             return $mdSidenav('left');
