@@ -39,6 +39,7 @@
     "node": ">=0.10.0"
   },
   "scripts": {
+    "serve": "grunt serve",
     "test": "grunt test",
     "build": "grunt build",
     "buildcontrol": "grunt buildcontrol"
