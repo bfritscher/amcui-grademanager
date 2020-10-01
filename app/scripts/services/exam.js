@@ -770,6 +770,17 @@ angular.module('grademanagerApp')
             };
         };
 
+        function convertBlobToBase64(blob) {
+            return new Promise(function (resolve, reject) {
+                var reader = new FileReader();
+                reader.onerror = reject;
+                reader.onload = function () {
+                    resolve(reader.result.split(',')[1]);
+                };
+                reader.readAsDataURL(blob);
+            });
+        }
+
         function moodleQuizText(xml, text) {
             var files = [];
             text = text.replace(/<img id="(.*?)">/g, function(subString, id) {
@@ -779,11 +790,9 @@ angular.module('grademanagerApp')
             xml.push('<text><![CDATA[' + text + ']]></text>');
             files.forEach(function(fileId) {
                 xml.push(fetch(editor.graphicsPreviewURL(fileId)).then(function(response) {
-                    return response.body.getReader().read().then(function(result) {
-                        return btoa(String.fromCharCode.apply(null, result.value));
-                    }).then(function(b64) {
-                        return '<file name="' + fileId + '" path="/" encoding="base64">' + b64 + '</file>';
-                    });
+                    return response.blob().then(convertBlobToBase64);
+                }).then(function(b64) {
+                    return '<file name="' + fileId + '" path="/" encoding="base64">' + b64 + '</file>';
                 }));
             });
         }
