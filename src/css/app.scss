@@ -1,0 +1,91 @@
+// app global css in SCSS form
+
+.gutter > * {
+  margin-right: 1rem;
+}
+
+.gutter > *:last-child {
+  margin-right: 0;
+}
+
+.two-columns {
+  column-count: 2;
+  column-gap: 40px;
+}
+
+.q-table tbody td,
+.q-table th {
+  font-size: 16px;
+}
+
+.q-dialog__inner--minimized .q-card.q-dialog-plugin {
+  min-width: 600px;
+}
+
+.codemirror-container.border {
+  border: 1px solid #dddddd;
+}
+
+// https://getbootstrap.com/docs/5.0/layout/containers/
+
+.container,
+.container-sm,
+.container-md,
+.container-lg,
+.container-xl,
+.container-fluid {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+@media (min-width: 576px) {
+  .container,
+  .container-sm {
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container,
+  .container-sm,
+  .container-md {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 992px) {
+  .container,
+  .container-sm,
+  .container-md,
+  .container-lg {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container,
+  .container-sm,
+  .container-md,
+  .container-lg,
+  .container-xl {
+    max-width: 1140px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .container,
+  .container-sm,
+  .container-md,
+  .container-lg,
+  .container-xl,
+  .container-xxl {
+    max-width: 1320px;
+  }
+}
+
+@media (min-width: $breakpoint-xs) {
+  .q-dialog .q-card__section.scroll {
+    max-height: calc(100vh - 160px);
+  }
+}
