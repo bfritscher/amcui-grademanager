@@ -65,15 +65,27 @@
               </span>
               <q-btn
                 v-if="props.row.users.indexOf($store.state.user.username) < 0"
+                size="sm"
                 @click="addToProject(props.row)"
                 >add self</q-btn
               >
               <q-btn
                 v-if="props.row.users.indexOf($store.state.user.username) > -1"
+                size="sm"
                 @click="removeFromProject(props.row)"
                 >remove self</q-btn
               >
-              <q-btn color="negative" @click="deleteProject(props.row)"
+              <q-btn
+                v-if="props.row.error !== ERROR_NO_FOLDER"
+                color="warning"
+                size="sm"
+                @click="gitgcProject(props.row)"
+                >git gc</q-btn
+              >
+              <q-btn
+                color="negative"
+                size="sm"
+                @click="deleteProject(props.row)"
                 >Delete</q-btn
               >
             </q-td>
@@ -106,17 +118,20 @@
           </template>
           <template #body-cell-actions="props">
             <q-td :props="props">
-             <q-btn color="warning" @click="removeMfa(props.row)"
+              <q-btn color="warning" size="sm" @click="removeMfa(props.row)"
                 >remove MFA</q-btn
               >
-              <q-btn color="warning" @click="changePassword(props.row)"
+              <q-btn
+                color="warning"
+                size="sm"
+                @click="changePassword(props.row)"
                 >change password</q-btn
               >
-              <q-btn color="negative" @click="deleteUser(props.row)"
+              <q-btn color="negative" size="sm" @click="deleteUser(props.row)"
                 >Delete</q-btn
               >
             </q-td>
-          </template>          
+          </template>
         </q-table>
       </q-tab-panel>
     </q-tab-panels>
@@ -235,7 +250,7 @@ export default defineComponent({
           align: 'left',
           field: 'projects',
           sortable: false,
-        },        
+        },
       ],
     });
 
@@ -258,6 +273,10 @@ export default defineComponent({
 
         Object.keys(tables.stats.users || {}).forEach((u) => {
           tables.stats.users[u].forEach((p) => {
+            if (!tables.stats.projects[p]) {
+              console.log('not found', p, 'for', u);
+              return;
+            }
             tables.stats.projects[p].users.push(u);
           });
           tables.users.push({
@@ -331,6 +350,9 @@ export default defineComponent({
             });
         }
       },
+      gitgcProject(project: AdminProject) {
+        API.$http.post(`${API.URL}/admin/project/${project.name}/gitgc`);
+      },
       deleteUser(user: AdminUser) {
         if (confirm(`Delete user ${user.username}`)) {
           API.$http
@@ -341,19 +363,20 @@ export default defineComponent({
         }
       },
       removeMfa(user: AdminUser) {
-        API.$http.post(`${API.URL}/admin/user/${user.username}/removemfa`).then(() => {
-          alert('done');
-        });
+        API.$http
+          .post(`${API.URL}/admin/user/${user.username}/removemfa`)
+          .then(() => {
+            alert('done');
+          });
       },
       changePassword(user: AdminUser) {
-        API.$http.post(
-          `${API.URL}/admin/user/${user.username}/changepassword`,
-          {
+        API.$http
+          .post(`${API.URL}/admin/user/${user.username}/changepassword`, {
             newPassword: prompt('New password?'),
-          }
-        ).then(() => {
-          alert('done');
-        });
+          })
+          .then(() => {
+            alert('done');
+          });
       },
     };
   },
