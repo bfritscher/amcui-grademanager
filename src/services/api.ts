@@ -180,8 +180,19 @@ export default class Api {
       this.socket.disconnect();
     }
 
-    this.socket = io(this.URL, {
+    let origin = '';
+    let path = '/socket.io/';
+    if (this.URL.startsWith('http')) {
+       const url = new URL(this.URL);
+       origin = url.origin;
+        path = url.pathname + path;
+    } else {
+      origin = window.location.origin;
+      path = this.URL + path;
+    }
+    this.socket = io(origin, {
       auth: { token: `Bearer ${this.store.state.token}` },
+      path: path,
     });
 
     this.loadOptions();

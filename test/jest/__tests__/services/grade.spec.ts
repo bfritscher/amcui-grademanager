@@ -7,10 +7,14 @@ describe('Grade', () => {
   describe('loading students.csv', () => {
     it('should load and merge students.csv', () => {
       const gs = new GradeService({ API: {} });
+      const s1 = { id: '101', name: 'test' };
       gs.grade.students = {
         fields: ['id', 'name'],
-        data: [{ id: '101', name: 'test' }],
+        data: [s1],
       };
+      gs.grade.studentsLookup = {
+        '101': s1,
+      }
       gs.parseCSV('id,name,project\r\n101,a,4.5\r\n,103,b,2.0');
       expect(gs.grade.students.data.length).toBe(2);
       expect(gs.grade.students.data[0].project).toBe(4.5);
@@ -385,7 +389,7 @@ describe('Grade', () => {
           fs.readFileSync(path.resolve(__dirname, './students.out.csv'), 'utf8')
         );
         resolve();
-      }, 1000);
+      }, 3000);
     });
   });
 });

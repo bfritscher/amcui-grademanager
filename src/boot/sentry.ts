@@ -5,7 +5,7 @@ import { Integrations } from '@sentry/tracing';
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli/boot-files
 export default boot(({ app, router }) => {
-  if (process.env.SENTRY_DSN && process.env.PROD) {
+  if (process.env.PROD && process.env.SENTRY_DSN && process.env.SENTRY_DSN.startsWith('http')) {
     Sentry.init({
       app,
       release: process.env.COMMITHASH,

@@ -29,3 +29,10 @@ See [Configuring quasar.conf.js](https://v2.quasar.dev/quasar-cli/quasar-conf-js
 ```bash
 icongenie generate -m spa -i .\src\assets\images\auto-multiple-choice.png
 ```
+
+### config variable via environment
+```bash
+SENTRY_DSN=
+AMCUI_API=
+GA_CODE=
+```
