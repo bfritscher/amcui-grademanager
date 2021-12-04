@@ -33,12 +33,13 @@ module.exports = {
    *
    * ref：https://v1.vuepress.vuejs.org/theme/default-theme-config.html
    */
-   base: "/docs/",
+   base: "/amcui-grademanager/",
    themeConfig: {
     // if your docs are in a different repo from your main project:
-    docsRepo: "bfritscher/grademanager",
+    repo: "bfritscher/amcui-grademanager",
     // if your docs are in a specific branch (defaults to 'master'):
     docsBranch: "docs",
+    docsDir: "src",
     // defaults to false, set to true to enable
     editLinks: true,
     // custom text for edit link. Defaults to "Edit this page"
