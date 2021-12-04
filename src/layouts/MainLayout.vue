@@ -13,10 +13,9 @@
         <q-btn
           flat
           type="a"
-          href="https://amcui.ig.he-arc.ch/docs/"
+          href="https://bfritscher.github.io/amcui-grademanager/"
           target="_blank"
         >
-          <!-- TODO-nice docs to github? -->
           docs
         </q-btn>
 
