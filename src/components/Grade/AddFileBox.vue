@@ -1,7 +1,7 @@
 <template>
   <div class="bg-secondary">
     <q-btn
-v-if="ui.closed" 
+v-if="ui.closed"
     size="sm"
     class="full-width"
     flat label="CSV Options"
@@ -35,6 +35,7 @@ v-if="ui.closed"
       />
       <q-space />
       <q-btn label="export" flat color="negative" @click="exportData()" />
+      <q-btn label="grades.csv" flat color="positive" @click="downloadCsv()" />
     </div>
     <q-btn
       icon="mdi-close"
@@ -84,6 +85,15 @@ export default defineComponent({
       },
       exportData() {
         ui.pasteData = gradeService.exportData();
+      },
+      downloadCsv() {
+        const csv =  gradeService.exportAllData();;
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'grades.csv';
+        a.click();
       },
       parsePasteData() {
         gradeService.parseCSV(ui.pasteData);

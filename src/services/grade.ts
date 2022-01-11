@@ -249,6 +249,18 @@ export default class GradeService {
     return Papa.unparse(JSON.parse(JSON.stringify(this.grade.students)));
   }
 
+  exportAllData() {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const data = JSON.parse(JSON.stringify(this.grade.students)) as {fields: string[], data: any[]};
+    Object.keys(this.grade.questions).forEach((key) => {
+      data.fields.push(key);
+      data.data.forEach((row) => {
+        row[key] = this.grade.scores[row.id] ? this.grade.scores[row.id].questions[key] : '';
+      });
+    });
+    return Papa.unparse(data);
+  }
+
   makeFunc(func: string) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-implied-eval

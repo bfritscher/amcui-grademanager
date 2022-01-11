@@ -1,7 +1,6 @@
 [Nice]
 Grades css fix layout recompute on q-table scroll grade
 lock progress during file parsing ? implement analyse command progress?
-export csv not only copy past?
 
 [Code]
 fix props mutated
