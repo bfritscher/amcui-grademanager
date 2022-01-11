@@ -375,7 +375,6 @@ export default class Api {
   }
 
   saveOptions() {
-    console.log('SAVE options');
     const options = this.options.options;
     return this.$http.post(this.URL + '/project/' + this.project + '/options', {
       options,

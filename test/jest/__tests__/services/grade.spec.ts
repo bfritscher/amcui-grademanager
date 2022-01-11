@@ -99,6 +99,7 @@ describe('Grade', () => {
         project: 'test',
         URL: 'test',
         $http: jest.fn(),
+        saveOptions: jest.fn(),
         options: {
           options: {
             note_min: '1.0',
@@ -143,6 +144,7 @@ describe('Grade', () => {
         project: 'test',
         URL: 'test',
         $http: jest.fn(),
+        saveOptions: jest.fn(),
         options: {
           options: {
             note_min: '1.0',
@@ -187,6 +189,7 @@ describe('Grade', () => {
         project: 'test',
         URL: 'test',
         $http: jest.fn(),
+        saveOptions: jest.fn(),
         options: {
           options: {
             note_min: '1.0',
@@ -357,6 +360,7 @@ describe('Grade', () => {
       project: 'test',
       URL: 'test',
       $http,
+      saveOptions: jest.fn(),
       options: {
         options: {
           note_min: '1',
