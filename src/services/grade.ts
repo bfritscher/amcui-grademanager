@@ -383,6 +383,19 @@ export default class GradeService {
   }
 
   calculateGrades() {
+    // ensure options exists
+    if (isNaN(Number(this.API.options.options.node_grain))) {
+      this.API.options.options.node_grain = '0.1';
+      this.API.saveOptions();
+    }
+    if (isNaN(Number(this.API.options.options.note_min))) {
+      this.API.options.options.note_min = '1.0';
+      this.API.saveOptions();
+    }
+    if (isNaN(Number(this.API.options.options.note_max))) {
+      this.API.options.options.note_max = '6.0';
+      this.API.saveOptions();
+    }
     if (!this.grade.students.fields.includes('Total')) {
       this.grade.students.fields.push('Total');
     }
