@@ -41,8 +41,8 @@ export default defineComponent({
     watch(
       () => props.modelValue,
       () => {
-        if (cmInstance && cmInstance.getValue() !== content.value) {
-          cmInstance.setValue(content.value);
+        if (cmInstance && content.value !== props.modelValue) {
+          cmInstance.setValue(props.modelValue);
         }
       }
     );
