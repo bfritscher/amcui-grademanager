@@ -1,6 +1,9 @@
 <template>
   <div class="myrichtexteditor">
-    <div ref="toolbar" class="toolbar hide row no-wrap shadow-1 items-center q-pa-sm scroll">
+    <div
+      ref="toolbar"
+      class="toolbar hide row no-wrap shadow-1 items-center q-pa-sm scroll"
+    >
       <a data-wysihtml5-command="bold" title="CTRL+B"
         ><q-icon name="mdi-format-bold"></q-icon
       ></a>
@@ -128,11 +131,10 @@
                   : graphics.width
             "
           >
-            <q-icon name="mdi-minus" class="text-grey-9"/>
+            <q-icon name="mdi-minus" class="text-grey-9" />
           </button>
           <div class="row items-center">
-            <span>{{ graphics.width * 100 }}%
-            </span>
+            <span>{{ graphics.width * 100 }}% </span>
           </div>
           <button
             aria-label="wider"
@@ -157,10 +159,7 @@
           <q-icon name="settings" class="text-grey-9" />
         </button>
         <q-space />
-        <button
-          aria-label="close"
-          @click.prevent.stop="closeGraphicsToolbar()"
-        >
+        <button aria-label="close" @click.prevent.stop="closeGraphicsToolbar()">
           <q-icon name="mdi-close" class="text-grey-9" />
         </button>
       </template>
@@ -338,7 +337,7 @@ export default defineComponent({
       showStyle: false,
       content: this.modelValue,
       editor: null as any,
-      currentImg: null as HTMLElement|null,
+      currentImg: null as HTMLElement | null,
       showPreview: true,
       watchers: {} as any,
     };
@@ -457,6 +456,10 @@ export default defineComponent({
 
       editor.on('focus', () => {
         toolbar.classList.remove('hide');
+        toolbar.classList.toggle(
+          'scrollfix',
+          toolbar.scrollWidth > toolbar.clientWidth
+        );
       });
 
       editor.on('blur', () => {
@@ -490,6 +493,10 @@ export default defineComponent({
 
       toolbar.classList.remove('hide');
       textarea.classList.remove('hide');
+      toolbar.classList.toggle(
+        'scrollfix',
+        toolbar.scrollWidth > toolbar.clientWidth
+      );
 
       //remove preview since we now have the editor
       this.showPreview = false;
@@ -629,6 +636,10 @@ export default defineComponent({
   z-index: 999;
 }
 
+.myrichtexteditor .toolbar.scrollfix {
+  top: -80px;
+}
+
 .myrichtexteditor .toolbar a {
   padding: 2px;
   color: #666666;
@@ -722,6 +733,4 @@ export default defineComponent({
 .myrichtexteditor .preview {
   padding: 8px;
 }
-
-
 </style>
