@@ -58,6 +58,11 @@
           flat
           @click="isLogVisible = !isLogVisible"
         />
+        <q-btn
+          label="html"
+          flat
+          @click="exportHTML()"
+        />
         <q-space />
         <q-btn
           color="primary"
@@ -75,6 +80,7 @@
 import { useDialogPluginComponent } from 'quasar';
 import { defineComponent, inject, reactive, ref } from 'vue';
 import Api from '../../services/api';
+import ExamEditor from '../../services/examEditor';
 import formatDate from '../../utils/formatDate';
 import Codemirror from '../Codemirror.vue';
 
@@ -99,6 +105,7 @@ export default defineComponent({
     //                    example: onDialogOK({ /*.../* }) - with payload
     // onDialogCancel - Function to call to settle dialog with "cancel" outcome
     const API = inject('API') as Api;
+    const examService = inject('examService') as ExamEditor;
 
     const logOptions = reactive({
       lineNumbers: false,
@@ -145,6 +152,9 @@ export default defineComponent({
         }
         return [];
       },
+      exportHTML() {
+        examService.toHtml();
+      }
     };
   },
 });

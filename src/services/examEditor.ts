@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import latexToExam from './latexToExam';
 import examToLatex from './examToLatex';
 import examToMoodle from './examToMoodle';
+import examToHTML from './examToHTML';
 import { Notify, Dialog } from 'quasar';
 import Api from './api';
 import {
@@ -492,6 +493,10 @@ export default class ExamEditor {
 
   toMoodleQuiz() {
     examToMoodle(this);
+  }
+
+  toHtml() {
+    examToHTML(this);
   }
 
   linkToQuestion(section: Section, question?: Question) {
