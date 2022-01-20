@@ -14,7 +14,12 @@
         @update:model-value="examService.toggleCopy(section)"
         >{{ section.number }} {{ section.title }}</q-checkbox
       >
-      <div v-else>{{ section.number }} {{ section.title }}</div>
+      <div v-else>
+        {{ section.number }} {{ section.title }}
+        <span v-if="section.questions.length > 0" class="section-question-nb"
+          >({{ section.questions.length }})</span
+        >
+      </div>
       <q-space />
       <q-icon name="mdi-cursor-move" class="text-grey-7" size="sm" />
     </router-link>
@@ -70,5 +75,10 @@ export default defineComponent({
 }
 .section-menu a {
   text-decoration: none;
+}
+.section-question-nb {
+  font-weight: normal;
+  font-size: 80%;
+  vertical-align: top;
 }
 </style>
