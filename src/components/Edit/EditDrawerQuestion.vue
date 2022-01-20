@@ -1,8 +1,11 @@
 <template>
-  <li class="question-menu q-mb-xs" :class="{active: examService.currentQuestion === question}">
+  <li
+    class="question-menu q-mb-xs"
+    :class="{ active: examService.currentQuestion === question }"
+  >
     <router-link
       :to="examService.linkToQuestion(section, question)"
-       class="row no-wrap items-center text-subtitle1 text-bold text-black"
+      class="row no-wrap items-center text-subtitle1 text-bold text-black"
     >
       <div class="column question-menu-description col no-wrap">
         <strong class="col">
@@ -28,13 +31,27 @@
             ></q-icon>
             Question {{ question.number }}
             <span v-if="question.type === 'MULTIPLE'">♣</span>
+            <span
+              v-if="question.answers && question.answers.length > 0"
+              title="number of answers"
+              class="question-answer-nb"
+              >&nbsp;({{
+                question.type === 'MULTIPLE'
+                  ? question.answers.length + 1
+                  : question.answers.length
+              }})</span
+            >
           </div>
         </strong>
         <em class="col text-subtitle2">{{
           htmlToPlaintext(question.content).slice(0, 80)
         }}</em>
       </div>
-      <q-icon class="col-auto text-grey-7" name="mdi-cursor-move" size="sm"></q-icon>
+      <q-icon
+        class="col-auto text-grey-7"
+        name="mdi-cursor-move"
+        size="sm"
+      ></q-icon>
     </router-link>
   </li>
 </template>
@@ -69,7 +86,8 @@ export default defineComponent({
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.question-menu.active, .question-menu.active a {
+.question-menu.active,
+.question-menu.active a {
   color: #283593 !important;
 }
 
@@ -78,5 +96,10 @@ export default defineComponent({
 }
 .question-menu a {
   text-decoration: none;
+}
+.question-answer-nb {
+  font-weight: normal;
+  font-size: 80%;
+  vertical-align: top;
 }
 </style>

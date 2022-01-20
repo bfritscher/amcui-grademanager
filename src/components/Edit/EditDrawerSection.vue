@@ -16,7 +16,10 @@
       >
       <div v-else>
         {{ section.number }} {{ section.title }}
-        <span v-if="section.questions.length > 0" class="section-question-nb"
+        <span
+          v-if="section.questions.length > 0"
+          title="number of questions"
+          class="section-question-nb"
           >({{ section.questions.length }})</span
         >
       </div>
