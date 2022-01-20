@@ -31,7 +31,7 @@
           </div>
         </strong>
         <em class="col text-subtitle2">{{
-          htmlToPlaintext(question.content).slice(0, 50)
+          htmlToPlaintext(question.content).slice(0, 80)
         }}</em>
       </div>
       <q-icon class="col-auto text-grey-7" name="mdi-cursor-move" size="sm"></q-icon>
