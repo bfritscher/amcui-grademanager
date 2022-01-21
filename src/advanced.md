@@ -62,16 +62,29 @@ Nous avons donc paramétré avec précision le nombre de points de chaque répon
 Le but de cette documentation utilisateur est de vous aider à mettre en place un projet AMCUI et non de vous offrir une liste exhaustive de toutes les possibilités offertes par le code LaTeX.
 
 
+
+## Désactiver les coupures de mots (césure)
+
+Sous Latex Options dans source.tex ajouter les deux commandes suivantes:
+
+```tex
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+```
+
+
+## Question coupé sur plusieurs pages
+
+Vérifier sous Latex Options dans source.tex que le mode `bloc` est bien activé.
+
+```tex
+\usepackage[francais,bloc,completemulti]{automultiplechoice}
+```
+
+*bloc : place chaque question dans un bloc, de telle sorte qu'elle ne puisse pas être coupée par un saut de page.*
+
+
+
 ## Authentification à deux facteurs
 
-Il est possible d'activer une authentification à deux facteurs avec une clef U2F.
-
- ![2factor](./assets/2factor.png)
-
-
-Branchez votre clef U2F et écrivez votre mot de passe puis cliquez sur le bouton **ADD U2F KEY**. L'application va vous demander de brancher/activer votre clef U2F. Vous obtiendrez le résultat de la Figure 8.
-
- ![2factor_success](./assets/2factor_success.png)
-*Figure 8 Authentification à deux facteurs en place*
-
-Maintenant lorsque vous vous connectez à l'application, vous devrez activer votre clef U2F après avoir inséré vos informations de connexion (login + mot de passe). Pour enlever la double authentification, insérez votre mot de passe et cliquez sur **REMOVE U2F KEY**.
+Il est possible d'activer une authentification à deux facteurs dans le profile utilisateur en haut à droite de la page.
