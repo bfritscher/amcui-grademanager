@@ -31,9 +31,9 @@
 </template>
 
 <script lang="ts">
-import { match, surround } from 'fuzzyjs';
 import { useDialogPluginComponent } from 'quasar';
 import GradeService from '../../services/grade';
+import { match } from '../../utils/match';
 import {
   defineComponent,
   inject,
@@ -136,20 +136,15 @@ export default defineComponent({
           options.value = studentsWithoutScore.value
             .map((item: {[key:string]: any}) => {
               const label = itemAccesor(item);
-              const result = match(needle, label, { caseSensitive: false });
+              const result = match(needle, label);
               item._match = result.match;
               item._score = result.score;
-              if (result.match && result.score > 0) {
-                item._label = surround(label, {
-                  result,
-                  prefix: '<strong>',
-                  suffix: '</strong>',
-                });
-              }
+              item._label = result.wrapped;
               return item;
             })
-            .filter((item) => item._match && item._score > 0)
-            .sort((a, b) => b._score - a._score);
+            .filter((item) => item._match)
+            .sort((a, b) => b._score - a._score)
+            .slice(0, 10);
         } else {
           options.value = [];
         }

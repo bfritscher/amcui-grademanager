@@ -5151,11 +5151,6 @@ functional-red-black-tree@^1.0.1:
   resolved "https://registry.npmjs.org/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz"
   integrity sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=
 
-fuzzyjs@5.0.1:
-  version "5.0.1"
-  resolved "https://registry.npmjs.org/fuzzyjs/-/fuzzyjs-5.0.1.tgz"
-  integrity sha512-/BixxKEZ0sIQkIogNBhuwX7EC1gznFoR9jhrEU0cb89HUTH+tb2u9s86Rj//xGzpQg04A1aD9KDyGE+ldxgLFQ==
-
 gensync@^1.0.0-beta.2:
   version "1.0.0-beta.2"
   resolved "https://registry.npmjs.org/gensync/-/gensync-1.0.0-beta.2.tgz"
