@@ -138,7 +138,8 @@ export default defineComponent({
               const label = itemAccesor(item);
               const result = match(needle, label, { caseSensitive: false });
               item._match = result.match;
-              if (result.match) {
+              item._score = result.score;
+              if (result.match && result.score > 0) {
                 item._label = surround(label, {
                   result,
                   prefix: '<strong>',
@@ -147,7 +148,8 @@ export default defineComponent({
               }
               return item;
             })
-            .filter((item) => item._match);
+            .filter((item) => item._match && item._score > 0)
+            .sort((a, b) => b._score - a._score);
         } else {
           options.value = [];
         }
