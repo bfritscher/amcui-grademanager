@@ -207,6 +207,8 @@
               @click="deleteAll()"
               >delete all scans</q-btn
             >
+
+
           </q-td>
         </q-tr>
       </template>
@@ -222,6 +224,7 @@ import {
   inject,
   computed,
   ref,
+  onUnmounted,
 } from 'vue';
 import formatDate from '../../utils/formatDate';
 import { useRouter, useRoute } from 'vue-router';
@@ -315,7 +318,22 @@ export default defineComponent({
       });
     };
 
+    function handleNavKeys(e: KeyboardEvent) {
+      if (e.key === 'PageDown') {
+        nextPage(1);
+      }
+      if (e.key === 'PageUp') {
+        nextPage(-1);
+      }
+    }
+
     onMounted(loadPages);
+    onMounted(() => {
+      window.addEventListener('keydown', handleNavKeys)
+    });
+    onUnmounted(() => {
+      window.removeEventListener('keydown', handleNavKeys);
+    });
 
     const selectedPage = computed(() => {
       return [
@@ -352,6 +370,32 @@ export default defineComponent({
       if (scan.pages.length > 0) {
         deleteScan(scan.pages[0]).then(deleteAllScan);
       }
+    }
+
+    function goToPage(page: Page) {
+        router.push({
+          name: 'ScanPreview',
+          params: {
+            project: route.params.project,
+            page: page.page,
+            student: page.student,
+            copy: page.copy,
+          },
+        });
+      }
+
+    function nextPage(step: number) {
+      const currentPageIndex = scan.pages.findIndex(
+        (page) =>
+          page.id === selectedPage.value[0].id
+      );
+      let nextIndex;
+      if (step > 0) {
+        nextIndex = currentPageIndex + step < scan.pages.length ? currentPageIndex + step : 0;
+      } else {
+        nextIndex = currentPageIndex + step >= 0 ? currentPageIndex + step : scan.pages.length - 1;
+      }
+      goToPage(scan.pages[nextIndex]);
     }
 
     const uploaderRef = ref();
@@ -397,17 +441,8 @@ export default defineComponent({
           deleteAllScan();
         });
       },
-      goToPage(page: Page) {
-        router.push({
-          name: 'ScanPreview',
-          params: {
-            project: route.params.project,
-            page: page.page,
-            student: page.student,
-            copy: page.copy,
-          },
-        });
-      },
+      goToPage,
+      nextPage,
       onRejected,
       onUploaded(info: { files: any[]; xhr: any }) {
         uploaderRef.value.removeFile(info.files[0]);
@@ -426,6 +461,9 @@ export default defineComponent({
           fieldName: 'file',
         };
       },
+      onKeypress(event: KeyboardEvent) {
+        console.log(event);
+      }
     };
   },
 });
