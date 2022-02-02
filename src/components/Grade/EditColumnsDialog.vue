@@ -46,6 +46,7 @@
         </draggable>
       </q-card-section>
       <q-card-actions align="right">
+        <q-btn flat label="add column" @click="addColumn" />
         <q-space />
         <q-btn color="primary" flat label="close" @click="onDialogOK" />
       </q-card-actions>
@@ -54,7 +55,7 @@
 </template>
 
 <script lang="ts">
-import { useDialogPluginComponent } from 'quasar';
+import { useDialogPluginComponent, useQuasar } from 'quasar';
 import draggable from 'vuedraggable';
 import GradeService from '../../services/grade';
 import {
@@ -98,6 +99,8 @@ export default defineComponent({
     // onDialogCancel - Function to call to settle dialog with "cancel" outcome
     const gradeService = inject('gradeService') as GradeService;
 
+    const $q = useQuasar();
+
     const list = computed({
       get(): Ifield[] {
         return props.fields.map((value, index) => {
@@ -135,7 +138,7 @@ export default defineComponent({
         ) {
           gradeService.calculateGrades();
         }
-      },      
+      },
       removeColumn(col: string) {
         if (col !== 'id') {
           const index = gradeService.grade.students.fields.indexOf(col);
@@ -143,6 +146,23 @@ export default defineComponent({
           gradeService.calculateGrades();
         }
       },
+      addColumn() {
+        $q.dialog({
+          title: 'Add Column',
+          message: 'Provide a name for the new column',
+          prompt: {
+            label: 'New name',
+            model: '',
+            type: 'text', // optional
+          },
+          cancel: true,
+          persistent: true,
+        }).onOk((name: string) => {
+          name = name.trim()
+          gradeService.grade.students.fields.push(name);
+          gradeService.calculateGrades();
+        });
+      }
     };
   },
 });
