@@ -6,6 +6,7 @@
         label="StudentLookup"
         debounce="1000"
         class="col"
+        :spellcheck="false"
         @update:model-value="updateOnBlur('studentLookup', $event)"
       ></q-input>
       <q-select
@@ -29,6 +30,7 @@
         label="CurrentFileLookup"
         debounce="1000"
         class="col"
+        :spellcheck="false"
         @update:model-value="updateOnBlur('fileLookup', $event)"
       ></q-input>
       <q-btn color="negative" flat @click="$emit('importCols')"
@@ -88,6 +90,9 @@
             </q-btn>
           </div>
         </th>
+        <th>
+          <q-btn flat padding="xs" size="md" label="add column" @click="addColumn"></q-btn>
+        </th>
       </tr>
     </thead>
     <tbody>
@@ -119,13 +124,28 @@
                 @keyup.esc="scope.cancel"
               />
             </template>
-          </q-popup-edit>          
+          </q-popup-edit>
+        </td>
+        <td class="text-center">
+          <q-btn
+          flat
+          size="md"
+          padding="xs"
+          icon="mdi-close"
+          aria-label="remove row"
+          color="negative"
+          @click="removeRow(index)"
+        >
+          <q-tooltip>remove row</q-tooltip>
+        </q-btn>
         </td>
       </tr>
     </tbody>
   </q-markup-table>
   <q-separator />
-  <q-btn color="negative" class="q-ma-md" @click="$emit('removeFile')">Remove file</q-btn>
+  <q-btn color="primary" class="q-ma-md" @click="addRow">Add Row</q-btn>
+  <q-btn class="q-ma-md" @click="renameFile">Rename File</q-btn>
+  <q-btn color="negative" class="q-ma-md" @click="$emit('removeFile')">Remove File</q-btn>
 </template>
 <script lang="ts">
 import { useQuasar } from 'quasar';
@@ -173,6 +193,47 @@ export default defineComponent({
           cancel: 'Cancel',
         }).onOk(() => {
           props.file.meta.fields.splice(index, 1);
+          gradeService.saveFiles();
+        });
+      },
+      addColumn() {
+        $q.dialog({
+          title: 'Add Column',
+          message: 'Provide a name for the new column',
+          prompt: {
+            label: 'New name',
+            model: '',
+            type: 'text', // optional
+          },
+          cancel: true,
+          persistent: true,
+        }).onOk((name: string) => {
+          name = name.trim()
+          props.file.meta.fields.push(name);
+          gradeService.saveFiles();
+        });
+      },
+      addRow() {
+        props.file.data.push({});
+        gradeService.saveFiles();
+      },
+      removeRow(index: number) {
+        props.file.data.splice(index, 1);
+        gradeService.saveFiles();
+      },
+      renameFile() {
+        $q.dialog({
+          title: 'Rename File',
+          message: 'Provide a name for the file',
+          prompt: {
+            label: 'New name',
+            model: props.file.name,
+            type: 'text', // optional
+          },
+          cancel: true,
+          persistent: true,
+        }).onOk((name: string) => {
+          props.file.name = name.trim();
           gradeService.saveFiles();
         });
       },
