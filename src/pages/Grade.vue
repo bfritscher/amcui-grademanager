@@ -105,7 +105,8 @@
                   >
                     <span>{{ col }}</span>
                   </q-th>
-                  <q-th class="text-left">
+                  <q-th key="FinalGrade" class="text-left" :props="props">
+                    <span style="font-size: 70%">FinalGrade</span>
                     <q-input
                       v-model="API.options.options.final_grade_formula"
                       label="Final grade formula"
@@ -119,7 +120,8 @@
                       "
                     />
                   </q-th>
-                  <q-th class="text-left grade-max">
+                  <q-th key="Grade" class="text-left grade-max" :props="props">
+                    <span style="font-size: 70%">Grade</span>
                     <q-input
                       v-model="API.options.options.points_max"
                       label="Points"
@@ -149,7 +151,7 @@
                       </template>
                     </q-input>
                   </q-th>
-                  <q-th>
+                  <q-th key="Total" :props="props">
                     <span style="font-size: 80%">Total</span>
                     <span class="question-max q-ml-sm"
                       >(max:{{ gradeService.grade.maxPoints }})</span
@@ -611,6 +613,7 @@ export default defineComponent({
             headerClasses: '',
             field: 'FinalGrade',
             align: 'right',
+            sortable: true,
           },
           {
             name: 'Grade',
@@ -618,6 +621,7 @@ export default defineComponent({
             headerClasses: '',
             field: 'Grade',
             align: 'right',
+            sortable: true,
           },
           {
             label: 'Total',
@@ -625,6 +629,7 @@ export default defineComponent({
             headerClasses: '',
             field: 'Total',
             align: 'right',
+            sortable: true,
           },
         ]);
       if (ui.displayQuestions) {
