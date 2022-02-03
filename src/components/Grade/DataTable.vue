@@ -23,6 +23,18 @@
         </td>
       </tr>
       <tr>
+        <th class="text-left">Min</th>
+        <td v-for="(c, index) in table[5]" :key="index" class="text-right">
+          {{ c }}
+        </td>
+      </tr>
+      <tr>
+        <th class="text-left">Max</th>
+        <td v-for="(c, index) in table[6]" :key="index" class="text-right">
+          {{ c }}
+        </td>
+      </tr>
+      <tr>
         <th class="text-left">Pass</th>
         <td v-for="(c, index) in table[2]" :key="index" class="text-right">
           {{ c }}%
@@ -47,6 +59,7 @@
 <script lang="ts">
 import { defineComponent, inject, computed } from 'vue';
 import GradeService from '../../services/grade';
+import Api from '../../services/api';
 
 export default defineComponent({
   name: 'DataTable',
@@ -58,11 +71,14 @@ export default defineComponent({
   },
   setup(props) {
     const gradeService = inject('gradeService') as GradeService;
+    const API = inject('API') as Api;
     const delta = 5;
+    const minGrade = parseFloat(API.options.options.note_min);
+    const maxGrade = parseFloat(API.options.options.note_max);
 
     const tableData = computed(() => {
       // maxPoints, AVG, Pass, Remed, Fail
-      const table = [[], [], [], [], []] as string[][];
+      const table = [[], [], [], [], [], [], []] as string[][];
       for (
         let max = props.maxPoints - delta;
         max <= delta + props.maxPoints;
@@ -74,6 +90,8 @@ export default defineComponent({
           pass: 0,
           remed: 0,
           fail: 0,
+          min: maxGrade,
+          max: minGrade,
         };
         for (let i = 0; i < gradeService.grade.students.data.length; i++) {
           const score =
@@ -94,6 +112,8 @@ export default defineComponent({
           } else {
             iteration.fail++;
           }
+          iteration.min = Math.min(iteration.min, gradeScaled);
+          iteration.max = Math.max(iteration.max, gradeScaled);
           iteration.total += gradeScaled;
           iteration.count++;
         }
@@ -110,6 +130,8 @@ export default defineComponent({
         table[4].push(
           Math.round((iteration.fail / iteration.count) * 100).toString()
         );
+        table[5].push(iteration.min.toFixed(2));
+        table[6].push(iteration.max.toFixed(2));
       }
       return table;
     });
