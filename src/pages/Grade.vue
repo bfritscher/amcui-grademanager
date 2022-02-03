@@ -48,11 +48,11 @@
             />
 
             <q-banner
-              v-if="gradeService.grade.students.fields.indexOf('name') < 0"
+              v-if="showMatchLookupWarning"
               inline-actions
               class="text-white bg-orange"
             >
-              Warning: It is recommanded to have a <em>name</em> column.
+              Warning: It is recommanded to have at least one of the following column for manual matching: <em>{{ matchLookups.join(', ') }}</em>.
             </q-banner>
             <q-table
               v-model:pagination="ui.pagination"
@@ -476,6 +476,7 @@ import { useQuasar } from 'quasar';
 import formatDate from '../utils/formatDate';
 import AddFileBox from '../components/Grade/AddFileBox.vue';
 import LoadingProgress from '../components/LoadingProgress.vue';
+import { matchLookups } from '../utils/options';
 
 export default defineComponent({
   name: 'Grade',
@@ -544,6 +545,12 @@ export default defineComponent({
           },
         }))
       );
+    });
+
+    const showMatchLookupWarning = computed(() => {
+      return !gradeService.grade.students.fields.some((field) => {
+        return matchLookups.includes(field.toLowerCase());
+      });
     });
 
     // students table
@@ -654,6 +661,8 @@ export default defineComponent({
       ui,
       tabSelected,
       tabItems,
+      showMatchLookupWarning,
+      matchLookups,
       rows,
       columns,
       studentsFieldFiltered,

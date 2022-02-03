@@ -44,6 +44,7 @@ import {
 } from 'vue';
 import Api from '../../services/api';
 import { GradeRecord, Name } from '../models';
+import { matchLookups } from '../../utils/options';
 
 export default defineComponent({
   name: 'AssociationDialog',
@@ -120,13 +121,12 @@ export default defineComponent({
     const options = ref<any[]>([]);
 
     const itemAccesor = (item: {[key:string]: any}): string => {
-      // TODO-nice options to configure?
-      let labels: string[] = [];
-      ['name', 'nom', 'prenom', 'surname', 'email'].forEach((key: string) => {
-        if (item[key]) {
+      const labels: string[] = [];
+      Object.keys(item).forEach((key: string) => {
+        if (item[key] && matchLookups.includes(key.toLowerCase())) {
           labels.push(String(item[key]))
         }
-      })
+      });
       return labels.join(' ');
     };
 
