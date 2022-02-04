@@ -1,6 +1,5 @@
 <template>
   <div v-if="!gradeService.grade.isLoading">
-    <div class="text-h6">Datatable</div>
     <table class="datatable">
       <colgroup>
         <col />
@@ -147,7 +146,9 @@ export default defineComponent({
 .datatable {
   border-spacing: 4px 0;
 }
-.datatable td {
+.datatable td,
+.datatable th {
+  padding: 4px 12px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
 </style>

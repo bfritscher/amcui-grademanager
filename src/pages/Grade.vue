@@ -40,13 +40,34 @@
         <q-tab-panel name="students" class="q-pa-none col column no-wrap">
           <template v-if="tabSelected === 'students'">
             <add-file-box />
-
-            <data-table
-              v-if="ui.showDataTable"
-              class="q-ma-md"
-              :max-points="parseFloat(API.options.options.points_max)"
-            />
-
+            <div v-if="ui.showDataTable" class="q-ma-md">
+              <div class="text-h6">Datatable
+                <q-btn
+                  icon="mdi-table-eye-off"
+                  flat
+                  dense
+                  padding="xs"
+                  size="md"
+                  @click="ui.showDataTable = false"
+                ></q-btn>
+              </div>
+              <data-table
+                :max-points="parseFloat(API.options.options.points_max)"
+              />
+            </div>
+            <div v-if="ui.showHistogram" class="q-ma-md">
+              <div class="text-h6">Points Histogram
+                <q-btn
+                  icon="mdi-eye-off-outline"
+                  flat
+                  dense
+                  padding="xs"
+                  size="md"
+                  @click="ui.showHistogram = false"
+                ></q-btn>
+              </div>
+              <histogram :values="rows.map(x => x.total || x.Total)" :min="0" :max="gradeService.grade.maxPoints" />
+            </div>
             <q-banner
               v-if="showMatchLookupWarning"
               inline-actions
@@ -147,7 +168,9 @@
                           dense
                           padding="xs"
                           @click="ui.showDataTable = !ui.showDataTable"
-                        />
+                        >
+                          <q-tooltip>Datatable</q-tooltip>
+                        </q-btn>
                       </template>
                     </q-input>
                   </q-th>
@@ -156,6 +179,19 @@
                     <span class="question-max q-ml-sm"
                       >(max:{{ gradeService.grade.maxPoints }})</span
                     ><br />
+                    <q-btn
+                          :icon="
+                            ui.showHistogram
+                              ? 'mdi-eye-off-outline'
+                              : 'mdi-chart-box-outline'
+                          "
+                          flat
+                          dense
+                          padding="xs"
+                          @click="ui.showHistogram = !ui.showHistogram"
+                        >
+                      <q-tooltip>Histogram</q-tooltip>
+                    </q-btn>
                     <q-btn
                       size="md"
                       padding="xs"
@@ -479,6 +515,7 @@ import formatDate from '../utils/formatDate';
 import AddFileBox from '../components/Grade/AddFileBox.vue';
 import LoadingProgress from '../components/LoadingProgress.vue';
 import { matchLookups } from '../utils/options';
+import Histogram from 'src/components/Grade/Histogram.vue';
 
 export default defineComponent({
   name: 'Grade',
@@ -488,7 +525,8 @@ export default defineComponent({
     DataTable,
     AddFileBox,
     LoadingProgress,
-  },
+    Histogram
+},
   setup() {
     const API = inject('API') as Api;
     const gradeService = inject('gradeService') as GradeService;
@@ -500,6 +538,7 @@ export default defineComponent({
       // students tab
       displayQuestions: false,
       showDataTable: false,
+      showHistogram: false,
       filter: '',
       pagination: {
         rowsPerPage: 0,

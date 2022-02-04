@@ -1,7 +1,12 @@
 {
   "extends": "@quasar/app/tsconfig-preset",
   "compilerOptions": {
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "plotly.js-cartesian-dist-min": [
+        "node_modules/@types/plotly.js"
+      ]
+    }
   },
   "exclude": [
     "test/cypress",
