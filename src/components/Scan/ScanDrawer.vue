@@ -126,6 +126,7 @@
             <q-icon name="search" />
           </template>
         </q-input>
+        <span class="text-body2">Keyboard: PageDown + PageUp to navigate scans</span>
       </template>
       <template #header-cell-id="props">
         <q-th :props="props">

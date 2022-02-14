@@ -24,6 +24,8 @@
       <q-card-actions align="right">
         <q-btn v-if="unmatchedNames.length > 0" label="skip" @click="skip()" />
         <q-space />
+        <span class="text-body2">Use down arrow and ENTER to select.</span>
+        <q-space />
         <q-btn color="primary" flat label="close" @click="onDialogOK" />
       </q-card-actions>
     </q-card>
