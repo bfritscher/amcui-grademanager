@@ -273,6 +273,7 @@
                     v-for="col in studentsFieldFiltered"
                     :key="col"
                     :props="props"
+                    :title="col === 'id' && gradeService.grade.scores[props.row.id] ? gradeService.grade.scores[props.row.id].key : ''"
                   >
                     {{ props.row[col] }}
                     <q-popup-edit
