@@ -169,7 +169,14 @@ export default class GradeService {
     });
     if (!result || !result.meta || !result.meta.fields) return;
     //merge keys
-    result.meta.fields.forEach((field) => {
+    result.meta.fields.forEach((field, index) => {
+      // fix empty columns
+      if (field === '') {
+        field = 'Column ' + (index + 1);
+        result.data.forEach((row: any) => {
+          row[field] = row[''];
+        })
+      }
       if (this.grade.students.fields.indexOf(field) < 0) {
         this.grade.students.fields.push(field);
       }
