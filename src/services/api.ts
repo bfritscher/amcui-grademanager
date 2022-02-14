@@ -68,7 +68,7 @@ export default class Api {
         if (error.response.status === 401) {
           this.store.dispatch('LOGOUT');
         }
-        return Promise.reject(error.response);
+        return Promise.reject(error);
       }
     );
   }
