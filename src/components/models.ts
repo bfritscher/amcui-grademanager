@@ -233,7 +233,7 @@ export interface GradeRecord {
 export interface GradeQuestion {
   max: number;
   question: number;
-  page: number;
+  pages: { [key: string]: number };
 }
 
 export interface AdminProject {

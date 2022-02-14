@@ -130,10 +130,11 @@ export default class GradeService {
               this.grade.questions[row.title] = {
                 max: row.max,
                 question: row.question,
-                page: row.page,
+                pages: {},
               };
               this.grade.maxPoints += row.max;
             }
+            this.grade.questions[row.title].pages[row.student] = row.page;
             this.grade[target][id].total += row.score;
             this.grade[target][id].questions[row.title] = row.score;
 

@@ -342,7 +342,7 @@
                             params: {
                               project: API.project,
                               student: props.row.student,
-                              page: value.page,
+                              page: value.pages[props.row.student],
                               copy: props.row.copy,
                               question: value.question,
                             },
@@ -375,7 +375,7 @@
                               project: API.project,
                               student:
                                 gradeService.grade.scores[props.row.id].student,
-                              page: value.page,
+                              page: value.pages[gradeService.grade.scores[props.row.id].student],
                               copy: gradeService.grade.scores[props.row.id]
                                 .copy,
                               question: value.question,
