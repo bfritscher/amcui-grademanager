@@ -152,6 +152,7 @@
                       type="number"
                       dense
                       style="min-width: 80px;width:100px"
+                      @click.stop=""
                       @update:model-value="
                         API.saveOptions();
                         gradeService.calculateGrades();
