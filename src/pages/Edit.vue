@@ -186,11 +186,11 @@ export default defineComponent({
       }
     }
 
-    let client: any;
+    let clientRef: any;
 
     function load() {
       examService.load((client) => {
-        client = client;
+        clientRef = client;
         editor.isLoading = false;
         throttleDebouncePreview();
         watch(
@@ -223,8 +223,8 @@ export default defineComponent({
     );
 
     onUnmounted(() => {
-      if (client) {
-        client.removeAllListeners();
+      if (clientRef) {
+        clientRef.removeAllListeners();
       }
     });
 
