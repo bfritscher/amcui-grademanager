@@ -5,7 +5,7 @@
         <q-toolbar-title> Task Progress </q-toolbar-title>
         <q-btn flat round dense icon="mdi-close" :disable="API.options.status.locked != '0'" @click="onDialogOK" />
       </q-toolbar>
-      <q-card-section class="column scroll">
+      <q-card-section class="column no-wrap scroll">
         <div class="text-center">
           <q-btn
             v-if="API.options.status.printed && API.logs['printing done']"
