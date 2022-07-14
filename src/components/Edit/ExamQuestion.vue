@@ -190,7 +190,7 @@
       </template>
     </div>
     <div v-if="question.type == 'OPEN'" class="q-pb-md">
-      <div class="answer-open q-mb-md q-mx-lg">
+      <div class="answer-open relative-position q-mb-md q-mx-lg">
         <p
           v-for="(p, index) in range(question.lines)"
           :key="index"
@@ -198,6 +198,12 @@
         >
           &nbsp;
         </p>
+        <div class="absolute absolute-top">
+           <my-rich-text-editor
+              v-model="question.answer"
+              class="q-pa-sm text-red"
+            ></my-rich-text-editor>
+          </div>
       </div>
     </div>
   </div>
