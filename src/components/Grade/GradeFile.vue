@@ -20,7 +20,7 @@
         :options="studentIds"
         @update:model-value="updateOnBlur('demoid', $event)"
       ></q-select>
-      <div style="min-width: 200px;">
+      <div style="min-width: 200px">
         {{ demoStudent() }}
       </div>
     </div>
@@ -49,7 +49,10 @@
               :model-value="!!file.meta.selected[index]"
               :label="key"
               color="primary"
-              @update:model-value="file.meta.selected[index]= $event;gradeService.saveFiles()"
+              @update:model-value="
+                file.meta.selected[index] = $event;
+                gradeService.saveFiles();
+              "
             ></q-checkbox>
             <q-btn
               flat
@@ -59,39 +62,44 @@
               @click.prevent.stop=""
             >
               <q-popup-edit
+                v-slot="scope"
                 :model-value="key"
                 title="Rename column"
                 buttons
                 @update:model-value="renameColumn(key, $event)"
               >
-                <template #="scope">
-                  <div class="row">
-                    <q-input
-                      v-model="scope.value"
-                      type="text"
-                      dense
-                      autofocus
-                      @keyup.enter="scope.set"
-                      @keyup.esc="scope.cancel"
-                    />
-                    <q-btn
-                      flat
-                      padding="xs"
-                      size="md"
-                      icon="mdi-close"
-                      color="negative"
-                      label="Delete"
-                      @click="removeColumn(index)"
-                    >
-                    </q-btn>
-                  </div>
-                </template>
+                <div class="row">
+                  <q-input
+                    v-model="scope.value"
+                    type="text"
+                    dense
+                    autofocus
+                    @keyup.enter="scope.set"
+                    @keyup.esc="scope.cancel"
+                  />
+                  <q-btn
+                    flat
+                    padding="xs"
+                    size="md"
+                    icon="mdi-close"
+                    color="negative"
+                    label="Delete"
+                    @click="removeColumn(index)"
+                  >
+                  </q-btn>
+                </div>
               </q-popup-edit>
             </q-btn>
           </div>
         </th>
         <th>
-          <q-btn flat padding="xs" size="md" label="add column" @click="addColumn"></q-btn>
+          <q-btn
+            flat
+            padding="xs"
+            size="md"
+            label="add column"
+            @click="addColumn"
+          ></q-btn>
         </th>
       </tr>
     </thead>
@@ -110,34 +118,33 @@
         >
           {{ row[key] }}
           <q-popup-edit
+            v-slot="scope"
             v-model="row[key]"
             buttons
             @update:model-value="gradeService.saveFiles()"
           >
-            <template #="scope">
-              <q-input
-                v-model="scope.value"
-                type="text"
-                dense
-                autofocus
-                @keyup.enter="scope.set"
-                @keyup.esc="scope.cancel"
-              />
-            </template>
+            <q-input
+              v-model="scope.value"
+              type="text"
+              dense
+              autofocus
+              @keyup.enter="scope.set"
+              @keyup.esc="scope.cancel"
+            />
           </q-popup-edit>
         </td>
         <td class="text-center">
           <q-btn
-          flat
-          size="md"
-          padding="xs"
-          icon="mdi-close"
-          aria-label="remove row"
-          color="negative"
-          @click="removeRow(index)"
-        >
-          <q-tooltip>remove row</q-tooltip>
-        </q-btn>
+            flat
+            size="md"
+            padding="xs"
+            icon="mdi-close"
+            aria-label="remove row"
+            color="negative"
+            @click="removeRow(index)"
+          >
+            <q-tooltip>remove row</q-tooltip>
+          </q-btn>
         </td>
       </tr>
     </tbody>
@@ -145,7 +152,9 @@
   <q-separator />
   <q-btn color="primary" class="q-ma-md" @click="addRow">Add Row</q-btn>
   <q-btn class="q-ma-md" @click="renameFile">Rename File</q-btn>
-  <q-btn color="negative" class="q-ma-md" @click="$emit('removeFile')">Remove File</q-btn>
+  <q-btn color="negative" class="q-ma-md" @click="$emit('removeFile')"
+    >Remove File</q-btn
+  >
 </template>
 <script lang="ts">
 import { useQuasar } from 'quasar';
@@ -167,7 +176,9 @@ export default defineComponent({
     const gradeService = inject('gradeService') as GradeService;
     const $q = useQuasar();
 
-    const studentIds = computed(() => gradeService.grade.students.data.map((o) => o.id));
+    const studentIds = computed(() =>
+      gradeService.grade.students.data.map((o) => o.id)
+    );
 
     return {
       gradeService,
@@ -208,7 +219,7 @@ export default defineComponent({
           cancel: true,
           persistent: true,
         }).onOk((name: string) => {
-          name = name.trim()
+          name = name.trim();
           props.file.meta.fields.push(name);
           gradeService.saveFiles();
         });

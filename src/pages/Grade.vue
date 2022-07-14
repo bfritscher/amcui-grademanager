@@ -41,7 +41,8 @@
           <template v-if="tabSelected === 'students'">
             <add-file-box />
             <div v-if="ui.showDataTable" class="q-ma-md">
-              <div class="text-h6">Datatable
+              <div class="text-h6">
+                Datatable
                 <q-btn
                   icon="mdi-table-eye-off"
                   flat
@@ -56,7 +57,8 @@
               />
             </div>
             <div v-if="ui.showHistogram" class="q-ma-md">
-              <div class="text-h6">Points Histogram
+              <div class="text-h6">
+                Points Histogram
                 <q-btn
                   icon="mdi-eye-off-outline"
                   flat
@@ -66,14 +68,20 @@
                   @click="ui.showHistogram = false"
                 ></q-btn>
               </div>
-              <histogram :values="rows.map(x => x.total || x.Total)" :min="0" :max="gradeService.grade.maxPoints" />
+              <histogram
+                :values="rows.map((x) => x.total || x.Total)"
+                :min="0"
+                :max="gradeService.grade.maxPoints"
+              />
             </div>
             <q-banner
               v-if="showMatchLookupWarning"
               inline-actions
               class="text-white bg-orange"
             >
-              Warning: It is recommanded to have at least one of the following column for manual matching: <em>{{ matchLookups.join(', ') }}</em>.
+              Warning: It is recommanded to have at least one of the following
+              column for manual matching: <em>{{ matchLookups.join(', ') }}</em
+              >.
             </q-banner>
             <q-table
               v-model:pagination="ui.pagination"
@@ -151,7 +159,7 @@
                       min="0"
                       type="number"
                       dense
-                      style="min-width: 80px;width:100px"
+                      style="min-width: 80px; width: 100px"
                       @click.stop=""
                       @update:model-value="
                         API.saveOptions();
@@ -181,16 +189,16 @@
                       >(max:{{ gradeService.grade.maxPoints }})</span
                     ><br />
                     <q-btn
-                          :icon="
-                            ui.showHistogram
-                              ? 'mdi-eye-off-outline'
-                              : 'mdi-chart-box-outline'
-                          "
-                          flat
-                          dense
-                          padding="xs"
-                          @click="ui.showHistogram = !ui.showHistogram"
-                        >
+                      :icon="
+                        ui.showHistogram
+                          ? 'mdi-eye-off-outline'
+                          : 'mdi-chart-box-outline'
+                      "
+                      flat
+                      dense
+                      padding="xs"
+                      @click="ui.showHistogram = !ui.showHistogram"
+                    >
                       <q-tooltip>Histogram</q-tooltip>
                     </q-btn>
                     <q-btn
@@ -274,25 +282,32 @@
                     v-for="col in studentsFieldFiltered"
                     :key="col"
                     :props="props"
-                    :title="col === 'id' && gradeService.grade.scores[props.row.id] ? gradeService.grade.scores[props.row.id].key : ''"
+                    :title="
+                      col === 'id' && gradeService.grade.scores[props.row.id]
+                        ? gradeService.grade.scores[props.row.id].key
+                        : ''
+                    "
                   >
                     {{ props.row[col] }}
                     <q-popup-edit
-                      v-if="(col !== 'id' || !gradeService.grade.scores[props.row.id]) && !props.row._unmatched"
+                      v-if="
+                        (col !== 'id' ||
+                          !gradeService.grade.scores[props.row.id]) &&
+                        !props.row._unmatched
+                      "
+                      v-slot="scope"
                       v-model="props.row[col]"
                       buttons
                       @update:model-value="gradeService.calculateGrades()"
                     >
-                      <template #="scope">
-                        <q-input
-                          v-model="scope.value"
-                          type="text"
-                          dense
-                          autofocus
-                          @keyup.enter="scope.set"
-                          @keyup.esc="scope.cancel"
-                        />
-                      </template>
+                      <q-input
+                        v-model="scope.value"
+                        type="text"
+                        dense
+                        autofocus
+                        @keyup.enter="scope.set"
+                        @keyup.esc="scope.cancel"
+                      />
                     </q-popup-edit>
                   </q-td>
                   <!-- TODO-nice limits as parameters -->
@@ -323,7 +338,9 @@
                     {{ props.row.Grade }}
                   </q-td>
                   <q-td key="Total" :props="props" class="text-right">
-                    {{ props.row._unmatched ? props.row.total : props.row.Total }}
+                    {{
+                      props.row._unmatched ? props.row.total : props.row.Total
+                    }}
                   </q-td>
                   <template v-if="ui.displayQuestions">
                     <template v-if="props.row._unmatched">
@@ -376,7 +393,9 @@
                               project: API.project,
                               student:
                                 gradeService.grade.scores[props.row.id].student,
-                              page: value.pages[gradeService.grade.scores[props.row.id].student],
+                              page: value.pages[
+                                gradeService.grade.scores[props.row.id].student
+                              ],
                               copy: gradeService.grade.scores[props.row.id]
                                 .copy,
                               question: value.question,
@@ -408,18 +427,28 @@
                       props.cols.find((c) => c.name === col)?.align
                     }`"
                   >
-                  <template v-if="col !== 'id'">
-                    {{
-                      props.cols.find((c) => c.name === col)?.align ===
-                        'left'
-                        ? gradeService.grade.students.data.length
-                        : gradeService.avgStudentField(col).toFixed(2)
-                    }}
+                    <template v-if="col !== 'id'">
+                      {{
+                        props.cols.find((c) => c.name === col)?.align === 'left'
+                          ? gradeService.grade.students.data.length
+                          : gradeService.avgStudentField(col).toFixed(2)
+                      }}
                     </template>
                     <template v-else>
-                      <span v-if="Object.values(gradeService.grade.unmatched).length > 0">{{ Object.values(gradeService.grade.unmatched).length }} <q-tooltip>Unmatched rows</q-tooltip></span> |
-                      <span>{{ gradeService.grade.students.data.length}} <q-tooltip>Student rows</q-tooltip></span>
-
+                      <span
+                        v-if="
+                          Object.values(gradeService.grade.unmatched).length > 0
+                        "
+                        >{{
+                          Object.values(gradeService.grade.unmatched).length
+                        }}
+                        <q-tooltip>Unmatched rows</q-tooltip></span
+                      >
+                      |
+                      <span
+                        >{{ gradeService.grade.students.data.length }}
+                        <q-tooltip>Student rows</q-tooltip></span
+                      >
                     </template>
                   </q-th>
                   <q-th class="text-right">
@@ -527,8 +556,8 @@ export default defineComponent({
     DataTable,
     AddFileBox,
     LoadingProgress,
-    Histogram
-},
+    Histogram,
+  },
   setup() {
     const API = inject('API') as Api;
     const gradeService = inject('gradeService') as GradeService;
@@ -745,7 +774,7 @@ export default defineComponent({
           });
         });
       },
-      showAssociationDialog(row: GradeRecord){
+      showAssociationDialog(row: GradeRecord) {
         gradeService.grade.isLoading = true;
         $q.dialog({
           component: AssociationDialog,
@@ -755,8 +784,7 @@ export default defineComponent({
         }).onDismiss(() => {
           gradeService.calculateGrades();
           gradeService.grade.isLoading = false;
-        })
-
+        });
       },
       showEditColumnsDialog() {
         $q.dialog({

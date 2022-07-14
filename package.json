@@ -54,10 +54,10 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "7.18.2",
-    "@quasar/app": "3.3.2",
+    "@quasar/app": "3.3.3",
     "@quasar/quasar-app-extension-testing": "2.0.4",
     "@quasar/quasar-app-extension-testing-e2e-cypress": "4.2.0",
-    "@quasar/quasar-app-extension-testing-unit-jest": "3.0.0-alpha.4",
+    "@quasar/quasar-app-extension-testing-unit-jest": "3.0.0-alpha.10",
     "@types/codemirror": "5.60.5",
     "@types/lodash": "4.14.182",
     "@types/node": "16.0",
