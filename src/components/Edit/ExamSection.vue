@@ -188,6 +188,15 @@ export default defineComponent({
           },
         });
       }
+      if (route.name === 'Edit' && Number(route.params.sectionIndex) >= examService.exam.sections.length) {
+        router.push({
+          name: 'Edit',
+          params: {
+            project: route.params.project,
+            sectionIndex: examService.exam.sections.length - 1,
+          },
+        });
+      }
     });
 
     const section = computed(() => {
