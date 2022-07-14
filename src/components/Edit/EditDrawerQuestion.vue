@@ -32,7 +32,7 @@
             Question {{ question.number }}
             <span v-if="question.type === 'MULTIPLE'">♣</span>
             <span
-              v-if="question.answers && question.answers.length > 0"
+              v-if="question.type !== 'OPEN' && question.answers && question.answers.length > 0"
               title="number of answers"
               class="question-answer-nb"
               >&nbsp;({{
