@@ -7,19 +7,19 @@ export default function examToLatex(localEditor: ExamEditor) {
   const body: string[] = [];
   editor = localEditor;
   if (editor.exam && editor.exam.sections) {
+    editor.exam.sections.forEach((section) => {
+      sectionToLatex(section, head, body);
+    });
+    // put at the top
     updatePropertiesFromLatexLayout(editor);
     Object.keys(editor.exam.properties).forEach((key) => {
-      head.push(
+      head.unshift(
         '\\newcommand{\\AMCUI' +
           key +
           '}{' +
           html2Latex(editor.exam.properties[key] || '') +
           '}'
       );
-    });
-
-    editor.exam.sections.forEach((section) => {
-      sectionToLatex(section, head, body);
     });
   }
 
@@ -76,6 +76,17 @@ function escapeLatex(text: string|null) {
 
   return text;
 }
+
+function numberToAlpha(n: number) {
+  if (n <= 0) throw Error('numberToAlpha: n must be positive and non-zero');
+  n = n - 1;
+  let result = '';
+  while (n >= 0) {
+    result = String.fromCharCode(n % 26 + 65) + result;
+    n = Math.floor(n / 26) - 1;
+  }
+  return result;
+};
 
 function html2Latex(content: string, isAnswer = false) {
   const div = document.createElement('div');
@@ -353,6 +364,21 @@ function choiceQuestionToLatex(question: Question, type: string, head: string[])
 }
 
 function openQuestionToLatex(question: Question, head:string[]) {
+  const answerboxId = `\\answerbox${numberToAlpha(question.number || 0)}`;
+  if (question.answer) {
+    const savebox = [];
+    const saveboxStart = `\\newsavebox{${answerboxId}}
+\\savebox{${answerboxId}}{%
+  \\begin{minipage}[t]{14cm}
+    \\color{red}{%`;
+    savebox.push(saveboxStart)
+    savebox.push('\n  ' + html2Latex(question.answer));
+    const saveboxEnd = `    }
+  \\end{minipage}
+}`;
+    savebox.push(saveboxEnd)
+    head.unshift(...savebox);
+  }
   const beginQuestion =
     '  \\begin{question}{Q' + ('00' + question.number).slice(-2) + '}';
   head.push(beginQuestion);
@@ -368,6 +394,9 @@ function openQuestionToLatex(question: Question, head:string[]) {
   amcOpen += 'lines=' + question.lines;
   if (question.lineup) {
     amcOpen += ',lineup=true';
+  }
+  if (question.answer) {
+    amcOpen += `,answer=\\usebox{${answerboxId}}`;
   }
   amcOpen += ',dots=' + (question.dots ? 'true' : 'false');
   amcOpen +=

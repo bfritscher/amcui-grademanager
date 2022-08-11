@@ -73,6 +73,10 @@ export default class Api {
     );
   }
 
+  getVersion() {
+    return this.$http.get(this.URL).then((r: any) => r.data.sha);
+  }
+
   getTemplates() {
     return this.$http.get(this.URL + '/templates').then((r: any) => r.data);
   }

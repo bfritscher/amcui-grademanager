@@ -1,6 +1,6 @@
 import { boot } from 'quasar/wrappers';
 import * as Sentry from '@sentry/vue';
-import { Integrations } from '@sentry/tracing';
+import { BrowserTracing } from '@sentry/tracing';
 
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli/boot-files
@@ -11,7 +11,7 @@ export default boot(({ app, router }) => {
       release: process.env.COMMITHASH,
       dsn: process.env.SENTRY_DSN,
       integrations: [
-        new Integrations.BrowserTracing({
+        new BrowserTracing({
           routingInstrumentation: Sentry.vueRouterInstrumentation(router),
           // tracingOrigins: ['localhost', 'my-site-url.com', /^\//],
         }),

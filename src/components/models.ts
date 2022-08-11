@@ -83,6 +83,7 @@ export interface Question {
   boxedAnswers: boolean;
   lineup: boolean;
   answers: Answer[];
+  answer?: string;
   number?: number;
   isValid?: boolean;
 }

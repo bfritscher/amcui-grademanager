@@ -160,6 +160,9 @@ export default class ExamEditor {
           if (!question.answers) {
             question.answers = [];
           }
+          if (question.type === 'OPEN' && !question.hasOwnProperty('answer')) {
+            question.answer = '';
+          }
         });
       });
 
@@ -277,6 +280,9 @@ export default class ExamEditor {
       this.addAnswer(question);
       this.addAnswer(question);
     }
+    if (question.type === 'OPEN') {
+      question.answer = '';
+    }
 
     section.questions.push(question);
     return question;
@@ -295,6 +301,7 @@ export default class ExamEditor {
     copy.columns = question.columns;
     copy.boxedAnswers = question.boxedAnswers;
     copy.answers = [];
+    copy.answer = question.answer;
 
     question.answers.forEach((answer) => {
       this.copyAnswer(copy, answer);

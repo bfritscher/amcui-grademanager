@@ -77,11 +77,15 @@
         </q-tab-panels>
       </q-card>
     </div>
-    <a
-      :href="`https://github.com/bfritscher/grademanager/commit/${COMMITHASH}`"
-      class="git-version"
-      >v: {{ COMMITHASH.slice(0, 7) }}</a
-    >
+    <div class="git-version">
+      <a
+        :href="`https://github.com/bfritscher/amcui-grademanager/commit/${COMMITHASH}`"
+        >c: {{ COMMITHASH.slice(0, 7) }}</a
+      >&nbsp;<a
+        :href="`https://github.com/bfritscher/amcui-server/commit/${serverVersion}`"
+        >s: {{ serverVersion.slice(0, 7) }}</a
+      >
+    </div>
   </q-page>
 </template>
 
@@ -112,9 +116,10 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    onMounted(() => {
+    onMounted(async () => {
       API.project = '';
       API.getProjectList();
+      serverVersion.value = await API.getVersion()
     });
 
     const form = reactive({
@@ -131,6 +136,7 @@ export default defineComponent({
 
     const selectedTab = ref('recent');
     const search = ref('');
+    const serverVersion = ref('');
 
     const filteredProjects = computed(() => {
       return (
@@ -165,6 +171,7 @@ export default defineComponent({
       search,
       filteredProjects,
       COMMITHASH: process.env.COMMITHASH || '',
+      serverVersion,
       openProject,
       createProject() {
         form.error = '';
@@ -208,6 +215,8 @@ export default defineComponent({
   position: fixed;
   bottom: 4px;
   right: 20px;
+}
+.git-version a {
   color: #999;
   font-size: 8px;
   text-decoration: none;

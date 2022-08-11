@@ -37,6 +37,12 @@ const routes: RouteRecordRaw[] = [
             },
           };
         },
+        meta: {
+          requiresAuth: true,
+        },
+      },
+      {
+        path: ':project/edit',
         components: {
           default: () => import('pages/Edit.vue'),
           LeftDrawer: () => import('components/Edit/EditDrawer.vue'),
