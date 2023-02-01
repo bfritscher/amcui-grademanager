@@ -20,7 +20,7 @@
   <div class="row">
     <div v-for="row in sortedStats" :key="row.title" class="question-stat">
       <div class="text-h5 text-bold">{{ row.title }}</div>
-      <div v-if=" questionsLookup.hasOwnProperty(row.question)" class="q-my-sm bg-grey-11 q-pa-sm text-body2" >{{ filterTags(questionsLookup[row.question].content) }}</div>
+      <div v-if=" questionsLookup.hasOwnProperty(row.title)" class="q-my-sm bg-grey-11 q-pa-sm text-body2" >{{ filterTags(questionsLookup[row.title].content) }}</div>
       <div>
         Total: <b>{{ row.total }}</b> Mean:
         <b>{{ (row.avg * 100).toFixed(2) }}%</b>
@@ -32,7 +32,7 @@
           :style="{ width: (a.nb / row.total) * 100 + '%' }"
           class="answer-stat"
           :class="correctToColor(a.correct)"
-          :title="questionsLookup.hasOwnProperty(row.question) && questionsLookup[row.question].answers.length > a.answer ? filterTags(questionsLookup[row.question].answers[a.answer].content) : ''"
+          :title="questionsLookup.hasOwnProperty(row.title) && questionsLookup[row.title].answers.length > a.answer ? filterTags(questionsLookup[row.title].answers[a.answer].content) : ''"
         >
           <span class="answer-letter">{{
             toLetter(a.answer, row.answers.length - 2)
@@ -41,7 +41,7 @@
           <span class="answer-percent"
             >{{ ((a.nb / row.total) * 100).toFixed(2) }}%</span
           >
-          <span v-if="questionsLookup.hasOwnProperty(row.question) && questionsLookup[row.question].answers.length > a.answer" class="answer-answer text-caption"> {{ filterTags(questionsLookup[row.question].answers[a.answer].content) }}</span>
+          <span v-if="questionsLookup.hasOwnProperty(row.title) && questionsLookup[row.title].answers.length > a.answer" class="answer-answer text-caption"> {{ filterTags(questionsLookup[row.title].answers[a.answer].content) }}</span>
         </div>
       </div>
     </div>
@@ -91,7 +91,10 @@ export default defineComponent({
     questionsLookup() {
       return this.examService.exam.sections.reduce((lookup, section) => {
         section.questions.forEach(question => {
-          lookup[question.number || 0] = question;
+          const fixedQuestion = Object.assign({}, question);
+          fixedQuestion.answers = [{content: 'None of the above', id:'0' , correct:false}, ...fixedQuestion.answers];
+
+          lookup[`Q${('00' + question.number).slice(-2)}`] = fixedQuestion;
         })
         return lookup;
       }, {} as {[key: string]: Question})
