@@ -13,8 +13,8 @@ declare module '@vue/runtime-core' {
 }
 
 export default boot(({ app, router, store }) => {
-  const API = reactive(new Api({router, store}));
-  const examService = reactive(new ExamEditor({store, router, API}));
+  const API:Api = reactive(new Api({router, store})) as any; // FIXME?
+  const examService:ExamEditor = reactive(new ExamEditor({store, router, API})) as any; // FIXME?
   const gradeService = new GradeService({API});
   app.provide('API', API);
   app.provide('examService', examService);
