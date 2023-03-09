@@ -1,9 +1,21 @@
 <template>
-  <q-dialog ref="dialogRef" persistent :maximized="$q.screen.lt.sm" @hide="onDialogHide">
+  <q-dialog
+    ref="dialogRef"
+    persistent
+    :maximized="$q.screen.lt.sm"
+    @hide="onDialogHide"
+  >
     <q-card class="q-dialog-plugin">
       <q-toolbar class="bg-primary text-white">
         <q-toolbar-title> Task Progress </q-toolbar-title>
-        <q-btn flat round dense icon="mdi-close" :disable="API.options.status.locked != '0'" @click="onDialogOK" />
+        <q-btn
+          flat
+          round
+          dense
+          icon="mdi-close"
+          :disable="API.options.status.locked != '0'"
+          @click="onDialogOK"
+        />
       </q-toolbar>
       <q-card-section class="column no-wrap scroll">
         <div class="text-center">
@@ -24,6 +36,29 @@
             color="primary"
             :href="API.getAnnotateZipURL()"
             >Download Zip with all annotated PDFs</q-btn
+          >
+          <q-btn
+            v-if="
+              API.options.status.annotated &&
+              API.logs['annotating done'] &&
+              API.logs['annotating done'].type == 'all'
+            "
+            color="primary"
+            type="a"
+            class="q-mx-md"
+            :href="API.getAnnotateMergedURL()"
+            >Download&nbsp;<small>(Merged PDFs)</small></q-btn
+          >
+          <q-btn
+            v-if="
+              API.options.status.annotated &&
+              API.logs['annotating done'] &&
+              API.logs['annotating done'].type == 'all'
+            "
+            color="primary"
+            type="a"
+            :href="API.getAnnotateMergedFirstPageURL()"
+            >Download&nbsp;<small>(Merged PDFs first page only)</small></q-btn
           >
           <q-btn
             v-if="
@@ -120,6 +155,6 @@ export default defineComponent({
 </script>
 <style scoped>
 pre {
-  white-space: pre-wrap
+  white-space: pre-wrap;
 }
 </style>

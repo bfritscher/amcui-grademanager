@@ -150,6 +150,26 @@ export default class Api {
     );
   }
 
+  getAnnotateMergedURL() {
+    return (
+      this.URL +
+      '/project/' +
+      this.project +
+      '/merged/all?token=' +
+      this.store.state.token
+    );
+  }
+
+  getAnnotateMergedFirstPageURL() {
+    return (
+      this.URL +
+      '/project/' +
+      this.project +
+      '/merged/firstpage?token=' +
+      this.store.state.token
+    );
+  }
+
   getStaticFileURL(file: string) {
     return (
       this.URL +
