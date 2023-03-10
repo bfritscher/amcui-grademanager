@@ -207,9 +207,11 @@ export default class Api {
     let origin = '';
     let path = '/socket.io/';
     if (this.URL.startsWith('http')) {
-       const url = new URL(this.URL);
-       origin = url.origin;
+      const url = new URL(this.URL);
+      origin = url.origin;
+      if (url.pathname !== '/') {
         path = url.pathname + path;
+      }
     } else {
       origin = window.location.origin;
       path = this.URL + path;

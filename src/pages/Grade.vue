@@ -11,10 +11,21 @@
       <q-btn color="primary" type="a" :href="API.getAnnotateZipURL()"
         >Download&nbsp;<small>(Zip with annotated PDFs)</small></q-btn
       >
-      <q-btn color="primary" type="a" class="q-mx-md" :href="API.getAnnotateMergedURL()"
+      <q-btn
+        color="primary"
+        type="a"
+        class="q-mx-md"
+        :href="API.getAnnotateMergedURL()"
+        download
+        target="_blank"
         >Download&nbsp;<small>(Merged PDFs)</small></q-btn
       >
-      <q-btn color="primary" type="a" :href="API.getAnnotateMergedFirstPageURL()"
+      <q-btn
+        color="primary"
+        type="a"
+        :href="API.getAnnotateMergedFirstPageURL()"
+        download
+        target="_blank"
         >Download&nbsp;<small>(Merged PDFs first page only)</small></q-btn
       >
       <template #action>

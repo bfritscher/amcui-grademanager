@@ -26,40 +26,53 @@
             :href="API.getDownloadZipURL()"
             >Download Zip with all PDFs</q-btn
           >
-          <q-btn
+          <div
             v-if="
               API.options.status.annotated &&
               API.logs['annotating done'] &&
               API.logs['annotating done'].type == 'all'
             "
-            type="a"
-            color="primary"
-            :href="API.getAnnotateZipURL()"
-            >Download Zip with all annotated PDFs</q-btn
+            class="text-center"
           >
-          <q-btn
+            <q-btn type="a" color="primary" :href="API.getAnnotateZipURL()"
+              >Download Zip with all annotated PDFs</q-btn
+            >
+          </div>
+          <div
             v-if="
               API.options.status.annotated &&
               API.logs['annotating done'] &&
               API.logs['annotating done'].type == 'all'
             "
-            color="primary"
-            type="a"
-            class="q-mx-md"
-            :href="API.getAnnotateMergedURL()"
-            >Download&nbsp;<small>(Merged PDFs)</small></q-btn
+            class="text-center"
           >
-          <q-btn
+            <q-btn
+              color="primary"
+              type="a"
+              class="q-my-md"
+              :href="API.getAnnotateMergedURL()"
+              target="_blank"
+              download
+              >Download&nbsp;<small>(Merged PDFs)</small></q-btn
+            >
+          </div>
+          <div
             v-if="
               API.options.status.annotated &&
               API.logs['annotating done'] &&
               API.logs['annotating done'].type == 'all'
             "
-            color="primary"
-            type="a"
-            :href="API.getAnnotateMergedFirstPageURL()"
-            >Download&nbsp;<small>(Merged PDFs first page only)</small></q-btn
+            class="text-center"
           >
+            <q-btn
+              color="primary"
+              type="a"
+              :href="API.getAnnotateMergedFirstPageURL()"
+              download
+              target="_blank"
+              >Download&nbsp;<small>(Merged PDFs first page only)</small></q-btn
+            >
+          </div>
           <q-btn
             v-if="
               API.options.status.annotated &&
