@@ -1,4 +1,4 @@
-export function cronbachAlpha(listOfQuestions: number[][]) {
+export function CronbachAlpha(listOfQuestions: number[][]) {
   // list of questions and their answers
   if (listOfQuestions.length < 2) {
     return -1;
@@ -12,12 +12,19 @@ export function cronbachAlpha(listOfQuestions: number[][]) {
     }, 0);
     const itemsMean = sumScores / individualScores.length;
     const itemsVariance =
-      individualScores.reduce((sum, score) => sum + Math.pow(score - itemsMean, 2), 0) / (individualScores.length - 1);
+      individualScores.reduce(
+        (sum, score) => sum + Math.pow(score - itemsMean, 2),
+        0
+      ) /
+      (individualScores.length - 1);
     sumVariance += itemsVariance;
   }
   const totalScores = listOfQuestions[0].map((_, i) => {
-    return listOfQuestions.reduce((sum, individualScores) => sum + individualScores[i], 0);
-  })
+    return listOfQuestions.reduce(
+      (sum, individualScores) => sum + individualScores[i],
+      0
+    );
+  });
   const totalMean =
     totalScores.reduce((sum, score) => sum + score, 0) / numIndividuals;
   const totalVariance =
@@ -42,337 +49,359 @@ Cronbachs Alpha	Interpretation
 < 0,5	Unacceptable
 */
 
-// eslint-disable @typescript-eslint/no-loss-of-precision
+// https://scistatcalc.blogspot.com/2013/10/shapiro-wilk-test-calculator.html
+export function ShapiroWilkW(X: number[]) {
+  const Xlen = X.length;
 
-// source: https://github.com/rniwa/js-shapiro-wilk/blob/master/shapiro-wilk.js
-/*
- *  Ported from http://svn.r-project.org/R/trunk/src/nmath/qnorm.c
- *
- *  Mathlib : A C Library of Special Functions
- *  Copyright (C) 1998       Ross Ihaka
- *  Copyright (C) 2000--2005 The R Core Team
- *  based on AS 111 (C) 1977 Royal Statistical Society
- *  and   on AS 241 (C) 1988 Royal Statistical Society
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, a copy is available at
- *  http://www.r-project.org/Licenses/
- */
+  let mu = 0;
 
-// The inverse of cdf.
-function normalQuantile(p: number, mu: number, sigma: number) {
-  let r, val;
-  if (sigma < 0) return -1;
-  if (sigma == 0) return mu;
+  for (let k = 0; k < Xlen; k++) mu = mu + Number(X[k]);
 
-  const q = p - 0.5;
+  mu = mu / Xlen;
 
-  if (0.075 <= p && p <= 0.925) {
-    r = 0.180625 - q * q;
-    val =
-      (q *
-        (((((((r * 2509.0809287301226727 + 33430.575583588128105) * r +
-          67265.770927008700853) *
-          r +
-          45921.953931549871457) *
-          r +
-          13731.693765509461125) *
-          r +
-          1971.5909503065514427) *
-          r +
-          133.14166789178437745) *
-          r +
-          3.387132872796366608)) /
-      (((((((r * 5226.495278852854561 + 28729.085735721942674) * r +
-        39307.89580009271061) *
-        r +
-        21213.794301586595867) *
-        r +
-        5394.1960214247511077) *
-        r +
-        687.1870074920579083) *
-        r +
-        42.313330701600911252) *
-        r +
-        1);
+  let sumsq = 0;
+
+  for (let k = 0; k < Xlen; k++)
+    sumsq = sumsq + (Number(X[k]) - mu) * (Number(X[k]) - mu);
+
+  let std2 = (1.0 / (Xlen - 1)) * sumsq;
+
+  if (Xlen == 1) std2 = 0;
+
+  const std = Math.sqrt(std2);
+
+  let sum_q = 0;
+
+  for (let k = 0; k < Xlen; k++) {
+    sum_q = sum_q + Math.pow(Number(X[k]) - mu, 4.0);
+  }
+
+  const kurt = (1.0 / Xlen) * Math.pow(std, -4.0) * sum_q - 3;
+
+  const xs = [];
+
+  for (let k = 0; k < Xlen; k++) xs[k] = Number(X[k]);
+
+  // Sorted data samples
+  xs.sort(compare);
+
+  const m = [];
+
+  for (let k = 0; k < Xlen; k++)
+    m[k] = gauss_icdf((k + 1 - 3 / 8) / (Xlen + 0.25), 0, 1);
+
+  let msq = 0;
+
+  for (let k = 0; k < Xlen; k++) msq = msq + m[k] * m[k];
+
+  const w = [];
+
+  for (let k = 0; k < Xlen; k++) w[k] = m[k] / Math.sqrt(msq);
+
+  let wx = 0;
+
+  for (let k = 0; k < Xlen; k++) wx = wx + w[k] * xs[k];
+
+  const Wfr = (wx * wx) / sumsq;
+
+  let c = [];
+
+  c = w;
+
+  const u = 1 / Math.sqrt(Xlen);
+
+  const p1 = [];
+
+  p1[0] = -2.706056;
+  p1[1] = 4.434685;
+  p1[2] = -2.07119;
+  p1[3] = -0.147981;
+  p1[4] = 0.221157;
+  p1[5] = c[Xlen - 1];
+
+  const u2 = u * u;
+  const u3 = u2 * u;
+  const u4 = u2 * u2;
+  const u5 = u3 * u2;
+
+  const p2 = [];
+
+  p2[0] = -3.582633;
+  p2[1] = 5.682633;
+  p2[2] = -1.752461;
+  p2[3] = -0.293762;
+  p2[4] = 0.042981;
+  p2[5] = c[Xlen - 2];
+
+  w[Xlen - 1] =
+    p1[0] * u5 + p1[1] * u4 + p1[2] * u3 + p1[3] * u2 + p1[4] * u + p1[5];
+
+  w[0] = -w[Xlen - 1];
+
+  if (Xlen == 3) {
+    w[0] = Math.sqrt(0.5);
+    w[2] = -w[0];
+  }
+
+  let ct = 0;
+  let phi = 0;
+
+  let numer = 1;
+  let denom = 1;
+
+  if (Xlen >= 6) {
+    w[Xlen - 2] =
+      p2[0] * u5 + p2[1] * u4 + p2[2] * u3 + p2[3] * u2 + p2[4] * u + p2[5];
+    w[1] = -w[Xlen - 2];
+    ct = 3;
+
+    numer = msq - 2 * m[Xlen - 1] * m[Xlen - 1] - 2 * m[Xlen - 2] * m[Xlen - 2];
+    denom = 1 - 2 * w[Xlen - 1] * w[Xlen - 1] - 2 * w[Xlen - 2] * w[Xlen - 2];
+    phi = numer / denom;
   } else {
-    /* closer than 0.075 from {0,1} boundary */
-    /* r = min(p, 1-p) < 0.075 */
-    if (q > 0) r = 1 - p;
-    else r = p; /* = R_DT_Iv(p) ^=  p */
-
-    r = Math.sqrt(
-      -Math.log(r)
-    ); /* r = sqrt(-log(r))  <==>  min(p, 1-p) = exp( - r^2 ) */
-
-    if (r <= 5) {
-      /* <==> min(p,1-p) >= exp(-25) ~= 1.3888e-11 */
-      r += -1.6;
-      val =
-        (((((((r * 7.7454501427834140764e-4 + 0.0227238449892691845833) * r +
-          0.24178072517745061177) *
-          r +
-          1.27045825245236838258) *
-          r +
-          3.64784832476320460504) *
-          r +
-          5.7694972214606914055) *
-          r +
-          4.6303378461565452959) *
-          r +
-          1.42343711074968357734) /
-        (((((((r * 1.05075007164441684324e-9 + 5.475938084995344946e-4) * r +
-          0.0151986665636164571966) *
-          r +
-          0.14810397642748007459) *
-          r +
-          0.68976733498510000455) *
-          r +
-          1.6763848301838038494) *
-          r +
-          2.05319162663775882187) *
-          r +
-          1);
-    } else {
-      /* very close to  0 or 1 */
-      r += -5;
-      val =
-        (((((((r * 2.01033439929228813265e-7 + 2.71155556874348757815e-5) * r +
-          0.0012426609473880784386) *
-          r +
-          0.026532189526576123093) *
-          r +
-          0.29656057182850489123) *
-          r +
-          1.7848265399172913358) *
-          r +
-          5.4637849111641143699) *
-          r +
-          6.6579046435011037772) /
-        (((((((r * 2.04426310338993978564e-15 + 1.4215117583164458887e-7) * r +
-          1.8463183175100546818e-5) *
-          r +
-          7.868691311456132591e-4) *
-          r +
-          0.0148753612908506148525) *
-          r +
-          0.13692988092273580531) *
-          r +
-          0.59983220655588793769) *
-          r +
-          1);
-    }
-
-    if (q < 0.0) val = -val;
-    /* return (q >= 0.)? r : -r ;*/
-  }
-  return mu + sigma * val;
-}
-
-/*
- *  Ported from http://svn.r-project.org/R/trunk/src/library/stats/src/swilk.c
- *
- *  R : A Computer Language for Statistical Data Analysis
- *  Copyright (C) 2000-12   The R Core Team.
- *
- *  Based on Applied Statistics algorithms AS181, R94
- *    (C) Royal Statistical Society 1982, 1995
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, a copy is available at
- *  http://www.r-project.org/Licenses/
- */
-
-function sign(x: number) {
-  if (x == 0) return 0;
-  return x > 0 ? 1 : -1;
-}
-
-export function ShapiroWilkW(x: number[]) {
-  function poly(cc: number[], nord: number, x: number) {
-    /* Algorithm AS 181.2	Appl. Statist.	(1982) Vol. 31, No. 2
-        Calculates the algebraic polynomial of order nord-1 with array of coefficients cc.
-        Zero order coefficient is cc(1) = cc[0] */
-    let p;
-    let ret_val;
-
-    ret_val = cc[0];
-    if (nord > 1) {
-      p = x * cc[nord - 1];
-      for (j = nord - 2; j > 0; j--) p = (p + cc[j]) * x;
-      ret_val += p;
-    }
-    return ret_val;
-  }
-  x = x.sort(function (a, b) {
-    return a - b;
-  });
-  const n = x.length;
-  if (n < 3) return undefined;
-  const nn2 = Math.floor(n / 2);
-  const a = new Array(Math.floor(nn2) + 1); /* 1-based */
-
-  /*	ALGORITHM AS R94 APPL. STATIST. (1995) vol.44, no.4, 547-551.
-	Calculates the Shapiro-Wilk W test and its significance level
-*/
-  const small = 1e-19;
-
-  /* polynomial coefficients */
-  const g = [-2.273, 0.459];
-  const c1 = [0, 0.221157, -0.147981, -2.07119, 4.434685, -2.706056];
-  const c2 = [0, 0.042981, -0.293762, -1.752461, 5.682633, -3.582633];
-  /*
-  const c3 = [0.544, -0.39978, 0.025054, -6.714e-4];
-  const c4 = [1.3822, -0.77857, 0.062767, -0.0020322];
-  const c5 = [-1.5861, -0.31082, -0.083751, 0.0038915];
-  const c6 = [-0.4803, -0.082676, 0.0030302];
-  */
-
-  /* Local variables */
-  let i, j, i1;
-
-  let summ2, ssumm2, gamma;
-  let a1, a2, sa, xi, sx, xx;
-  let fac, asa, an25, ssa, sax, rsn, ssx, xsx;
-
-  let pw = 1;
-  const an = n;
-
-  if (n == 3) a[1] = 0.70710678; /* = sqrt(1/2) */
-  else {
-    an25 = an + 0.25;
-    summ2 = 0.0;
-    for (i = 1; i <= nn2; i++) {
-      a[i] = normalQuantile((i - 0.375) / an25, 0, 1); // p(X <= x),
-      const r__1 = a[i];
-      summ2 += r__1 * r__1;
-    }
-    summ2 *= 2;
-    ssumm2 = Math.sqrt(summ2);
-    rsn = 1 / Math.sqrt(an);
-    a1 = poly(c1, 6, rsn) - a[1] / ssumm2;
-
-    /* Normalize a[] */
-    if (n > 5) {
-      i1 = 3;
-      a2 = -a[2] / ssumm2 + poly(c2, 6, rsn);
-      fac = Math.sqrt(
-        (summ2 - 2 * (a[1] * a[1]) - 2 * (a[2] * a[2])) /
-          (1 - 2 * (a1 * a1) - 2 * (a2 * a2))
-      );
-      a[2] = a2;
-    } else {
-      i1 = 2;
-      fac = Math.sqrt((summ2 - 2 * (a[1] * a[1])) / (1 - 2 * (a1 * a1)));
-    }
-    a[1] = a1;
-    for (i = i1; i <= nn2; i++) a[i] /= -fac;
+    ct = 2;
+    numer = msq - 2 * m[Xlen - 1] * m[Xlen - 1];
+    denom = 1 - 2 * w[Xlen - 1] * w[Xlen - 1];
+    phi = numer / denom;
   }
 
-  /*	Check for zero range */
-
-  const range = x[n - 1] - x[0];
-  if (range < small) {
-    console.log('range is too small!');
-    return undefined;
+  if (Xlen != 3) {
+    for (let k = ct - 1; k < Xlen - ct + 1; k++) w[k] = m[k] / Math.sqrt(phi);
   }
 
-  /*	Check for correct sort order on range - scaled X */
+  wx = 0;
 
-  xx = x[0] / range;
-  sx = xx;
-  sa = -a[1];
-  for (i = 1, j = n - 1; i < n; j--) {
-    xi = x[i] / range;
-    if (xx - xi > small) {
-      console.log('xx - xi is too big.', xx - xi);
-      return undefined;
-    }
-    sx += xi;
-    i++;
-    if (i != j) sa += sign(i - j) * a[Math.min(i, j)];
-    xx = xi;
-  }
-  if (n > 5000) {
-    console.log('n is too big!');
-    return undefined;
-  }
+  let Wsw = 0;
 
-  /*	Calculate W statistic as squared correlation
-	between data and coefficients */
+  for (let k = 0; k < Xlen; k++) wx = wx + w[k] * xs[k];
 
-  sa /= n;
-  sx /= n;
-  ssa = ssx = sax = 0;
-  for (i = 0, j = n - 1; i < n; i++, j--) {
-    if (i != j) asa = sign(i - j) * a[1 + Math.min(i, j)] - sa;
-    else asa = -sa;
-    xsx = x[i] / range - sx;
-    ssa += asa * asa;
-    ssx += xsx * xsx;
-    sax += asa * xsx;
-  }
+  Wsw = (wx * wx) / sumsq;
 
-  /*	W1 equals (1-W) calculated to avoid excessive rounding error
-	for W very near 1 (a potential problem in very large samples) */
+  let Wfinal = 0;
 
-  const ssassx = Math.sqrt(ssa * ssx);
-  const w1 = ((ssassx - sax) * (ssassx + sax)) / (ssa * ssx);
-  const w = 1 - w1;
+  if (kurt > 3) Wfinal = Wfr;
+  else Wfinal = Wsw;
 
-  /*	Calculate significance level for W */
+  // let Wc = find_critical(Xlen)
+  const Wc = calc_critical(Xlen);
 
-  if (n == 3) {
-    /* exact P value : */
-    const pi6 = 1.90985931710274; /* = 6/pi */
-    const stqr = 1.0471975511966; /* = asin(sqrt(3/4)) */
-    pw = pi6 * (Math.asin(Math.sqrt(w)) - stqr);
+  let accept_null = 0;
+
+  // Calculate p value
+  let pw = 0;
+
+  const N = Xlen;
+
+  const pi6 = 6 / Math.PI;
+
+  const G = [-0.2273e1, 0.459];
+  const c3 = [0.544, -0.39978, 0.25054e-1, -0.6714e-3];
+  const c4 = [0.13822e1, -0.77857, 0.62767e-1, -0.20322e-2];
+
+  const c5 = [-0.15861e1, -0.31082, -0.83751e-1, 0.38915e-2];
+  const c6 = [-0.4803, -0.82676e-1, 0.30302e-2];
+
+  const stqr = Math.PI / 3;
+
+  let y = Math.log(1 - Wfinal);
+  const xx = Math.log(N);
+  let mm = 0;
+  let s = 1;
+
+  if (N == 3) {
+    pw = pi6 * (Math.asin(Math.min(Math.sqrt(Wfinal), 1)) - stqr);
+
     if (pw < 0) pw = 0;
-    return w;
-  }
-  const y = Math.log(w1);
-  xx = Math.log(an);
-  if (n <= 11) {
-    gamma = poly(g, 2, an);
-    if (y >= gamma) {
-      pw = 1e-99; /* an "obvious" value, was 'small' which was 1e-19f */
-      return w;
+    else if (pw > 1) pw = 1;
+  } else if (N <= 11) {
+    const gma = G[1] * N + G[0] * 1;
+
+    if (y > gma) pw = 1e-19;
+    else {
+      y = -Math.log(gma - y);
+      mm = c3[3] * N * N * N + c3[2] * N * N + c3[1] * N + c3[0];
+      s = Math.exp(c4[3] * N * N * N + c4[2] * N * N + c4[1] * N + c4[0]);
+      pw = 1 - gauss_cdf((y - mm) / s, 0, 1);
     }
-    /*
-    y = -Math.log(gamma - y);
-    m = poly(c3, 4, an);
-    s = Math.exp(poly(c4, 4, an));
-    */
   } else {
-    /* n >= 12 */
-    /*
-    m = poly(c5, 4, xx);
-    s = Math.exp(poly(c6, 3, xx));
-    */
+    mm = c5[3] * xx * xx * xx + c5[2] * xx * xx + c5[1] * xx + c5[0];
+    s = Math.exp(c6[2] * xx * xx + c6[1] * xx + c6[0]);
+    pw = 1 - gauss_cdf((y - mm) / s, 0, 1);
   }
 
-  // Oops, we don't have pnorm
-  // pw = pnorm(y, m, s, 0/* upper tail */, 0);
+  if (Wfinal >= Wc) {
+    /*
+    if (pw >= 0.05) {
+      document.getElementById('p1').innerHTML =
+        'Accept Null Hypothesis as calculated W is greater than the critical value of W.';
+    } else {
+      document.getElementById('p1').innerHTML =
+        'Accept Null Hypothesis as calculated W is greater than the critical value of W. The p-value is less than 0.05 though.';
+    }
+    */
 
-  return w;
+    accept_null = 1;
+  } else {
+    accept_null = 0;
+    /*
+    document.getElementById('p1').innerHTML =
+      'Reject Null Hypothesis as calculated W is less than the critical value of W.';
+
+
+    if (pw <= 0.05) {
+      document.getElementById('p1').innerHTML =
+        'Reject Null Hypothesis as calculated W is less than the critical value of W.';
+    } else {
+      document.getElementById('p1').innerHTML =
+        'Reject Null Hypothesis as calculated W is less than the critical value of W. The p-value exceeds 0.05 though.';
+    }
+    */
+  }
+  const midpoint = Math.floor(xs.length / 2); // 2.
+  const median = xs.length % 2 === 1 ?
+    xs[midpoint] : // 3.1. If odd length, just take midpoint
+    (xs[midpoint - 1] + xs[midpoint]) / 2; // 3.2. If even length, take median of midpoints
+  return {
+    n: Xlen,
+    mean: mu,
+    median,
+    min: Math.min(...xs),
+    max: Math.max(...xs),
+    std: std,
+    var: std2,
+    kurt: kurt,
+    w: Wfinal,
+    pvalue: pw,
+    wcrit: Wc,
+    accept_null,
+  };
+}
+
+function gauss_cdf(inp: number, mu: number, sig: number): number {
+  let res = erf_taylor((inp - mu) / Math.sqrt(2 * sig * sig));
+  res = 0.5 * (1 + res);
+  return res;
+}
+
+function gauss_icdf(p: number, mu: number, sig: number): number {
+  return inverf(2 * p - 1) * sig * Math.sqrt(2.0) + mu;
+}
+
+function inverf(x: number): number {
+  let w;
+  let p;
+  w = -1 * Math.log((1.0 - x) * (1.0 + x));
+
+  if (w < 5.0) {
+    w = w - 2.5;
+    p = 2.81022636e-8;
+    p = 3.43273939e-7 + p * w;
+    p = -3.5233877e-6 + p * w;
+    p = -4.39150654e-6 + p * w;
+    p = 0.00021858087 + p * w;
+    p = -0.00125372503 + p * w;
+    p = -0.00417768164 + p * w;
+    p = 0.246640727 + p * w;
+    p = 1.50140941 + p * w;
+  } else {
+    w = Math.sqrt(w) - 3.0;
+    p = -0.000200214257;
+    p = 0.000100950558 + p * w;
+    p = 0.00134934322 + p * w;
+    p = -0.00367342844 + p * w;
+    p = 0.00573950773 + p * w;
+    p = -0.0076224613 + p * w;
+    p = 0.00943887047 + p * w;
+    p = 1.00167406 + p * w;
+    p = 2.83297682 + p * w;
+  }
+
+  const res_ra = p * x;
+  let res_hm = 0;
+  const fx = erf_taylor(res_ra) - x;
+  const df = (2.0 / Math.sqrt(Math.PI)) * Math.exp(-(res_ra * res_ra));
+  const d2f = -2 * res_ra * df;
+
+  res_hm = res_ra - (2 * fx * df) / (2 * df * df - fx * d2f);
+
+  if (x == 0) res_hm = 0;
+
+  return res_hm;
+}
+
+function erf_taylor(x: number): number {
+  let res = 0;
+
+  const c = 2.0 / Math.sqrt(Math.PI);
+
+  for (let n = 0; n < 100; n++)
+    res =
+      res +
+      (Math.pow(-1, n) * Math.pow(x, 2 * n + 1)) / (sFact(n) * (2 * n + 1));
+
+  res = c * res;
+
+  // Fudge to resolve stability issues..
+  if (x >= 5.74) res = 1.0;
+  if (x <= -5.74) res = -1.0;
+
+  return res;
+}
+
+function calc_critical(nsamp: number) {
+  let res = 0.0;
+  const pw = 0.05;
+
+  const pi6 = 6 / Math.PI;
+
+  const N = nsamp;
+
+  const G = [-0.2273e1, 0.459];
+  const c3 = [0.544, -0.39978, 0.25054e-1, -0.6714e-3];
+  const c4 = [0.13822e1, -0.77857, 0.62767e-1, -0.20322e-2];
+
+  const c5 = [-0.15861e1, -0.31082, -0.83751e-1, 0.38915e-2];
+  const c6 = [-0.4803, -0.82676e-1, 0.30302e-2];
+
+  const stqr = Math.PI / 3;
+
+  const xx = Math.log(N);
+  let m = 0;
+  let s = 1;
+
+  if (N == 3) {
+    res = Math.sin(pw / pi6 + stqr) ^ 2;
+  } else if (N <= 11) {
+    const gma = G[1] * N + G[0] * 1;
+    m = c3[3] * N * N * N + c3[2] * N * N + c3[1] * N + c3[0];
+    s = Math.exp(c4[3] * N * N * N + c4[2] * N * N + c4[1] * N + c4[0]);
+
+    const yms = gauss_icdf(1 - pw, 0, 1);
+
+    const y0 = s * yms + m;
+    const y1 = gma - Math.exp(-y0);
+    res = 1 - Math.exp(y1);
+  } else {
+    m = c5[3] * xx * xx * xx + c5[2] * xx * xx + c5[1] * xx + c5[0];
+    s = Math.exp(c6[2] * xx * xx + c6[1] * xx + c6[0]);
+
+    const yms = gauss_icdf(1 - pw, 0, 1);
+    const y0 = s * yms + m;
+    res = 1 - Math.exp(y0);
+  }
+  return res;
+}
+
+function sFact(num: number): number {
+  let rval = 1;
+  for (let i = 2; i <= num; i++) rval = rval * i;
+  return rval;
+}
+
+function compare(a:number,b:number) {
+  if (a < b)
+     return -1;
+  if (a > b)
+    return 1;
+  return 0;
 }
