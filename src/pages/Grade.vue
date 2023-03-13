@@ -629,7 +629,7 @@ export default defineComponent({
           },
         },
         {
-          label: 'Stats2',
+          label: 'Stats (Reliability)',
           name: 'stats2',
           to: {
             name: 'Grade',

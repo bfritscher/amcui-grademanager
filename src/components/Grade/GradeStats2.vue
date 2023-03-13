@@ -1,49 +1,176 @@
 <template>
-  <div>
-    <h2>Statistiques globales</h2>
-    /* moyenne ecart-type score médian min/max score nb étudiant nb questions
-    histogram */ cronbachAlpha: {{ cronbachAlphaAll }} > 0.7 ?
-    <pre>
-      Cronbachs Alpha	Interpretation
-&gt; 0,9	Excellent
-&gt; 0,8	Good
-&gt; 0,7	Acceptable
-&gt; 0,6	Questionable
-&gt; 0,5	Poor
-&lt; 0,5	Unacceptable
+  <div class="q-px-md q-pb-md">
+    <h2 class="text-h5">Global Statistics</h2>
+    <div class="row">
+      <div class="col-12 col-md-6">
+        <q-markup-table dense flat class="my-table">
+          <tbody>
+            <tr>
+              <th class="text-left">Number of students</th>
+              <td>{{ ShapiroWilkWAll.n }}</td>
+            </tr>
+            <tr>
+              <th class="text-left">Number of questions</th>
+              <td>{{ Object.keys(enableQuestions).length }}</td>
+            </tr>
+            <tr>
+              <th class="text-left">Exam average</th>
+              <td>{{ ShapiroWilkWAll.mean.toFixed(2) }}</td>
+            </tr>
+            <tr>
+              <th class="text-left">Standard deviation</th>
+              <td>{{ ShapiroWilkWAll.std.toFixed(2) }}</td>
+            </tr>
+            <tr>
+              <th class="text-left">Exam median</th>
+              <td>{{ ShapiroWilkWAll.median.toFixed(2) }}</td>
+            </tr>
+            <tr>
+              <th class="text-left">Highest score</th>
+              <td>{{ ShapiroWilkWAll.max }}</td>
+            </tr>
+            <tr>
+              <th class="text-left">Lowest score</th>
+              <td>{{ ShapiroWilkWAll.min }}</td>
+            </tr>
+            <tr>
+              <th class="text-left">Shapiro-Wilk Normal Test</th>
+              <td :class="ShapiroWilkWAllCls">
 
-      {{ ShapiroWilkWAll }}
+                <div class="row">
+                  {{ ShapiroWilkWAll.w.toFixed(2) }}, p-value =
+                  {{ ShapiroWilkWAll.pvalue.toFixed(3) }}
+                  <q-space />
+                  <q-icon name="mdi-help">
+                    <q-tooltip>
+                      <p v-if="ShapiroWilkWAll.accept_null">
+                        Accept Null Hypothesis as calculated W is greater than the critical value
+                        of W.
+                        <span v-if="ShapiroWilkWAll.pvalue < 0.05">The p-value is less than 0.05 though.</span>
+                      </p>
+                      <p v-else>
+                        Reject Null Hypothesis as calculated W is less than the critical value of
+                        W.
+                        <span v-if="ShapiroWilkWAll.pvalue > 0.05">The p-value exceeds 0.05 though.</span>
+                      </p>
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th>Exam reliability (Cronbach alpha)</th>
+              <td :class="cronbachAlphaAllCls">
+                <div class="row">
+                  {{ cronbachAlphaAll.toFixed(3) }}
+                  <q-space />
+                  <q-icon name="mdi-help">
+                    <q-tooltip>
+                      &gt; 0,9 Excellent <br>
+                      &gt; 0,8 Good <br>
+                      &gt; 0,7 Acceptable <br>
+                      &gt; 0,6 Questionable <br>
+                      &gt; 0,5 Poor <br>
+                      &lt; 0,5 Unacceptable <br>
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </q-markup-table>
 
-      W({{ ShapiroWilkWAll.n }}) = {{ ShapiroWilkWAll.w.toFixed(2) }}, p = {{
-        ShapiroWilkWAll.pvalue.toFixed(3)
-      }}
-    </pre>
 
-    <p v-if="ShapiroWilkWAll.accept_null">
-      Accept Null Hypothesis as calculated W is greater than the critical value
-      of W.
-      <span v-if="ShapiroWilkWAll.pvalue < 0.05"
-        >The p-value is less than 0.05 though.</span
-      >
-    </p>
-    <p v-else>
-      Reject Null Hypothesis as calculated W is less than the critical value of
-      W.
-      <span v-if="ShapiroWilkWAll.pvalue > 0.05"
-        >The p-value exceeds 0.05 though.</span
-      >
-    </p>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-h6">
+          Scores Histogram
+        </div>
+        <histogram
+        :values="Object.values(gradeService.grade.scores).map((x) => x.total)" :min="0"
+          :max="gradeService.grade.maxPoints" />
+      </div>
+    </div>
+    <h2 class="text-h5">Question and Answers Statistics</h2>
 
-    <h2>Analyse par question</h2>
-    <table>
+    <q-markup-table dense flat class="my-table my-table-dense my-table-minwidth">
+      <tbody>
+        <tr>
+          <td> P-index</td>
+          <td class="text-wrap">The difficulty index of the item. It corresponds to
+     ratio of respondents who answer the item correctly, i.e.: Ri
+     (number of respondents who answer the item correctly) / Ni (number
+     total respondents)</td>
+          <td>
+            <div class="warn">&lt; 0.30: difficult item</div>
+            <div class="ok">0.30 - 0.70: acceptable</div>
+            <div class="good">0.50 - 0.60: ideal</div>
+            <div class="warnlight">&gt; 0.70: easy item</div>
+          </td>
+        </tr>
+        <tr>
+          <td>D-Index</td>
+          <td class="text-wrap text-body2">The item's discrimination index, which can be between -1 and +1.
+     It corresponds to the difference between: Px (proportion of success for the item
+     among the 27% of individuals whose results are the highest on
+     the entire test) – Py (proportion of success among 27%
+     of individuals with the lowest overall scores).</td>
+          <td>
+            <div class="bad">&lt; 0 (negative values): anomaly of the item</div>
+            <div>The higher the value of D-index is close to +1, the stronger the discriminating power of the item.</div>
+            <div class="good">&gt; at 0.30 is desirable</div>
+
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Reliability if the question is removed
+          </td>
+          <td class="text-wrap">
+            The new value of Cronbach's alpha if the question is removed from
+     the exam.
+
+            The elimination of less-reliable items should be based not only on a statistical basis but also on a theoretical and
+    logical basis.
+          </td>
+          <td class="text-wrap">
+            The higher the index and the higher the reference value,
+     the more the removal of the question would improve the reliability of the exam
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Distraction Index
+          </td>
+          <td class="text-wrap">
+            Indicates the effectiveness of the distractors. If the
+     distractor is selected by less than 5% of respondents, it is
+     considered non-functional. The distraction index is calculated on the
+     the number of non-functional distractors (NFD) for each item.
+          </td>
+          <td>
+            <div>Example for a question including 4 distractors:</div>
+             <div>4 NFD: 0%</div>
+            <div>3 NFD: 25%</div>
+            <div>2 NFD: 50%</div>
+            <div>1 NFD: 75%</div>
+            <div>0 NFD: 100%</div>
+          </td>
+        </tr>
+      </tbody>
+    </q-markup-table>
+
+
+
+    <q-markup-table dense flat class="text-center my-table my-table-minwidth">
       <thead>
         <tr>
           <th></th>
           <th>P-index</th>
           <th>StdDev</th>
           <th>D-index</th>
-          <th>Fiabilité si la question est supprimée</th>
-          <th>Indice de distraction</th>
+          <th>Reliability if removed</th>
+          <th>Distraction Index</th>
         </tr>
       </thead>
       <tbody>
@@ -71,36 +198,15 @@
           </td>
         </tr>
       </tbody>
-    </table>
-
-    P-index: Il s'agit de l'indice de difficulté de l'item. Il correspond au
-    ratio des répondant·e·s qui répondent correctement à l'item, soit : Ri
-    (nombre des répondant·e·s qui répondent à l'item correctement) / Ni (nombre
-    total de répondant·e·s). &lt; 0.30 : item difficile • 0.30 - 0.70 :
-    acceptable • 0.50 - 0.60 : idéal • &gt; 0.70 : item facile D-Index Il s'agit
-    de l'indice de discrimination de l'item qui peut se situer entre -1 et +1.
-    Il correspond à la différence entre : Px (proportion de réussite à l'item
-    parmi les 27% d'individus dont les résultats sont les plus élevés sur
-    l'ensemble de l'épreuve) – Py (proportion de réussite chez les 27%
-    d'individus dont les résultats globaux sont les plus faibles). &lt; 0
-    (valeurs négatives) : anomalie de l'item • Plus la valeur de D-index est
-    proche de +1, plus le pouvoir discriminant de l'item est fort • Un indice
-    &gt; à 0,30 est souhaitable Fiabilité si la question est supprimée Indique
-    la nouvelle valeur de l'alpha de Cronbach si la question est retirée de
-    l'examen. Plus l'indice est élevé et supérieur à la valeur de référence,
-    plus la suppression de la question améliorerait la fiabilité de l'examen
-    Indice de distraction Indique l'efficacité des distracteurs. Si le
-    distracteur est sélectionné par moins de 5% des répondant·e·s, il est
-    considéré comme non fonctionnel. L'indice de distraction est calculé sur la
-    base du nombre de distracteurs non fonctionnels (DNF) pour chaque item.
-    Exemple pour un question comprenant 4 distracteurs : • 4 DNF : 0% • 3 DNF :
-    25% • 2 DNF : 50% • 1 DNF : 75% • 0 DNF : 100%
+    </q-markup-table>
   </div>
 </template>
 <script lang="ts" setup>
 import { inject, computed, reactive } from 'vue';
 import GradeService from '../../services/grade';
 import { CronbachAlpha, ShapiroWilkW } from '../../utils/stats';
+import Histogram from 'src/components/Grade/Histogram.vue';
+
 const gradeService = inject('gradeService') as GradeService;
 
 const enableQuestions = reactive(
@@ -130,12 +236,42 @@ function cronbachAlphaFiltered(questionToRemove = '') {
 const cronbachAlphaAll = computed(() => {
   return cronbachAlphaFiltered();
 });
+const cronbachAlphaAllCls = computed(() => {
+  if (cronbachAlphaAll.value < 0.5) {
+    return 'bad';
+  }
+  if (cronbachAlphaAll.value < 0.6) {
+    return 'warn';
+  }
+  if (cronbachAlphaAll.value < 0.7) {
+    return 'warnlight';
+  }
+  if (cronbachAlphaAll.value < 0.8) {
+    return 'ok';
+  }
+  return 'good';
+});
 
 const ShapiroWilkWAll = computed(() => {
   return ShapiroWilkW(
     Object.values(gradeService.grade.scores).map((student) => student.total)
   );
 });
+
+const ShapiroWilkWAllCls = computed(() => {
+  if (ShapiroWilkWAll.value.accept_null === 1) {
+    if (ShapiroWilkWAll.value.pvalue < 0.05) {
+      return 'ok';
+    }
+    return 'good';
+  }
+  if (ShapiroWilkWAll.value.pvalue > 0.05) {
+    return 'warn';
+  } else {
+    return 'bad';
+  }
+});
+
 
 function nbCorrectFor(questionId: string, scores: any[]) {
   return scores.reduce((totalCorrect, studentData) => {
@@ -198,64 +334,80 @@ const questionAnalytics = computed(() => {
         pIndex < 0.3
           ? 'warn'
           : pIndex < 0.5
-          ? 'ok'
-          : pIndex < 0.6
-          ? 'good'
-          : pIndex < 0.7
-          ? 'ok'
-          : pIndex < 0.99
-          ? 'warnlight'
-          : 'bad',
+            ? 'ok'
+            : pIndex < 0.6
+              ? 'good'
+              : pIndex < 0.7
+                ? 'ok'
+                : pIndex < 0.99
+                  ? 'warnlight'
+                  : 'bad',
       stdDev: stdDev.toFixed(2),
       dIndex: dIndex.toFixed(2),
       dIndexCls:
         dIndex < 0
           ? 'bad'
           : dIndex < 0.15
-          ? 'warn'
-          : dIndex < 0.3
-          ? 'warnlight'
-          : dIndex < 0.4
-          ? 'ok'
-          : 'good',
+            ? 'warn'
+            : dIndex < 0.3
+              ? 'warnlight'
+              : dIndex < 0.4
+                ? 'ok'
+                : 'good',
       alphaIfRemoved: alphaIfRemoved.toFixed(3),
       alphaDelta: alphaDelta.toFixed(3),
       alphaDeltaCls:
         alphaDelta < -0.1
           ? 'bad'
           : alphaDelta < 0
-          ? 'warn'
-          : alphaDelta > 0.1
-          ? 'good'
-          : 'ok',
+            ? 'warn'
+            : alphaDelta > 0.1
+              ? 'good'
+              : 'ok',
       distractionIndex: `${Math.round(distractionIndex * 100)}%`,
       distractionIndexCls:
         distractionIndex < 0.05
           ? 'bad'
           : distractionIndex < 0.3
-          ? 'warn'
-          : distractionIndex > 0.7
-          ? 'good'
-          : '',
+            ? 'warn'
+            : distractionIndex > 0.7
+              ? 'good'
+              : '',
     };
     return stats;
   }, {} as Record<string, any>);
 });
 </script>
 <style scoped>
+.my-table-minwidth td {
+    min-width: 120px;
+}
+
+.my-table-dense td {
+  font-size: 0.8rem !important;
+}
+
+.text-wrap {
+  white-space: normal !important;
+}
+
 .bad {
-  background-color: red;
+  background-color: #FF572299;
 }
+
 .good {
-  background-color: green;
+  background-color: #21BA4599;
 }
+
 .ok {
-  background-color: lightgreen;
+  background-color: #90ee9099;
 }
+
 .warn {
-  background-color: orange;
+  background-color: #F2C03799;
 }
+
 .warnlight {
-  background-color: lightyellow;
+  background-color: #ffeb3b99;
 }
 </style>
