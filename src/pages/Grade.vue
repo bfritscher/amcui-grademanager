@@ -521,6 +521,11 @@
             :stats="gradeService.grade.stats"
           ></grade-stats>
         </q-tab-panel>
+        <q-tab-panel name="stats2" class="q-pa-none">
+          <grade-stats2
+            v-if="tabSelected === 'stats2'"
+          ></grade-stats2>
+        </q-tab-panel>
         <q-tab-panel
           v-for="(file, index) in gradeService.grade.files"
           :key="index"
@@ -551,6 +556,7 @@ import {
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import GradeStats from '../components/Grade/GradeStats.vue';
+import GradeStats2 from '../components/Grade/GradeStats2.vue';
 import GradeFileComponent from '../components/Grade/GradeFile.vue';
 import DataTable from '../components/Grade/DataTable.vue';
 import Api from '../services/api';
@@ -569,6 +575,7 @@ export default defineComponent({
   name: 'Grade',
   components: {
     GradeStats,
+    GradeStats2,
     GradeFile: GradeFileComponent,
     DataTable,
     AddFileBox,
@@ -618,6 +625,17 @@ export default defineComponent({
             params: {
               project: route.params.project,
               tab: 'stats',
+            },
+          },
+        },
+        {
+          label: 'Stats (Reliability)',
+          name: 'stats2',
+          to: {
+            name: 'Grade',
+            params: {
+              project: route.params.project,
+              tab: 'stats2',
             },
           },
         },
