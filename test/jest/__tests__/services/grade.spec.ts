@@ -67,6 +67,8 @@ describe('Grade', () => {
       expect(gs.minMaxRoundGrade(4.55).toFixed(2)).toBe('4.60');
       expect(gs.minMaxRoundGrade(4.59).toFixed(2)).toBe('4.60');
       expect(gs.minMaxRoundGrade(4.49)).toBe(4.5);
+      // 4.949999999999999
+      expect(gs.minMaxRoundGrade(6*0.3+4.5*0.7)).toBe(5);
       API.options.options.note_grain = '0.5';
       expect(gs.minMaxRoundGrade(4.0)).toBe(4.0);
       expect(gs.minMaxRoundGrade(4.55).toFixed(2)).toBe('4.50');

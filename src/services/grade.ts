@@ -381,6 +381,7 @@ export default class GradeService {
     if (grade === '' || isNaN(Number(grade))) {
       return NaN;
     }
+    grade = parseFloat(Number(grade).toFixed(10));
     // TODO-nice note_arrondi as custom roundingFormula instead of round
     const roundingUnit = parseFloat(this.API.options.options.note_grain);
     const minGrade = parseFloat(this.API.options.options.note_min);
