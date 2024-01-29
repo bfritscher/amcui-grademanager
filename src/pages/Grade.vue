@@ -160,6 +160,7 @@
                       debounce="500"
                       dense
                       autocomplete="off"
+                      @click.stop=""
                       @update:model-value="
                         API.saveOptions();
                         gradeService.calculateGrades();
@@ -193,7 +194,7 @@
                           flat
                           dense
                           padding="xs"
-                          @click="ui.showDataTable = !ui.showDataTable"
+                          @click.stop="ui.showDataTable = !ui.showDataTable"
                         >
                           <q-tooltip>Datatable</q-tooltip>
                         </q-btn>
@@ -214,7 +215,7 @@
                       flat
                       dense
                       padding="xs"
-                      @click="ui.showHistogram = !ui.showHistogram"
+                      @click.stop="ui.showHistogram = !ui.showHistogram"
                     >
                       <q-tooltip>Histogram</q-tooltip>
                     </q-btn>
@@ -223,7 +224,7 @@
                       padding="xs"
                       flat
                       dense
-                      @click="ui.displayQuestions = !ui.displayQuestions"
+                      @click.stop="ui.displayQuestions = !ui.displayQuestions"
                       >{{ ui.displayQuestions ? 'hide' : 'show' }} all</q-btn
                     >
                   </q-th>
