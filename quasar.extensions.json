@@ -6,12 +6,7 @@
     ]
   },
   "@quasar/testing-unit-jest": {
-    "babel": "babelrc",
-    "options": [
-      "scripts",
-      "typescript",
-      "majestic"
-    ]
+    "options": []
   },
   "@quasar/testing-e2e-cypress": {
     "options": [
