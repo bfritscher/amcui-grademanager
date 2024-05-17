@@ -1,6 +1,5 @@
 import { boot } from 'quasar/wrappers';
 import * as Sentry from '@sentry/vue';
-import { BrowserTracing } from '@sentry/tracing';
 
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli/boot-files
@@ -11,16 +10,15 @@ export default boot(({ app, router }) => {
       release: process.env.COMMITHASH,
       dsn: process.env.SENTRY_DSN,
       integrations: [
-        new BrowserTracing({
-          routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-          // tracingOrigins: ['localhost', 'my-site-url.com', /^\//],
-        }),
+        Sentry.browserTracingIntegration({router}),
+        Sentry.replayIntegration()
       ],
       // Set tracesSampleRate to 1.0 to capture 100%
       // of transactions for performance monitoring.
       // We recommend adjusting this value in production
       tracesSampleRate: 1.0,
       trackComponents: true,
+      replaysOnErrorSampleRate: 1.0,
     });
   }
 });

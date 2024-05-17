@@ -82,7 +82,7 @@ export default store(function (/* { ssrContext } */) {
         commit('SET_USER', {});
         commit('SET_PROJECTS', []);
         commit('SET_PROJECTS_RECENT', []);
-        Sentry.configureScope((scope) => scope.setUser(null));
+        Sentry.getCurrentScope().setUser(null);
         // eslint-disable-next-line
         // @ts-ignore
         if (this.$router.currentRoute.path !== '/login') {
