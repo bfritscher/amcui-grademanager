@@ -33,9 +33,7 @@
         :spellcheck="false"
         @update:model-value="updateOnBlur('fileLookup', $event)"
       ></q-input>
-      <q-btn color="negative" flat @click="$emit('importCols')"
-        >import selected columns</q-btn
-      >
+      <q-btn color="negative" flat @click="$emit('importCols')">import selected columns</q-btn>
     </div>
   </div>
   <q-markup-table dense flat class="my-table">
@@ -54,13 +52,7 @@
                 gradeService.saveFiles();
               "
             ></q-checkbox>
-            <q-btn
-              flat
-              size="md"
-              padding="xs"
-              icon="mdi-pencil"
-              @click.prevent.stop=""
-            >
+            <q-btn flat size="md" padding="xs" icon="sym_o_edit" @click.prevent.stop="">
               <q-popup-edit
                 v-slot="scope"
                 :model-value="key"
@@ -81,7 +73,7 @@
                     flat
                     padding="xs"
                     size="md"
-                    icon="mdi-close"
+                    icon="sym_o_close"
                     color="negative"
                     label="Delete"
                     @click="removeColumn(index)"
@@ -93,13 +85,7 @@
           </div>
         </th>
         <th>
-          <q-btn
-            flat
-            padding="xs"
-            size="md"
-            label="add column"
-            @click="addColumn"
-          ></q-btn>
+          <q-btn flat padding="xs" size="md" label="add column" @click="addColumn"></q-btn>
         </th>
       </tr>
     </thead>
@@ -111,11 +97,7 @@
         <td>
           {{ gradeService.makeFunc(file.fileLookup)(row) }}
         </td>
-        <td
-          v-for="key in file.meta.fields"
-          :key="key"
-          :class="{ 'text-right': !isNaN(row[key]) }"
-        >
+        <td v-for="key in file.meta.fields" :key="key" :class="{ 'text-right': !isNaN(row[key]) }">
           {{ row[key] }}
           <q-popup-edit
             v-slot="scope"
@@ -138,7 +120,7 @@
             flat
             size="md"
             padding="xs"
-            icon="mdi-close"
+            icon="sym_o_close"
             aria-label="remove row"
             color="negative"
             @click="removeRow(index)"
@@ -152,46 +134,35 @@
   <q-separator />
   <q-btn color="primary" class="q-ma-md" @click="addRow">Add Row</q-btn>
   <q-btn class="q-ma-md" @click="renameFile">Rename File</q-btn>
-  <q-btn color="negative" class="q-ma-md" @click="$emit('removeFile')"
-    >Remove File</q-btn
-  >
+  <q-btn color="negative" class="q-ma-md" @click="$emit('removeFile')">Remove File</q-btn>
 </template>
 <script lang="ts">
 import { useQuasar } from 'quasar';
-import { defineComponent, inject, PropType, computed } from 'vue';
+import { defineComponent, inject, type PropType, computed } from 'vue';
 
 import GradeService from '../../services/grade';
-import { GradeFile } from '../models';
+import type { GradeFile } from '../models';
 
 export default defineComponent({
   name: 'GradeFile',
   props: {
     file: {
       type: Object as PropType<GradeFile>,
-      required: true,
-    },
+      required: true
+    }
   },
   emits: ['importCols', 'removeFile'],
   setup(props) {
     const gradeService = inject('gradeService') as GradeService;
     const $q = useQuasar();
 
-    const studentIds = computed(() =>
-      gradeService.grade.students.data.map((o) => o.id)
-    );
+    const studentIds = computed(() => gradeService.grade.students.data.map((o) => o.id));
 
     return {
       gradeService,
       studentIds,
       renameColumn(key: string, newName: string) {
-        if (
-          gradeService.renameColumn(
-            key,
-            newName,
-            props.file.meta.fields,
-            props.file.data
-          )
-        ) {
+        if (gradeService.renameColumn(key, newName, props.file.meta.fields, props.file.data)) {
           gradeService.saveFiles();
         }
       },
@@ -201,7 +172,7 @@ export default defineComponent({
           message: `Remove column ${props.file.meta.fields[index]}`,
           persistent: true,
           ok: 'Remove',
-          cancel: 'Cancel',
+          cancel: 'Cancel'
         }).onOk(() => {
           props.file.meta.fields.splice(index, 1);
           gradeService.saveFiles();
@@ -214,10 +185,10 @@ export default defineComponent({
           prompt: {
             label: 'New name',
             model: '',
-            type: 'text', // optional
+            type: 'text' // optional
           },
           cancel: true,
-          persistent: true,
+          persistent: true
         }).onOk((name: string) => {
           name = name.trim();
           props.file.meta.fields.push(name);
@@ -239,16 +210,16 @@ export default defineComponent({
           prompt: {
             label: 'New name',
             model: props.file.name,
-            type: 'text', // optional
+            type: 'text' // optional
           },
           cancel: true,
-          persistent: true,
+          persistent: true
         }).onOk((name: string) => {
           props.file.name = name.trim();
           gradeService.saveFiles();
         });
       },
-      updateOnBlur(name: string, value: string) {
+      updateOnBlur(name: string, value: string | number | null) {
         (props.file as any)[name] = value;
         gradeService.saveFiles();
       },
@@ -272,9 +243,9 @@ export default defineComponent({
         }
         const value = gradeService.makeFunc(props.file.studentLookup)(student);
         return value || 'No value';
-      },
+      }
     };
-  },
+  }
 });
 </script>
 <style>

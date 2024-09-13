@@ -1,38 +1,29 @@
 <template>
-  <q-dialog
-    ref="dialogRef"
-    :maximized="$q.screen.lt.sm"
-    persistent
-    @hide="onDialogHide"
-  >
+  <q-dialog ref="dialogRef" :maximized="$q.screen.lt.sm" persistent @hide="onDialogHide">
     <q-card class="q-dialog-plugin">
       <q-toolbar class="bg-primary text-white">
         <q-toolbar-title> Edit Columns </q-toolbar-title>
-        <q-btn flat round dense icon="mdi-close" @click="onDialogOK" />
+        <q-btn flat round dense icon="sym_o_close" @click="onDialogOK" />
       </q-toolbar>
       <q-card-section>
-        <draggable v-model="list" item-key="index" handle=".mdi-cursor-move">
+        <draggable v-model="list" item-key="index" handle=".drag-handle">
           <template #item="{ element }">
             <div>
               <q-input
-:model-value="element.value"
+                :model-value="element.value"
                 debounce="1000"
                 :readonly="element.locked"
                 @update:model-value="renameColumn(element.value, $event)"
               >
                 <template #before>
-                  <q-icon
-                    name="mdi-cursor-move"
-                    class="text-grey-7"
-                    size="sm"
-                  />
+                  <q-icon name="sym_o_drag_pan" class="text-grey-7 drag-handle" size="sm" />
                 </template>
                 <template #after>
                   <q-btn
                     flat
                     padding="xs"
                     size="md"
-                    icon="mdi-close"
+                    icon="sym_o_close"
                     color="negative"
                     label="Delete"
                     :disable="element.locked"
@@ -58,12 +49,7 @@
 import { useDialogPluginComponent, useQuasar } from 'quasar';
 import draggable from 'vuedraggable';
 import GradeService from '../../services/grade';
-import {
-  defineComponent,
-  inject,
-  PropType,
-  computed,
-} from 'vue';
+import { defineComponent, type PropType, computed } from 'vue';
 
 interface Ifield {
   index: number;
@@ -74,18 +60,22 @@ interface Ifield {
 export default defineComponent({
   name: 'EditColumnsDialog',
   components: {
-    draggable,
+    draggable
   },
   props: {
     fields: {
       type: Array as PropType<string[]>,
-      required: true,
+      required: true
     },
+    gradeService: {
+      type: Object as PropType<GradeService>,
+      required: true
+    }
   },
   emits: [
     // REQUIRED; need to specify some events that your
     // component will emit through useDialogPluginComponent()
-    ...useDialogPluginComponent.emits,
+    ...useDialogPluginComponent.emits
   ],
 
   setup(props) {
@@ -97,7 +87,6 @@ export default defineComponent({
     //                    example: onDialogOK() - no payload
     //                    example: onDialogOK({ /*.../* }) - with payload
     // onDialogCancel - Function to call to settle dialog with "cancel" outcome
-    const gradeService = inject('gradeService') as GradeService;
 
     const $q = useQuasar();
 
@@ -112,13 +101,9 @@ export default defineComponent({
         });
       },
       set(orderedList: Ifield[]) {
-        props.fields.splice(
-          0,
-          props.fields.length,
-          ...orderedList.map((o) => o.value)
-        );
-        gradeService.debounceSaveCSV();
-      },
+        props.fields.splice(0, props.fields.length, ...orderedList.map((o) => o.value));
+        props.gradeService.debounceSaveCSV();
+      }
     });
 
     return {
@@ -126,24 +111,24 @@ export default defineComponent({
       onDialogHide,
       onDialogOK,
       list,
-      renameColumn(col: string, newName: string) {
-        if(!newName || col === 'id') return;
+      renameColumn(col: string, newName: string | number | null) {
+        if (!newName || col === 'id') return;
         if (
-          gradeService.renameColumn(
+          props.gradeService.renameColumn(
             col,
-            newName,
-            gradeService.grade.students.fields,
-            gradeService.grade.students.data
+            String(newName),
+            props.gradeService.grade.students.fields,
+            props.gradeService.grade.students.data
           )
         ) {
-          gradeService.calculateGrades();
+          props.gradeService.calculateGrades();
         }
       },
       removeColumn(col: string) {
         if (col !== 'id') {
-          const index = gradeService.grade.students.fields.indexOf(col);
-          gradeService.grade.students.fields.splice(index, 1);
-          gradeService.calculateGrades();
+          const index = props.gradeService.grade.students.fields.indexOf(col);
+          props.gradeService.grade.students.fields.splice(index, 1);
+          props.gradeService.calculateGrades();
         }
       },
       addColumn() {
@@ -153,22 +138,22 @@ export default defineComponent({
           prompt: {
             label: 'New name',
             model: '',
-            type: 'text', // optional
+            type: 'text' // optional
           },
           cancel: true,
-          persistent: true,
+          persistent: true
         }).onOk((name: string) => {
-          name = name.trim()
-          gradeService.grade.students.fields.push(name);
-          gradeService.calculateGrades();
+          name = name.trim();
+          props.gradeService.grade.students.fields.push(name);
+          props.gradeService.calculateGrades();
         });
       }
     };
-  },
+  }
 });
 </script>
 <style scoped>
-.mdi-cursor-move.q-icon {
+.sym_o_drag_pan.q-icon {
   cursor: move;
 }
 </style>

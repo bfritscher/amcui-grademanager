@@ -1,11 +1,8 @@
 <template>
-  <li
-    class="section-menu q-py-sm q-px-sm"
-    :class="{ 'bg-grey-3': section == currentSection }"
-  >
+  <li class="section-menu q-py-sm q-px-sm" :class="{ 'bg-grey-3': section == currentSection }">
     <router-link
       :to="examService.linkToQuestion(section)"
-      class="row items-center text-subtitle1 text-bold text-black"
+      class="row items-center text-subtitle1 text-bold text-black no-wrap"
     >
       <q-checkbox
         v-if="examService.copy.enabled"
@@ -14,7 +11,7 @@
         @update:model-value="examService.toggleCopy(section)"
         >{{ section.number }} {{ section.title }}</q-checkbox
       >
-      <div v-else>
+      <div v-else class="section-title">
         {{ section.number }} {{ section.title }}
         <span
           v-if="section.questions.length > 0"
@@ -24,10 +21,10 @@
         >
       </div>
       <q-space />
-      <q-icon name="mdi-cursor-move" class="text-grey-7" size="sm" />
+      <q-icon name="sym_o_drag_pan" class="text-grey-5" size="sm" />
     </router-link>
     <draggable
-      v-model="section.questions"
+      v-model="questions"
       group="question"
       tag="ol"
       item-key="id"
@@ -41,39 +38,49 @@
   </li>
 </template>
 <script lang="ts">
-import { defineComponent, PropType, computed, inject } from 'vue';
+import { defineComponent, type PropType, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { Section } from '../models';
+import type { Section } from '../models';
 import draggable from 'vuedraggable';
 import EditDrawerQuestion from './EditDrawerQuestion.vue';
-import ExamEditor from '../../services/examEditor';
+import { useExamStore } from '@/stores/exam';
 
 export default defineComponent({
   name: 'EditDrawerSection',
   components: {
     draggable,
-    EditDrawerQuestion,
+    EditDrawerQuestion
   },
   props: {
     section: {
       type: Object as PropType<Section>,
-      required: true,
-    },
+      required: true
+    }
   },
-  setup() {
-    const examService = inject('examService') as ExamEditor;
+  setup(props) {
+    const examService = useExamStore();
     const route = useRoute();
     const currentSection = computed(() => {
       return examService.exam.sections[Number(route.params.sectionIndex)];
     });
+
+    const questions = computed({
+      get: () => props.section.questions,
+      set: (val) => {
+        examService.updateQuestionsOrder(props.section, val);
+      }
+    });
+
     return {
-      currentSection,
+      questions,
+      examService,
+      currentSection
     };
-  },
+  }
 });
 </script>
 <style scoped>
-.section-menu .mdi-cursor-move.q-icon {
+.section-menu .sym_o_drag_pan.q-icon {
   cursor: move;
 }
 .section-menu a {
@@ -83,5 +90,10 @@ export default defineComponent({
   font-weight: normal;
   font-size: 80%;
   vertical-align: top;
+}
+.section-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

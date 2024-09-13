@@ -9,7 +9,7 @@
       :fit="true"
       :max-zoom="5"
       :min-zoom="0.05"
-      @svgpanzoom="registerSvgPanZoom"
+      @created="registerSvgPanZoom"
     >
       <svg
         version="1.1"
@@ -19,8 +19,7 @@
         height="100%"
       >
         <filter id="dropshadow">
-          <feDropShadow dx="8" dy="6" stdDeviation="0"  flood-opacity="0.1"/>
-
+          <feDropShadow dx="8" dy="6" stdDeviation="0" flood-opacity="0.1" />
         </filter>
         <g
           :transform="
@@ -46,7 +45,7 @@
             y="0"
             :width="`${page.width}px`"
             :height="`${page.height}px`"
-            style="filter: url(#dropshadow);"
+            style="filter: url(#dropshadow)"
             fill="white"
           ></rect>
           <image
@@ -86,179 +85,167 @@
       >remove manual
       <q-tooltip>Remove manually set ticks</q-tooltip>
     </q-btn>
-    <q-checkbox
-      v-model="rotate"
-      label="rotate"
-      class="absolute absolute-bottom-left"
-    ></q-checkbox>
+    <q-checkbox v-model="rotate" label="rotate" class="absolute absolute-bottom-left"></q-checkbox>
   </div>
 </template>
-<script lang="ts">
-import { defineComponent } from 'vue';
-import { PageCapture, Zone } from '../models';
+<script setup lang="ts">
+import type { PageCapture, Zone } from '../models';
+import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { useApiStore } from '@/stores/api';
+import { useStore } from '@/stores/store';
 
 import SvgPanZoom from '../vue-svg-pan-zoom';
 
-export default defineComponent({
-  name: 'ScanPreview',
-  components: {
-    SvgPanZoom,
-  },
-  inject: ['API'],
-  data() {
-    return {
-      page: null as PageCapture | null,
-      zones: [] as Zone[],
-      rotate: true,
-      svgpanzoom: null as any,
-    };
-  },
-  computed: {
-    pageSrc(): string {
-      if (this.page && this.page.layout_image) {
-        return `${this.API.URL}/project/${this.$route.params.project}/static/cr/${this.page.layout_image}?token=${this.$store.state.token}`;
-      }
-      return '';
-    },
-    boxQuestion(): string {
-      if (
-        !this.$route.params.question === undefined ||
-        isNaN(Number(this.$route.params.question))
-      ) {
-        return '';
-      }
-      const question = parseInt(this.$route.params.question as string, 10);
-      const questionZones = this.zones.filter((z) => z.question === question);
-      if (questionZones.length === 0) {
-        return '';
-      }
-      let { xmin, ymin, xmax, ymax } = questionZones.reduce(
-        (acc, z) => {
-          acc.xmax = Math.max(acc.xmax, z.x0, z.x1, z.x2, z.x3);
-          acc.xmin = Math.min(acc.xmin, z.x0, z.x1, z.x2, z.x3);
-          acc.ymax = Math.max(acc.ymax, z.y0, z.y1, z.y2, z.y3);
-          acc.ymin = Math.min(acc.ymin, z.y0, z.y1, z.y2, z.y3);
-          return acc;
-        },
-        {
-          xmin: Infinity,
-          ymin: Infinity,
-          xmax: 0,
-          ymax: 0,
-        }
-      );
-      const pad = 20;
-      xmin -= pad;
-      ymin -= pad;
-      xmax += pad;
-      ymax += pad;
-      return `M ${xmin} ${ymin} L${xmin} ${ymax} L${xmax} ${ymax} L${xmax} ${ymin} Z`;
-    },
-  },
-  watch: {
-    $route() {
-      this.loadPage();
-    },
-  },
-  created() {
-    window.addEventListener('resize', () => {
-      this.resizeHandler();
-    });
-  },
-  mounted() {
-    this.loadPage();
-  },
-  unmounted() {
-    window.removeEventListener('resize', () => {
-      this.resizeHandler();
-    });
-  },
-  methods: {
-    loadPage() {
-      this.page = null;
-      this.API.$http
-        .get(
-          this.API.URL +
-            '/project/' +
-            this.$route.params.project +
-            '/capture/' +
-            this.$route.params.student +
-            '/' +
-            this.$route.params.page +
-            ':' +
-            this.$route.params.copy
-        )
-        .then((r) => {
-          this.page = r.data;
-        });
-      this.API.$http
-        .get(
-          this.API.URL +
-            '/project/' +
-            this.$route.params.project +
-            '/zones/' +
-            this.$route.params.student +
-            '/' +
-            this.$route.params.page +
-            ':' +
-            this.$route.params.copy
-        )
-        .then((r) => {
-          this.zones = r.data;
-        });
-    },
-    registerSvgPanZoom(svgpanzoom: any) {
-      this.svgpanzoom = svgpanzoom;
-    },
-    resizeHandler() {
-      if (this.svgpanzoom) {
-        this.svgpanzoom.resize();
-        this.svgpanzoom.fit();
-        this.svgpanzoom.center();
-      }
-    },
-    ticked(zone: Zone) {
-      if (zone.manual >= 0) {
-        return zone.manual === 1;
-      }
-      if (zone.total <= 0) {
-        return false;
-      }
-      return (
-        zone.black >= parseFloat(this.API.options.options.seuil) * zone.total
-      );
-    },
-    toggle(zone: Zone) {
-      if (zone.manual === 0) {
-        zone.manual = 1;
-      } else if (zone.manual === 1) {
-        zone.manual = 0;
-      } else {
-        zone.manual =
-          zone.black >= parseFloat(this.API.options.options.seuil) * zone.total
-            ? 0
-            : 1;
-      }
-      this.API.setZoneManual(this.$route.params.project as string, {
-        student: parseInt(this.$route.params.student as string, 10),
-        page: parseInt(this.$route.params.page as string, 10),
-        copy: parseInt(this.$route.params.copy as string, 10),
-        manual: zone.manual,
-        type: 4,
-        id_a: zone.question,
-        id_b: zone.answer,
-      });
-    },
-    clear() {
-      this.zones.forEach((z) => {
-        z.manual = -1;
-      });
-      this.API.setPageAuto(this.$route.params.project as string, {
-        student: parseInt(this.$route.params.student as string, 10),
-        page: parseInt(this.$route.params.page as string, 10),
-        copy: parseInt(this.$route.params.copy as string, 10),
-      });
-    },
-  },
+const route = useRoute();
+const API = useApiStore();
+const store = useStore();
+
+const page = ref<PageCapture | undefined>();
+const zones = ref<Zone[]>([]);
+const rotate = ref(true);
+const svgpanzoom = ref<any>(null);
+
+const pageSrc = computed(() => {
+  if (page.value && page.value.layout_image) {
+    return `${API.URL}/project/${route.params.project}/static/cr/${page.value.layout_image}?token=${store.token}`;
+  }
+  return '';
 });
+
+const boxQuestion = computed(() => {
+  if (!route.params.question === undefined || isNaN(Number(route.params.question))) {
+    return '';
+  }
+  const question = parseInt(route.params.question as string, 10);
+  const questionZones = zones.value.filter((z) => z.question === question);
+  if (questionZones.length === 0) {
+    return '';
+  }
+  let { xmin, ymin, xmax, ymax } = questionZones.reduce(
+    (acc, z) => {
+      acc.xmax = Math.max(acc.xmax, z.x0, z.x1, z.x2, z.x3);
+      acc.xmin = Math.min(acc.xmin, z.x0, z.x1, z.x2, z.x3);
+      acc.ymax = Math.max(acc.ymax, z.y0, z.y1, z.y2, z.y3);
+      acc.ymin = Math.min(acc.ymin, z.y0, z.y1, z.y2, z.y3);
+      return acc;
+    },
+    {
+      xmin: Infinity,
+      ymin: Infinity,
+      xmax: 0,
+      ymax: 0
+    }
+  );
+  const pad = 20;
+  xmin -= pad;
+  ymin -= pad;
+  xmax += pad;
+  ymax += pad;
+  return `M ${xmin} ${ymin} L${xmin} ${ymax} L${xmax} ${ymax} L${xmax} ${ymin} Z`;
+});
+
+watch(route, () => {
+  loadPage();
+});
+
+window.addEventListener('resize', () => {
+  resizeHandler();
+});
+
+onMounted(() => {
+  loadPage();
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', () => {
+    resizeHandler();
+  });
+});
+
+function loadPage() {
+  page.value = undefined;
+  API.$http
+    .get(
+      API.URL +
+        '/project/' +
+        route.params.project +
+        '/capture/' +
+        route.params.student +
+        '/' +
+        route.params.page +
+        ':' +
+        route.params.copy
+    )
+    .then((r) => {
+      page.value = r.data;
+    });
+  API.$http
+    .get(
+      API.URL +
+        '/project/' +
+        route.params.project +
+        '/zones/' +
+        route.params.student +
+        '/' +
+        route.params.page +
+        ':' +
+        route.params.copy
+    )
+    .then((r) => {
+      zones.value = r.data;
+    });
+}
+
+function registerSvgPanZoom(data: any) {
+  svgpanzoom.value = data;
+}
+
+function resizeHandler() {
+  if (svgpanzoom.value) {
+    svgpanzoom.value.resize();
+    svgpanzoom.value.fit();
+    svgpanzoom.value.center();
+  }
+}
+
+function ticked(zone: Zone) {
+  if (zone.manual >= 0) {
+    return zone.manual === 1;
+  }
+  if (zone.total <= 0) {
+    return false;
+  }
+  return zone.black >= parseFloat(API.options.options.seuil) * zone.total;
+}
+
+function toggle(zone: Zone) {
+  if (zone.manual === 0) {
+    zone.manual = 1;
+  } else if (zone.manual === 1) {
+    zone.manual = 0;
+  } else {
+    zone.manual = zone.black >= parseFloat(API.options.options.seuil) * zone.total ? 0 : 1;
+  }
+  API.setZoneManual(route.params.project as string, {
+    student: parseInt(route.params.student as string, 10),
+    page: parseInt(route.params.page as string, 10),
+    copy: parseInt(route.params.copy as string, 10),
+    manual: zone.manual,
+    type: 4,
+    id_a: zone.question,
+    id_b: zone.answer
+  });
+}
+
+function clear() {
+  zones.value.forEach((z) => {
+    z.manual = -1;
+  });
+  API.setPageAuto(route.params.project as string, {
+    student: parseInt(route.params.student as string, 10),
+    page: parseInt(route.params.page as string, 10),
+    copy: parseInt(route.params.copy as string, 10)
+  });
+}
 </script>

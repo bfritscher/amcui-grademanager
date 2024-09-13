@@ -21,10 +21,11 @@
             <b>{{ item.project }}</b>
           </td>
           <td>
-            <span v-if="item.status?.printed && !item.status?.annotated"
-              >printed</span
+            <q-chip v-if="item.status?.printed && !item.status?.annotated" icon="sym_o_print"
+              >printed</q-chip
             >
-            <span v-if="item.status?.annotated">annotated</span>
+            <q-chip v-else-if="item.status?.annotated" icon="sym_o_checklist">annotated</q-chip>
+            <q-chip v-else icon="sym_o_edit">edit</q-chip>
           </td>
           <td>{{ item.users.join(', ') }}</td>
           <td class="text-right">
@@ -32,14 +33,14 @@
               title="open"
               aria-label="open project"
               color="primary"
-              icon="mdi-eye"
+              icon="sym_o_visibility"
               flat
             ></q-btn>
             <q-btn
               title="copy"
               aria-label="copy project"
               color="primary"
-              icon="mdi-content-copy"
+              icon="sym_o_content_copy"
               flat
               @click.stop.prevent="$emit('copyProject', item)"
             ></q-btn>
@@ -51,21 +52,21 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
-import { Project } from '../models';
+import { defineComponent, type PropType } from 'vue';
+import type { Project } from '../models';
 
 export default defineComponent({
   name: 'HomeTable',
   props: {
     items: {
       type: Array as PropType<Project[]>,
-      required: true,
+      required: true
     },
     group: {
       type: String as PropType<keyof Project>,
-      default: '',
-    },
+      default: ''
+    }
   },
-  emits: ['openProject', 'copyProject'],
+  emits: ['openProject', 'copyProject']
 });
 </script>

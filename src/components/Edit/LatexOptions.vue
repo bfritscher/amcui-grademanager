@@ -8,29 +8,22 @@
       @update:model-value="load"
     >
       <q-tab name="latexSource" label="source.tex" />
-      <q-tab
-        name="latexPreviewQ"
-        label="questions_definition.tex"
-        icon="mdi-lock"
-      />
-      <q-tab
-        name="latexPreviewL"
-        label="questions_layout.tex"
-        icon="mdi-lock"
-      />
-      <q-tab name="dataJson" label="data.json" icon="mdi-lock" />
+      <q-tab name="latexPreviewQ" label="questions_definition.tex" icon="sym_o_lock" />
+      <q-tab name="latexPreviewL" label="questions_layout.tex" icon="sym_o_lock" />
+      <q-tab name="dataJson" label="data.json" icon="sym_o_lock" />
       <q-tab name="import" label="Import" />
     </q-tabs>
     <q-space />
-    <q-btn flat aria-label="close" icon="mdi-close" @click="$emit('close')" />
+    <q-btn flat aria-label="close" icon="sym_o_close" @click="$emit('close')" />
   </q-toolbar>
   <q-separator />
   <div class="col col-grow relative-position">
     <div class="absolute absolute-top-right absolute-bottom-left overflow-auto">
       <codemirror
         v-if="editor.selectedTab === 'latexSource'"
-        v-model="examService.exam.source"
+        :model-value="examService.exam.source"
         :options="editor.latexSourceOptions"
+        @update:model-value="examService.updateSource($event)"
       ></codemirror>
       <codemirror
         v-if="editor.selectedTab === 'latexPreviewQ'"
@@ -54,41 +47,32 @@
           class="border"
         ></codemirror>
         Past AMC Latex code here (amcui layout and question definition), then
-        <q-btn
-          color="primary"
-          @click="examService.importLatex(editor.importSource)"
-          >Import</q-btn
-        >
+        <q-btn color="primary" @click="examService.importLatex(editor.importSource)">Import</q-btn>
         <codemirror
           v-model="editor.importJSONSource"
           :options="editor.jsonImportOptions"
           class="border"
         ></codemirror>
-        Past a valid JSON sync object code here to overwrite current (You can
-        loose everything!).
-        <q-btn
-          color="negative"
-          @click="examService.importJSON(editor.importJSONSource)"
-          >DANGER! overwrite!</q-btn
-        >
+        Past a valid JSON sync object code here to overwrite current (You can loose everything!).
+        <q-btn color="negative" @click="importJSON">DANGER! overwrite!</q-btn>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import ExamEditor from '../../services/examEditor';
-import { defineComponent, reactive, inject } from 'vue';
+import { defineComponent, reactive } from 'vue';
 import Codemirror from '../Codemirror.vue';
+import { useExamStore } from '@/stores/exam';
 
 export default defineComponent({
   name: 'LatexOptions',
   components: {
-    Codemirror,
+    Codemirror
   },
   emits: ['close'],
-  setup() {
-    const examService = inject('examService') as ExamEditor;
+  setup(props, { emit }) {
+    const examService = useExamStore();
     const editor = reactive({
       selectedTab: 'latexSource',
       importSource: '',
@@ -103,7 +87,7 @@ export default defineComponent({
         viewportMargin: Infinity,
         readOnly: false,
         matchBrackets: true,
-        autoCloseBrackets: true,
+        autoCloseBrackets: true
       },
       latexPreviewOptions: {
         mode: 'stex',
@@ -111,7 +95,7 @@ export default defineComponent({
         lineWrapping: true,
         viewportMargin: Infinity,
         readOnly: true,
-        matchBrackets: true,
+        matchBrackets: true
       },
       jsonPreviewOptions: {
         mode: 'application/json',
@@ -119,7 +103,7 @@ export default defineComponent({
         lineWrapping: true,
         viewportMargin: Infinity,
         readOnly: true,
-        matchBrackets: true,
+        matchBrackets: true
       },
       jsonImportOptions: {
         mode: 'application/json',
@@ -127,8 +111,8 @@ export default defineComponent({
         lineWrapping: true,
         viewportMargin: Infinity,
         readOnly: false,
-        matchBrackets: true,
-      },
+        matchBrackets: true
+      }
     });
 
     return {
@@ -155,7 +139,11 @@ export default defineComponent({
           });
         }
       },
+      importJSON() {
+        examService.importJSON(editor.importJSONSource);
+        emit('close');
+      }
     };
-  },
+  }
 });
 </script>

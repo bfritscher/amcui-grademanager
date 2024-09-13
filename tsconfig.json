@@ -1,17 +1,17 @@
 {
-  "extends": "@quasar/app-webpack/tsconfig-preset",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "plotly.js-cartesian-dist-min": [
-        "node_modules/@types/plotly.js"
-      ]
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.vitest.json"
     }
-  },
-  "exclude": [
-    "test/cypress",
-    "/dist",
-    ".quasar",
-    "node_modules"
-  ]
+  ],
+  "compilerOptions": {
+    "module": "NodeNext"
+  }
 }

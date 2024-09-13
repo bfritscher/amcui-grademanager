@@ -1,13 +1,13 @@
 <template>
   <li
     class="question-menu q-mb-xs"
-    :class="{ active: examService.currentQuestion === question }"
+    :class="{ active: examService.currentQuestion?.id === question.id }"
   >
     <router-link
       :to="examService.linkToQuestion(section, question)"
       class="row no-wrap items-center text-subtitle1 text-bold text-black"
     >
-      <div class="column question-menu-description col no-wrap">
+      <div class="column question-menu-description col no-wrap relative-position">
         <strong class="col">
           <q-checkbox
             v-if="examService.copy.enabled"
@@ -15,20 +15,12 @@
             dense
             @update:model-value="examService.toggleCopy(section, question)"
           >
-            <q-icon
-              v-if="!question.isValid"
-              name="mdi-alert"
-              color="warning"
-            ></q-icon>
+            <q-icon v-if="!question.isValid" name="sym_o_warning" color="warning"></q-icon>
             Question {{ question.number }}
             <span v-if="question.type === 'MULTIPLE'">♣</span>
           </q-checkbox>
           <div v-else>
-            <q-icon
-              v-if="!question.isValid"
-              name="mdi-alert"
-              color="warning"
-            ></q-icon>
+            <q-icon v-if="!question.isValid" name="sym_o_warning" color="warning"></q-icon>
             Question {{ question.number }}
             <span v-if="question.type === 'MULTIPLE'">♣</span>
             <span
@@ -41,46 +33,48 @@
                   : question.answers.length
               }})</span
             >
+            <awareness-indicator :id="question.id" />
           </div>
         </strong>
-        <em class="col text-subtitle2">{{
-          htmlToPlaintext(question.content).slice(0, 80)
-        }}</em>
+        <span class="col text-subtitle2">{{ htmlToPlaintext(question.content).slice(0, 80) }}</span>
       </div>
-      <q-icon
-        class="col-auto text-grey-7"
-        name="mdi-cursor-move"
-        size="sm"
-      ></q-icon>
+      <q-icon class="col-auto text-grey-5" name="sym_o_drag_pan" size="sm"></q-icon>
     </router-link>
   </li>
 </template>
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
-import { Section, Question } from '../models';
+import { defineComponent, type PropType } from 'vue';
+import type { Section, Question } from '../models';
 import htmlToPlaintext from '../../utils/htmlToPlainText';
+import { useExamStore } from '@/stores/exam';
+import AwarenessIndicator from '@/components/AwarenessIndicator.vue';
 
 export default defineComponent({
   name: 'EditDrawerQuestion',
+  components: {
+    AwarenessIndicator
+  },
   props: {
     section: {
       type: Object as PropType<Section>,
-      required: true,
+      required: true
     },
     question: {
       type: Object as PropType<Question>,
-      required: true,
-    },
+      required: true
+    }
   },
   setup() {
+    const examService = useExamStore();
     return {
-      htmlToPlaintext,
+      examService,
+      htmlToPlaintext
     };
-  },
+  }
 });
 </script>
 <style scoped>
-.question-menu em {
+.question-menu .text-subtitle2 {
   font-weight: 400;
   white-space: nowrap;
   overflow: hidden;
@@ -91,7 +85,7 @@ export default defineComponent({
   color: #283593 !important;
 }
 
-.question-menu .mdi-cursor-move.q-icon {
+.question-menu .sym_o_drag_pan.q-icon {
   cursor: move;
 }
 .question-menu a {

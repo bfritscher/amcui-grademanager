@@ -1,33 +1,63 @@
-# Grade Manager (grademanager3)
+# amcui-grademanager4
 
-A Quasar Framework app
+This template should help get you started developing with Vue 3 in Vite.
 
-## Install the dependencies
-```bash
-yarn
+## Recommended IDE Setup
+
+[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+
+## Type Support for `.vue` Imports in TS
+
+TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+
+## Customize configuration
+
+See [Vite Configuration Reference](https://vitejs.dev/config/).
+
+## Project Setup
+
+```sh
+npm install
 ```
 
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
-```bash
-quasar dev
+### Compile and Hot-Reload for Development
+
+```sh
+npm run dev
 ```
 
-### Lint the files
-```bash
-yarn run lint
+### Type-Check, Compile and Minify for Production
+
+```sh
+npm run build
 ```
 
-### Build the app for production
-```bash
-quasar build
+### Run Unit Tests with [Vitest](https://vitest.dev/)
+
+```sh
+npm run test:unit
 ```
 
-### Customize the configuration
-See [Configuring quasar.conf.js](https://v2.quasar.dev/quasar-cli/quasar-conf-js).
+### Run End-to-End Tests with [Cypress](https://www.cypress.io/)
 
+```sh
+npm run test:e2e:dev
+```
 
-```bash
-icongenie generate -m spa -i .\src\assets\images\auto-multiple-choice.png
+This runs the end-to-end tests against the Vite development server.
+It is much faster than the production build.
+
+But it's still recommended to test the production build with `test:e2e` before deploying (e.g. in CI environments):
+
+```sh
+npm run build
+npm run test:e2e
+```
+
+### Lint with [ESLint](https://eslint.org/)
+
+```sh
+npm run lint
 ```
 
 ### config variable via environment

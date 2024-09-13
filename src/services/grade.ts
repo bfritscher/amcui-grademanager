@@ -1,18 +1,12 @@
 import { reactive } from 'vue';
 import Papa from 'papaparse';
-import * as _ from 'lodash';
-
-import Api from './api';
-import {
-  GradeRecord,
-  GradeQuestion,
-  Score,
-  GradeFile,
-  Stat,
-} from '../components/models';
+import { debounce } from 'lodash-es';
+import type { GradeRecord, GradeQuestion, Score, GradeFile, Stat } from '../components/models';
+import { useApiStore } from '@/stores/api';
+import { useRouter } from 'vue-router';
 
 export default class GradeService {
-  API: Api;
+  private API;
   grade = reactive({
     isLoading: true,
     showLoading: false,
@@ -21,7 +15,7 @@ export default class GradeService {
     files: [] as GradeFile[],
     students: {
       fields: ['id'],
-      data: [] as any[],
+      data: [] as any[]
     },
     studentsLookup: {} as { [key: string]: any },
     // pivot data
@@ -30,11 +24,11 @@ export default class GradeService {
     questions: {} as { [key: string]: GradeQuestion },
     whys: {} as { [key: string]: string },
     maxPoints: 0,
-    test: {},
+    test: {}
   });
 
-  constructor({ API }: { API: any }) {
-    this.API = API;
+  constructor() {
+    this.API = useApiStore();
   }
 
   startLoading() {
@@ -62,101 +56,92 @@ export default class GradeService {
     this.grade.files = [];
     this.grade.students = {
       fields: ['id'],
-      data: [],
+      data: []
     };
     this.grade.studentsLookup = {};
-    this.API.$http
-      .get(this.API.URL + '/project/' + this.API.project + '/csv')
-      .then((r) => {
-        this.parseCSV(r.data as string);
-        this.loadScores();
-      });
+    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/csv').then((r) => {
+      this.parseCSV(r.data as string);
+      this.loadScores();
+    });
 
-    this.API.$http
-      .get(this.API.URL + '/project/' + this.API.project + '/stats')
-      .then((r) => {
-        this.grade.stats = r.data;
-      });
+    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/stats').then((r) => {
+      this.grade.stats = r.data;
+    });
 
-    this.API.$http
-      .get(this.API.URL + '/project/' + this.API.project + '/gradefiles')
-      .then(
-        (r) => {
-          this.grade.files = r.data || [];
-          this.grade.files.forEach((file) => {
-            if (!file.meta.selected) {
-              file.meta.selected = {};
-            }
-          });
-        },
-        () => {
-          this.grade.files = [];
-        }
-      );
+    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/gradefiles').then(
+      (r) => {
+        this.grade.files = r.data || [];
+        this.grade.files.forEach((file) => {
+          if (!file.meta.selected) {
+            file.meta.selected = {};
+          }
+        });
+      },
+      () => {
+        this.grade.files = [];
+      }
+    );
   }
 
   loadScores() {
     this.startLoading();
-    this.API.$http
-      .get(this.API.URL + '/project/' + this.API.project + '/scores')
-      .then(
-        (r: any) => {
-          //pivot data
-          this.grade.scores = {};
-          this.grade.unmatched = {};
-          this.grade.questions = {};
-          this.grade.whys = {};
-          this.grade.maxPoints = 0;
-          r.data.forEach((row: Score) => {
-            const key = row.student + ':' + row.copy;
-            let id = key;
-            let target: keyof { unmatched: any; scores: any } = 'unmatched';
-            if (row.id && this.getStudentById(row.id)) {
-              id = row.id;
-              target = 'scores';
-            }
-
-            if (!this.grade[target].hasOwnProperty(id)) {
-              this.grade[target][id] = {
-                id: row.id,
-                key: key,
-                student: row.student,
-                copy: row.copy,
-                questions: {},
-                total: 0,
-              };
-            }
-            if (!this.grade.questions.hasOwnProperty(row.title)) {
-              this.grade.questions[row.title] = {
-                max: row.max,
-                question: row.question,
-                pages: {},
-              };
-              this.grade.maxPoints += row.max;
-            }
-            this.grade.questions[row.title].pages[row.student] = row.page;
-            this.grade[target][id].total += row.score;
-            this.grade[target][id].questions[row.title] = row.score;
-
-            this.grade.whys[key + ':' + row.question] = row.why;
-          });
-
-          // initial value for custom options data
-          if (!this.API.options.options.points_max) {
-            this.API.options.options.points_max =
-              this.grade.maxPoints.toString();
+    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/scores').then(
+      (r: any) => {
+        //pivot data
+        this.grade.scores = {};
+        this.grade.unmatched = {};
+        this.grade.questions = {};
+        this.grade.whys = {};
+        this.grade.maxPoints = 0;
+        r.data.forEach((row: Score) => {
+          const key = row.student + ':' + row.copy;
+          let id = key;
+          let target: keyof { unmatched: any; scores: any } = 'unmatched';
+          if (row.id && this.getStudentById(row.id)) {
+            id = row.id;
+            target = 'scores';
           }
 
-          if (!this.API.options.options.final_grade_formula) {
-            this.API.options.options.final_grade_formula = 'row.Grade';
+          if (!this.grade[target].hasOwnProperty(id)) {
+            this.grade[target][id] = {
+              id: row.id,
+              key: key,
+              student: row.student,
+              copy: row.copy,
+              questions: {},
+              total: 0
+            };
           }
-          this.calculateGrades();
-          this.stopLoading();
-        },
-        () => {
-          this.stopLoading();
+          if (!this.grade.questions.hasOwnProperty(row.title)) {
+            this.grade.questions[row.title] = {
+              max: row.max,
+              question: row.question,
+              pages: {}
+            };
+            this.grade.maxPoints += row.max;
+          }
+          this.grade.questions[row.title].pages[row.student] = row.page;
+          this.grade[target][id].total += row.score;
+          this.grade[target][id].questions[row.title] = row.score;
+
+          this.grade.whys[key + ':' + row.question] = row.why;
+        });
+
+        // initial value for custom options data
+        if (!this.API.options.options.points_max) {
+          this.API.options.options.points_max = this.grade.maxPoints.toString();
         }
-      );
+
+        if (!this.API.options.options.final_grade_formula) {
+          this.API.options.options.final_grade_formula = 'row.Grade';
+        }
+        this.calculateGrades();
+        this.stopLoading();
+      },
+      () => {
+        this.stopLoading();
+      }
+    );
   }
   // parse CSV data and integrate into into the in memory table
   // source server CSV local paste data or csv.
@@ -165,7 +150,7 @@ export default class GradeService {
     const result = Papa.parse(csv, {
       header: true,
       dynamicTyping: true,
-      skipEmptyLines: true,
+      skipEmptyLines: true
     });
     if (!result || !result.meta || !result.meta.fields) return;
     //merge keys
@@ -175,7 +160,7 @@ export default class GradeService {
         field = 'Column ' + (index + 1);
         result.data.forEach((row: any) => {
           row[field] = row[''];
-        })
+        });
       }
       if (this.grade.students.fields.indexOf(field) < 0) {
         this.grade.students.fields.push(field);
@@ -192,7 +177,7 @@ export default class GradeService {
           }, 0) + 1;
       }
       // TODO-test merge data with same id? #44
-      const existingRow = this.getStudentById(row.id as string|number);
+      const existingRow = this.getStudentById(row.id as string | number);
       if (existingRow) {
         Object.assign(existingRow, row);
       } else {
@@ -209,10 +194,7 @@ export default class GradeService {
 
   removeStudent(student: any) {
     this.unmatchStudent(student);
-    this.grade.students.data.splice(
-      this.grade.students.data.indexOf(student),
-      1
-    );
+    this.grade.students.data.splice(this.grade.students.data.indexOf(student), 1);
     delete this.grade.studentsLookup[student.id];
   }
 
@@ -220,34 +202,26 @@ export default class GradeService {
     const score = this.grade.scores[student.id];
     if (score) {
       this.API.$http
-        .post(
-          this.API.URL + '/project/' + this.API.project + '/association/manual',
-          {
-            student: score.student,
-            copy: score.copy,
-            id: 'NULL',
-          }
-        )
+        .post(this.API.URL + '/project/' + this.API.project + '/association/manual', {
+          student: score.student,
+          copy: score.copy,
+          id: 'NULL'
+        })
         .then(() => {
           this.grade.unmatched[student.id] = score;
-          delete this.grade.scores[student.id]
+          delete this.grade.scores[student.id];
         });
     }
   }
 
   annotateScore(score: GradeRecord) {
-    this.API.$http.post(
-      this.API.URL + '/project/' + this.API.project + '/annotate',
-      {
-        ids: [score.copy ? score.student + ':' + score.copy : score.student],
-      }
-    );
+    this.API.$http.post(this.API.URL + '/project/' + this.API.project + '/annotate', {
+      ids: [score.copy ? score.student + ':' + score.copy : score.student]
+    });
   }
 
   annotateAll() {
-    this.API.$http.post(
-      this.API.URL + '/project/' + this.API.project + '/annotate'
-    );
+    this.API.$http.post(this.API.URL + '/project/' + this.API.project + '/annotate');
   }
 
   // file handling
@@ -259,7 +233,10 @@ export default class GradeService {
 
   exportAllData() {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const data = JSON.parse(JSON.stringify(this.grade.students)) as {fields: string[], data: any[]};
+    const data = JSON.parse(JSON.stringify(this.grade.students)) as {
+      fields: string[];
+      data: any[];
+    };
     Object.keys(this.grade.questions).forEach((key) => {
       data.fields.push(key);
       data.data.forEach((row) => {
@@ -274,9 +251,7 @@ export default class GradeService {
       // eslint-disable-next-line @typescript-eslint/no-implied-eval
       return new Function(
         'row',
-        'try{ return ' +
-          func +
-          '; } catch (e) { return `Error: ${e.message}`; }'
+        'try{ return ' + func + '; } catch (e) { return `Error: ${e.message}`; }'
       );
     } catch (e: any) {
       return () => 'Error: ' + e.message;
@@ -327,20 +302,20 @@ export default class GradeService {
       complete: (results: any) => {
         results.name = name;
         results.studentLookup = 'row.name.toLowerCase()';
-        results.fileLookup =
-          '(row["First Name"]  +  " " + row.last_name).toLowerCase()';
+        results.fileLookup = '(row["First Name"]  +  " " + row.last_name).toLowerCase()';
         results.demoid = 1;
         results.meta.selected = {};
         const index = this.grade.files.push(results as GradeFile);
         this.saveFiles();
-        this.API.router.push({
+        const router = useRouter();
+        router.push({
           name: 'Grade',
           params: {
             project: this.API.project,
-            tab: `file${index - 1}`,
-          },
+            tab: `file${index - 1}`
+          }
         });
-      },
+      }
     });
   }
 
@@ -349,18 +324,10 @@ export default class GradeService {
     this.saveFiles();
   }
   saveFiles() {
-    this.API.$http.post(
-      `${this.API.URL}/project/${this.API.project}/gradefiles`,
-      this.grade.files
-    );
+    this.API.$http.post(`${this.API.URL}/project/${this.API.project}/gradefiles`, this.grade.files);
   }
 
-  renameColumn(
-    currentName: string,
-    newName: string,
-    fields: string[],
-    data: any[]
-  ) {
+  renameColumn(currentName: string, newName: string, fields: string[], data: any[]) {
     const index = fields.indexOf(currentName);
     if (newName && newName !== currentName) {
       fields[index] = newName;
@@ -426,7 +393,7 @@ export default class GradeService {
     if (!this.grade.students.fields.includes('FinalGrade')) {
       this.grade.students.fields.push('FinalGrade');
     }
-    this.grade.students.data.forEach((row: {[key: string]: string|number}) => {
+    this.grade.students.data.forEach((row: { [key: string]: string | number }) => {
       const score = this.grade.scores[row.id];
       if (score) {
         // copy total to csv
@@ -458,13 +425,13 @@ export default class GradeService {
       method: 'POST',
       url: this.API.URL + '/project/' + this.API.project + '/csv',
       headers: {
-        'Content-Type': 'text/plain',
+        'Content-Type': 'text/plain'
       },
-      data: this.exportData(),
+      data: this.exportData()
     });
   }
 
-  debounceSaveCSV = _.debounce(
+  debounceSaveCSV = debounce(
     () => {
       if (!this.grade.isLoading) {
         this.saveCSV();
@@ -497,9 +464,7 @@ export default class GradeService {
   }
 
   avgScore(getter: (o: any) => any) {
-    const rows = Object.values(this.grade.scores).concat(
-      Object.values(this.grade.unmatched)
-    );
+    const rows = Object.values(this.grade.scores).concat(Object.values(this.grade.unmatched));
     return this.avg(rows, getter);
   }
 

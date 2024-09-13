@@ -21,3 +21,5 @@ jobs:
           # githubOrg: override-org # optional
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_TOKEN }}
+          buildArgs: |
+            VITE_COMMITHASH=${{ github.sha }}

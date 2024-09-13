@@ -1,7 +1,7 @@
 <template>
   <q-page class="container">
     <q-form ref="form.ref" class="row q-py-lg" @submit="createProject">
-      <q-card class="col-12 col-md-8 offset-md-2">
+      <q-card flat bordered class="col-12 col-md-8 offset-md-2">
         <q-card-section>
           <div class="text-h5">New Project</div>
           <div class="row items-center no-wrap">
@@ -12,9 +12,7 @@
               :rules="form.projectNameRules"
               required
             ></q-input>
-            <q-btn type="submit" color="primary" unelevated
-              >Create Project</q-btn
-            >
+            <q-btn type="submit" color="primary" unelevated>Create Project</q-btn>
           </div>
         </q-card-section>
         <q-card-section v-if="form.error">
@@ -23,15 +21,11 @@
       </q-card>
     </q-form>
     <div class="row q-py-lg">
-      <q-card class="col-12 col-md-8 offset-md-2">
+      <q-card flat bordered class="col-12 col-md-8 offset-md-2">
         <q-card-section>
           <div class="text-h5">Existing Projects</div>
 
-          <q-input
-            v-model="search"
-            label="Search"
-            @click="selectedTab = 'all'"
-          >
+          <q-input v-model="search" label="Search" @click="selectedTab = 'all'">
             <template #append>
               <q-icon
                 v-if="search !== ''"
@@ -39,7 +33,7 @@
                 class="cursor-pointer"
                 @click="search = ''"
               />
-              <q-icon name="search" />
+              <q-icon name="sym_o_search" />
             </template>
           </q-input>
         </q-card-section>
@@ -78,11 +72,9 @@
       </q-card>
     </div>
     <div class="git-version">
-      <a
-        :href="`https://github.com/bfritscher/amcui-grademanager/commit/${COMMITHASH}`"
+      <a :href="`https://github.com/bfritscher/amcui-grademanager/commit/${COMMITHASH}`"
         >c: {{ COMMITHASH.slice(0, 7) }}</a
-      >&nbsp;<a
-        :href="`https://github.com/bfritscher/amcui-server/commit/${serverVersion}`"
+      >&nbsp;<a :href="`https://github.com/bfritscher/amcui-server/commit/${serverVersion}`"
         >s: {{ serverVersion.slice(0, 7) }}</a
       >
     </div>
@@ -90,28 +82,21 @@
 </template>
 
 <script lang="ts">
-import {
-  defineComponent,
-  onMounted,
-  inject,
-  ref,
-  computed,
-  reactive,
-} from 'vue';
+import { defineComponent, onMounted, ref, computed, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { useStore } from '../store';
-import Api from '../services/api';
-import { Project } from '../components/models';
+import { useStore } from '@/stores/store';
+import { useApiStore } from '@/stores/api';
+import type { Project } from '../components/models';
 import HomeTable from '../components/Home/HomeTable.vue';
 
 export default defineComponent({
   name: 'Home',
   components: {
-    HomeTable,
+    HomeTable
   },
   setup() {
-    const API = inject('API') as Api;
+    const API = useApiStore();
     const router = useRouter();
     const store = useStore();
     const $q = useQuasar();
@@ -119,7 +104,7 @@ export default defineComponent({
     onMounted(async () => {
       API.project = '';
       API.getProjectList();
-      serverVersion.value = await API.getVersion()
+      serverVersion.value = await API.getVersion();
     });
 
     const form = reactive({
@@ -129,9 +114,8 @@ export default defineComponent({
       projectNameRules: [
         (value: string) => !!value || 'Name is required',
         (value: string) =>
-          /^[-0-9a-z_]+$/.test(value) ||
-          'Only the following characters are allowed: 0-9a-z-_',
-      ],
+          /^[-0-9a-z_]+$/.test(value) || 'Only the following characters are allowed: 0-9a-z-_'
+      ]
     });
 
     const selectedTab = ref('recent');
@@ -139,23 +123,17 @@ export default defineComponent({
     const serverVersion = ref('');
 
     const filteredProjects = computed(() => {
-      return (
-        selectedTab.value === 'recent'
-          ? store.state.projectsRecent
-          : store.state.projects
-      ).filter((p) =>
+      return (selectedTab.value === 'recent' ? store.projectsRecent : store.projects).filter((p) =>
         p.project.toLowerCase().includes(search.value.toLowerCase())
       );
     });
 
-    const openProject = (
-      project: Project | { project: string; status?: any }
-    ) => {
+    const openProject = (project: Project | { project: string; status?: any }) => {
       const route = {
         name: 'Edit',
         params: {
-          project: project.project,
-        },
+          project: project.project
+        }
       };
       if (project.status && project.status.annotated) {
         route.name = 'Grade';
@@ -170,7 +148,7 @@ export default defineComponent({
       selectedTab,
       search,
       filteredProjects,
-      COMMITHASH: process.env.COMMITHASH || '',
+      COMMITHASH: import.meta.env.VITE_COMMITHASH || '',
       serverVersion,
       openProject,
       createProject() {
@@ -181,7 +159,7 @@ export default defineComponent({
             openProject({ project: r.data });
           },
           (data) => {
-            form.error = data.data || data;
+            form.error = data?.response?.data || data;
           }
         );
       },
@@ -192,22 +170,22 @@ export default defineComponent({
           prompt: {
             label: 'New name',
             model: '',
-            type: 'text', // optional
+            type: 'text' // optional
           },
           cancel: true,
-          persistent: true,
+          persistent: true
         }).onOk((name: string) => {
           name = name
             .trim()
             .toLowerCase()
-            .replace(/[^\-a-z0-9\_]/g, '');
+            .replace(/[^\-a-z0-9_]/g, '');
           API.copyProject(project.project, name).then(() => {
             openProject({ project: name });
           });
         });
-      },
+      }
     };
-  },
+  }
 });
 </script>
 <style scoped>

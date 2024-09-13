@@ -12,29 +12,21 @@ export function CronbachAlpha(listOfQuestions: number[][]) {
     }, 0);
     const itemsMean = sumScores / individualScores.length;
     const itemsVariance =
-      individualScores.reduce(
-        (sum, score) => sum + Math.pow(score - itemsMean, 2),
-        0
-      ) /
+      individualScores.reduce((sum, score) => sum + Math.pow(score - itemsMean, 2), 0) /
       (individualScores.length - 1);
     sumVariance += itemsVariance;
   }
   const totalScores = listOfQuestions[0].map((_, i) => {
-    return listOfQuestions.reduce(
-      (sum, individualScores) => sum + individualScores[i],
-      0
-    );
+    return listOfQuestions.reduce((sum, individualScores) => sum + individualScores[i], 0);
   });
-  const totalMean =
-    totalScores.reduce((sum, score) => sum + score, 0) / numIndividuals;
+  const totalMean = totalScores.reduce((sum, score) => sum + score, 0) / numIndividuals;
   const totalVariance =
     totalScores.reduce((sum, score) => {
       return sum + Math.pow(score - totalMean, 2);
     }, 0) /
     (numIndividuals - 1);
   const alpha =
-    ((numQuestions / (numQuestions - 1)) * (totalVariance - sumVariance)) /
-    totalVariance;
+    ((numQuestions / (numQuestions - 1)) * (totalVariance - sumVariance)) / totalVariance;
 
   return alpha;
 }
@@ -61,8 +53,7 @@ export function ShapiroWilkW(X: number[]) {
 
   let sumsq = 0;
 
-  for (let k = 0; k < Xlen; k++)
-    sumsq = sumsq + (Number(X[k]) - mu) * (Number(X[k]) - mu);
+  for (let k = 0; k < Xlen; k++) sumsq = sumsq + (Number(X[k]) - mu) * (Number(X[k]) - mu);
 
   let std2 = (1.0 / (Xlen - 1)) * sumsq;
 
@@ -87,8 +78,7 @@ export function ShapiroWilkW(X: number[]) {
 
   const m = [];
 
-  for (let k = 0; k < Xlen; k++)
-    m[k] = gauss_icdf((k + 1 - 3 / 8) / (Xlen + 0.25), 0, 1);
+  for (let k = 0; k < Xlen; k++) m[k] = gauss_icdf((k + 1 - 3 / 8) / (Xlen + 0.25), 0, 1);
 
   let msq = 0;
 
@@ -133,8 +123,7 @@ export function ShapiroWilkW(X: number[]) {
   p2[4] = 0.042981;
   p2[5] = c[Xlen - 2];
 
-  w[Xlen - 1] =
-    p1[0] * u5 + p1[1] * u4 + p1[2] * u3 + p1[3] * u2 + p1[4] * u + p1[5];
+  w[Xlen - 1] = p1[0] * u5 + p1[1] * u4 + p1[2] * u3 + p1[3] * u2 + p1[4] * u + p1[5];
 
   w[0] = -w[Xlen - 1];
 
@@ -146,23 +135,22 @@ export function ShapiroWilkW(X: number[]) {
   let ct = 0;
   let phi = 0;
 
-  let numer = 1;
-  let denom = 1;
+  let numerator = 1;
+  let denominator = 1;
 
   if (Xlen >= 6) {
-    w[Xlen - 2] =
-      p2[0] * u5 + p2[1] * u4 + p2[2] * u3 + p2[3] * u2 + p2[4] * u + p2[5];
+    w[Xlen - 2] = p2[0] * u5 + p2[1] * u4 + p2[2] * u3 + p2[3] * u2 + p2[4] * u + p2[5];
     w[1] = -w[Xlen - 2];
     ct = 3;
 
-    numer = msq - 2 * m[Xlen - 1] * m[Xlen - 1] - 2 * m[Xlen - 2] * m[Xlen - 2];
-    denom = 1 - 2 * w[Xlen - 1] * w[Xlen - 1] - 2 * w[Xlen - 2] * w[Xlen - 2];
-    phi = numer / denom;
+    numerator = msq - 2 * m[Xlen - 1] * m[Xlen - 1] - 2 * m[Xlen - 2] * m[Xlen - 2];
+    denominator = 1 - 2 * w[Xlen - 1] * w[Xlen - 1] - 2 * w[Xlen - 2] * w[Xlen - 2];
+    phi = numerator / denominator;
   } else {
     ct = 2;
-    numer = msq - 2 * m[Xlen - 1] * m[Xlen - 1];
-    denom = 1 - 2 * w[Xlen - 1] * w[Xlen - 1];
-    phi = numer / denom;
+    numerator = msq - 2 * m[Xlen - 1] * m[Xlen - 1];
+    denominator = 1 - 2 * w[Xlen - 1] * w[Xlen - 1];
+    phi = numerator / denominator;
   }
 
   if (Xlen != 3) {
@@ -258,9 +246,10 @@ export function ShapiroWilkW(X: number[]) {
     */
   }
   const midpoint = Math.floor(xs.length / 2); // 2.
-  const median = xs.length % 2 === 1 ?
-    xs[midpoint] : // 3.1. If odd length, just take midpoint
-    (xs[midpoint - 1] + xs[midpoint]) / 2; // 3.2. If even length, take median of midpoints
+  const median =
+    xs.length % 2 === 1
+      ? xs[midpoint] // 3.1. If odd length, just take midpoint
+      : (xs[midpoint - 1] + xs[midpoint]) / 2; // 3.2. If even length, take median of midpoints
   return {
     n: Xlen,
     mean: mu,
@@ -273,7 +262,7 @@ export function ShapiroWilkW(X: number[]) {
     w: Wfinal,
     pvalue: pw,
     wcrit: Wc,
-    accept_null,
+    accept_null
   };
 }
 
@@ -335,9 +324,7 @@ function erf_taylor(x: number): number {
   const c = 2.0 / Math.sqrt(Math.PI);
 
   for (let n = 0; n < 100; n++)
-    res =
-      res +
-      (Math.pow(-1, n) * Math.pow(x, 2 * n + 1)) / (sFact(n) * (2 * n + 1));
+    res = res + (Math.pow(-1, n) * Math.pow(x, 2 * n + 1)) / (sFact(n) * (2 * n + 1));
 
   res = c * res;
 
@@ -398,10 +385,8 @@ function sFact(num: number): number {
   return rval;
 }
 
-function compare(a:number,b:number) {
-  if (a < b)
-     return -1;
-  if (a > b)
-    return 1;
+function compare(a: number, b: number) {
+  if (a < b) return -1;
+  if (a > b) return 1;
   return 0;
 }

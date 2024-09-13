@@ -35,21 +35,15 @@
       </tr>
       <tr>
         <th class="text-left">Pass</th>
-        <td v-for="(c, index) in table[2]" :key="index" class="text-right">
-          {{ c }}%
-        </td>
+        <td v-for="(c, index) in table[2]" :key="index" class="text-right">{{ c }}%</td>
       </tr>
       <tr>
         <th class="text-left">Remed</th>
-        <td v-for="(c, index) in table[3]" :key="index" class="text-right">
-          {{ c }}%
-        </td>
+        <td v-for="(c, index) in table[3]" :key="index" class="text-right">{{ c }}%</td>
       </tr>
       <tr>
         <th class="text-left">Fail</th>
-        <td v-for="(c, index) in table[4]" :key="index" class="text-right">
-          {{ c }}%
-        </td>
+        <td v-for="(c, index) in table[4]" :key="index" class="text-right">{{ c }}%</td>
       </tr>
     </table>
   </div>
@@ -58,19 +52,19 @@
 <script lang="ts">
 import { defineComponent, inject, computed } from 'vue';
 import GradeService from '../../services/grade';
-import Api from '../../services/api';
+import { useApiStore } from '@/stores/api';
 
 export default defineComponent({
   name: 'DataTable',
   props: {
     maxPoints: {
       type: Number,
-      required: true,
-    },
+      required: true
+    }
   },
   setup(props) {
     const gradeService = inject('gradeService') as GradeService;
-    const API = inject('API') as Api;
+    const API = useApiStore();
     const delta = 5;
     const minGrade = parseFloat(API.options.options.note_min);
     const maxGrade = parseFloat(API.options.options.note_max);
@@ -78,11 +72,7 @@ export default defineComponent({
     const tableData = computed(() => {
       // maxPoints, AVG, Pass, Remed, Fail
       const table = [[], [], [], [], [], [], []] as string[][];
-      for (
-        let max = props.maxPoints - delta;
-        max <= delta + props.maxPoints;
-        max++
-      ) {
+      for (let max = props.maxPoints - delta; max <= delta + props.maxPoints; max++) {
         const iteration = {
           count: 0,
           total: 0,
@@ -90,19 +80,15 @@ export default defineComponent({
           remed: 0,
           fail: 0,
           min: maxGrade,
-          max: minGrade,
+          max: minGrade
         };
         for (let i = 0; i < gradeService.grade.students.data.length; i++) {
-          const score =
-            gradeService.grade.scores[gradeService.grade.students.data[i].id];
+          const score = gradeService.grade.scores[gradeService.grade.students.data[i].id];
           if (!score) continue;
           const value = score.total;
 
           if (isNaN(value)) continue;
-          const gradeScaled = gradeService.computedRoundedScaledGrade(
-            value,
-            max
-          );
+          const gradeScaled = gradeService.computedRoundedScaledGrade(value, max);
           //TODO-nice: make configurable? #45
           if (gradeScaled >= 4) {
             iteration.pass++;
@@ -120,15 +106,9 @@ export default defineComponent({
         table[0].push(max.toString());
         // TODO-nice configure number fixed
         table[1].push((iteration.total / iteration.count).toFixed(2));
-        table[2].push(
-          Math.round((iteration.pass / iteration.count) * 100).toString()
-        );
-        table[3].push(
-          Math.round((iteration.remed / iteration.count) * 100).toString()
-        );
-        table[4].push(
-          Math.round((iteration.fail / iteration.count) * 100).toString()
-        );
+        table[2].push(Math.round((iteration.pass / iteration.count) * 100).toString());
+        table[3].push(Math.round((iteration.remed / iteration.count) * 100).toString());
+        table[4].push(Math.round((iteration.fail / iteration.count) * 100).toString());
         table[5].push(iteration.min.toFixed(2));
         table[6].push(iteration.max.toFixed(2));
       }
@@ -137,9 +117,9 @@ export default defineComponent({
 
     return {
       table: tableData,
-      gradeService,
+      gradeService
     };
-  },
+  }
 });
 </script>
 <style scoped>

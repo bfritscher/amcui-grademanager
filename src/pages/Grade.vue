@@ -6,10 +6,10 @@
       inline-actions
       class="text-white bg-red"
     >
-      This project has been annotaed on
+      Annotated on
       {{ formatDate(API.options.status.annotated, 'YYYY-MM-DD HH:mm') }}.
       <q-btn color="primary" type="a" :href="API.getAnnotateZipURL()"
-        >Download&nbsp;<small>(Zip with annotated PDFs)</small></q-btn
+        >Download&nbsp;<small>(Zip with PDFs)</small></q-btn
       >
       <q-btn
         color="primary"
@@ -23,18 +23,21 @@
       <q-btn
         color="primary"
         type="a"
+        class="q-mx-md"
         :href="API.getAnnotateMergedFirstPageURL()"
         download
         target="_blank"
         >Download&nbsp;<small>(Merged PDFs first page only)</small></q-btn
       >
+      <q-btn
+        color="blue-grey-5"
+        type="a"
+        href="https://bfritscher.github.io/pdf-stamp/"
+        target="_blank"
+        >Stamp&nbsp;<small>(sign pdf)</small></q-btn
+      >
       <template #action>
-        <q-btn
-          flat
-          color="white"
-          icon="mdi-close"
-          @click="ui.hidePrintNotification = true"
-        />
+        <q-btn flat color="white" icon="sym_o_close" @click="ui.hidePrintNotification = true" />
       </template>
     </q-banner>
     <q-tabs
@@ -69,15 +72,13 @@
                   @click="ui.showDataTable = false"
                 ></q-btn>
               </div>
-              <data-table
-                :max-points="parseFloat(API.options.options.points_max)"
-              />
+              <data-table :max-points="parseFloat(API.options.options.points_max)" />
             </div>
             <div v-if="ui.showHistogram" class="q-ma-md">
               <div class="text-h6">
                 Points Histogram
                 <q-btn
-                  icon="mdi-eye-off-outline"
+                  icon="sym_o_visibility_off"
                   flat
                   dense
                   padding="xs"
@@ -85,19 +86,23 @@
                   @click="ui.showHistogram = false"
                 ></q-btn>
               </div>
-              <histogram
-                :values="rows.map((x) => x.total || x.Total)"
-                :min="0"
-                :max="gradeService.grade.maxPoints"
-              />
+              <Suspense>
+                <template #default>
+                  <histogram
+                    v-if="ui.showHistogram"
+                    :values="rows.map((x: any) => x.total || x.Total)"
+                    :min="0"
+                    :max="gradeService.grade.maxPoints"
+                  />
+                </template>
+                <template #fallback>
+                  <div>Loading...</div>
+                </template>
+              </Suspense>
             </div>
-            <q-banner
-              v-if="showMatchLookupWarning"
-              inline-actions
-              class="text-white bg-orange"
-            >
-              Warning: It is recommanded to have at least one of the following
-              column for manual matching: <em>{{ matchLookups.join(', ') }}</em
+            <q-banner v-if="showMatchLookupWarning" inline-actions class="text-white bg-orange">
+              Warning: It is recommended to have at least one of the following column for manual
+              matching: <em>{{ matchLookups.join(', ') }}</em
               >.
             </q-banner>
             <q-table
@@ -115,21 +120,16 @@
               flat
             >
               <template #top-right="props">
-                <q-input
-                  v-model="ui.filter"
-                  dense
-                  debounce="300"
-                  placeholder="Search"
-                >
+                <q-input v-model="ui.filter" dense debounce="300" placeholder="Search">
                   <template #prepend>
-                    <q-icon name="search" />
+                    <q-icon name="sym_o_search" />
                   </template>
                 </q-input>
                 <q-btn
                   flat
                   round
                   dense
-                  :icon="props.inFullscreen ? 'fullscreen_exit' : 'fullscreen'"
+                  :icon="props.inFullscreen ? 'sym_o_fullscreen_exit' : 'sym_o_fullscreen'"
                   class="q-ml-md"
                   @click="props.toggleFullscreen"
                 />
@@ -144,11 +144,7 @@
                       @click="showEditColumnsDialog()"
                     ></q-btn>
                   </q-th>
-                  <q-th
-                    v-for="col in studentsFieldFiltered"
-                    :key="col"
-                    :props="props"
-                  >
+                  <q-th v-for="col in studentsFieldFiltered" :key="col" :props="props">
                     <span>{{ col }}</span>
                   </q-th>
                   <q-th key="FinalGrade" class="text-left" :props="props">
@@ -186,11 +182,7 @@
                     >
                       <template #before>
                         <q-btn
-                          :icon="
-                            ui.showDataTable
-                              ? 'mdi-table-eye-off'
-                              : 'mdi-table-eye'
-                          "
+                          :icon="ui.showDataTable ? 'mdi-table-eye-off' : 'mdi-table-eye'"
                           flat
                           dense
                           padding="xs"
@@ -207,11 +199,7 @@
                       >(max:{{ gradeService.grade.maxPoints }})</span
                     ><br />
                     <q-btn
-                      :icon="
-                        ui.showHistogram
-                          ? 'mdi-eye-off-outline'
-                          : 'mdi-chart-box-outline'
-                      "
+                      :icon="ui.showHistogram ? 'sym_o_visibility_off' : 'sym_o_insert_chart'"
                       flat
                       dense
                       padding="xs"
@@ -230,14 +218,11 @@
                   </q-th>
                   <template v-if="ui.displayQuestions">
                     <q-th
-                      v-for="(value, qtitle, $index) in gradeService.grade
-                        .questions"
+                      v-for="(value, qtitle, $index) in gradeService.grade.questions"
                       :key="$index"
                       class="score"
                     >
-                      {{ qtitle }}<br /><span class="question-max"
-                        >max {{ value.max }}</span
-                      >
+                      {{ qtitle }}<br /><span class="question-max">max {{ value.max }}</span>
                     </q-th>
                   </template>
                 </q-tr>
@@ -259,7 +244,7 @@
                       flat
                       size="md"
                       padding="xs"
-                      icon="mdi-close"
+                      icon="sym_o_close"
                       aria-label="remove student"
                       color="negative"
                       @click="gradeService.removeStudent(props.row)"
@@ -271,7 +256,7 @@
                       flat
                       size="md"
                       padding="xs"
-                      icon="mdi-link-off"
+                      icon="sym_o_link_off"
                       aria-label="unmatch student"
                       color="secondary"
                       @click="gradeService.unmatchStudent(props.row)"
@@ -283,14 +268,10 @@
                       flat
                       size="md"
                       padding="xs"
-                      icon="mdi-eye"
+                      icon="sym_o_visibility"
                       aria-label="view annotated"
                       color="secondary"
-                      @click="
-                        gradeService.annotateScore(
-                          gradeService.grade.scores[props.row.id]
-                        )
-                      "
+                      @click="gradeService.annotateScore(gradeService.grade.scores[props.row.id])"
                     >
                       <q-tooltip>view annotated copy</q-tooltip>
                     </q-btn>
@@ -309,8 +290,7 @@
                     {{ props.row[col] }}
                     <q-popup-edit
                       v-if="
-                        (col !== 'id' ||
-                          !gradeService.grade.scores[props.row.id]) &&
+                        (col !== 'id' || !gradeService.grade.scores[props.row.id]) &&
                         !props.row._unmatched
                       "
                       v-slot="scope"
@@ -336,8 +316,7 @@
                     :class="{
                       'grade-fail': props.row.FinalGrade < 3.5,
                       'grade-pass': props.row.FinalGrade >= 4,
-                      'grade-remed':
-                        props.row.FinalGrade >= 3.5 && props.row.FinalGrade < 4,
+                      'grade-remed': props.row.FinalGrade >= 3.5 && props.row.FinalGrade < 4
                     }"
                   >
                     {{ props.row.FinalGrade }}
@@ -349,16 +328,13 @@
                     :class="{
                       'grade-fail': props.row.Grade < 3.5,
                       'grade-pass': props.row.Grade >= 4,
-                      'grade-remed':
-                        props.row.Grade >= 3.5 && props.row.Grade < 4,
+                      'grade-remed': props.row.Grade >= 3.5 && props.row.Grade < 4
                     }"
                   >
                     {{ props.row.Grade }}
                   </q-td>
                   <q-td key="Total" :props="props" class="text-right">
-                    {{
-                      props.row._unmatched ? props.row.total : props.row.Total
-                    }}
+                    {{ props.row._unmatched ? props.row.total : props.row.Total }}
                   </q-td>
                   <template v-if="ui.displayQuestions">
                     <template v-if="props.row._unmatched">
@@ -367,9 +343,7 @@
                         :key="qtitle"
                         class="text-right score"
                         :class="`why-${
-                          gradeService.grade.whys[
-                            props.row.key + ':' + value.question
-                          ]
+                          gradeService.grade.whys[props.row.key + ':' + value.question]
                         }`"
                       >
                         <router-link
@@ -380,8 +354,8 @@
                               student: props.row.student,
                               page: value.pages[props.row.student],
                               copy: props.row.copy,
-                              question: value.question,
-                            },
+                              question: value.question
+                            }
                           }"
                         >
                           {{ props.row.questions[qtitle] }}
@@ -396,9 +370,7 @@
                         :class="`why-${
                           gradeService.grade.scores[props.row.id]
                             ? gradeService.grade.whys[
-                                gradeService.grade.scores[props.row.id].key +
-                                  ':' +
-                                  value.question
+                                gradeService.grade.scores[props.row.id].key + ':' + value.question
                               ]
                             : '404'
                         }`"
@@ -409,22 +381,14 @@
                             name: 'ScanPreview',
                             params: {
                               project: API.project,
-                              student:
-                                gradeService.grade.scores[props.row.id].student,
-                              page: value.pages[
-                                gradeService.grade.scores[props.row.id].student
-                              ],
-                              copy: gradeService.grade.scores[props.row.id]
-                                .copy,
-                              question: value.question,
-                            },
+                              student: gradeService.grade.scores[props.row.id].student,
+                              page: value.pages[gradeService.grade.scores[props.row.id].student],
+                              copy: gradeService.grade.scores[props.row.id].copy,
+                              question: value.question
+                            }
                           }"
                         >
-                          {{
-                            gradeService.grade.scores[props.row.id].questions[
-                              qtitle
-                            ]
-                          }}
+                          {{ gradeService.grade.scores[props.row.id].questions[qtitle] }}
                         </router-link>
                       </q-td>
                     </template>
@@ -434,32 +398,23 @@
               <template #bottom-row="props">
                 <q-tr class="border">
                   <q-th>
-                    <q-btn color="negative" @click="gradeService.annotateAll()"
-                      >Annotate All</q-btn
-                    >
+                    <q-btn color="negative" @click="gradeService.annotateAll()">Annotate All</q-btn>
                   </q-th>
                   <q-th
                     v-for="(col, $index) in studentsFieldFiltered"
                     :key="$index"
-                    :class="`text-${
-                      props.cols.find((c) => c.name === col)?.align
-                    }`"
+                    :class="`text-${props.cols.find((c: any) => c.name === col)?.align}`"
                   >
                     <template v-if="col !== 'id'">
                       {{
-                        props.cols.find((c) => c.name === col)?.align === 'left'
+                        props.cols.find((c: any) => c.name === col)?.align === 'left'
                           ? gradeService.grade.students.data.length
                           : gradeService.avgStudentField(col).toFixed(2)
                       }}
                     </template>
                     <template v-else>
-                      <span
-                        v-if="
-                          Object.values(gradeService.grade.unmatched).length > 0
-                        "
-                        >{{
-                          Object.values(gradeService.grade.unmatched).length
-                        }}
+                      <span v-if="Object.values(gradeService.grade.unmatched).length > 0"
+                        >{{ Object.values(gradeService.grade.unmatched).length }}
                         <q-tooltip>Unmatched rows</q-tooltip></span
                       >
                       |
@@ -485,10 +440,7 @@
                       class="text-right score"
                     >
                       {{
-                        (
-                          (gradeService.avgQuestion(qtitle) / value.max) *
-                          100
-                        ).toFixed(0)
+                        ((gradeService.avgQuestion(String(qtitle)) / value.max) * 100).toFixed(0)
                       }}%
                     </q-th>
                   </template>
@@ -497,18 +449,12 @@
                   <q-td colspan="100%">
                     <div class="legend q-py-md">
                       <div>
-                        <span class="why-E">E</span> means syntax error (several
-                        boxes ticked for a simple question, or " none of the
-                        above" AND another box ticked for a multiple question).
+                        <span class="why-E">E</span> means syntax error (several boxes ticked for a
+                        simple question, or " none of the above" AND another box ticked for a
+                        multiple question).
                       </div>
-                      <div>
-                        <span class="why-V">V</span> means that no box are
-                        ticked.
-                      </div>
-                      <div>
-                        <span class="why-P">P</span> means that a floor has been
-                        applied.
-                      </div>
+                      <div><span class="why-V">V</span> means that no box are ticked.</div>
+                      <div><span class="why-P">P</span> means that a floor has been applied.</div>
                     </div></q-td
                   >
                 </q-tr>
@@ -523,9 +469,7 @@
           ></grade-stats>
         </q-tab-panel>
         <q-tab-panel name="stats2" class="q-pa-none">
-          <grade-stats2
-            v-if="tabSelected === 'stats2'"
-          ></grade-stats2>
+          <grade-stats2 v-if="tabSelected === 'stats2'"></grade-stats2>
         </q-tab-panel>
         <q-tab-panel
           v-for="(file, index) in gradeService.grade.files"
@@ -554,23 +498,25 @@ import {
   computed,
   onMounted,
   watchEffect,
+  defineAsyncComponent
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import GradeStats from '../components/Grade/GradeStats.vue';
 import GradeStats2 from '../components/Grade/GradeStats2.vue';
 import GradeFileComponent from '../components/Grade/GradeFile.vue';
 import DataTable from '../components/Grade/DataTable.vue';
-import Api from '../services/api';
 import GradeService from '../services/grade';
-import { GradeFile, GradeRecord } from '../components/models';
+import type { GradeFile, GradeRecord } from '../components/models';
 import AssociationDialog from '../components/Grade/AssociationDialog.vue';
-import EditColumsDialog from '../components/Grade/EditColumnsDialog.vue';
+import EditColumnsDialog from '../components/Grade/EditColumnsDialog.vue';
 import { useQuasar } from 'quasar';
 import formatDate from '../utils/formatDate';
 import AddFileBox from '../components/Grade/AddFileBox.vue';
 import LoadingProgress from '../components/LoadingProgress.vue';
 import { matchLookups } from '../utils/options';
-import Histogram from 'src/components/Grade/Histogram.vue';
+import { useApiStore } from '@/stores/api';
+
+const Histogram = defineAsyncComponent(() => import('@/components/Grade/Histogram.vue'));
 
 export default defineComponent({
   name: 'Grade',
@@ -581,10 +527,10 @@ export default defineComponent({
     DataTable,
     AddFileBox,
     LoadingProgress,
-    Histogram,
+    Histogram
   },
   setup() {
-    const API = inject('API') as Api;
+    const API = useApiStore();
     const gradeService = inject('gradeService') as GradeService;
     const route = useRoute();
     const router = useRouter();
@@ -597,12 +543,12 @@ export default defineComponent({
       showHistogram: false,
       filter: '',
       pagination: {
-        rowsPerPage: 0,
-      },
+        rowsPerPage: 0
+      }
     });
 
     const tabSelected = computed(() => {
-      return route.params.tab || 'student';
+      return String(route.params.tab) || 'student';
     });
 
     const tabItems = computed(() => {
@@ -614,9 +560,9 @@ export default defineComponent({
             name: 'Grade',
             params: {
               project: route.params.project,
-              tab: 'students',
-            },
-          },
+              tab: 'students'
+            }
+          }
         },
         {
           label: 'Stats',
@@ -625,9 +571,9 @@ export default defineComponent({
             name: 'Grade',
             params: {
               project: route.params.project,
-              tab: 'stats',
-            },
-          },
+              tab: 'stats'
+            }
+          }
         },
         {
           label: 'Stats (Reliability)',
@@ -636,10 +582,10 @@ export default defineComponent({
             name: 'Grade',
             params: {
               project: route.params.project,
-              tab: 'stats2',
-            },
-          },
-        },
+              tab: 'stats2'
+            }
+          }
+        }
       ].concat(
         gradeService.grade.files.map((file, index) => ({
           label: file.name.substring(0, 20),
@@ -648,9 +594,9 @@ export default defineComponent({
             name: 'Grade',
             params: {
               project: route.params.project,
-              tab: `file${index}`,
-            },
-          },
+              tab: `file${index}`
+            }
+          }
         }))
       );
     });
@@ -663,7 +609,7 @@ export default defineComponent({
 
     // students table
 
-    const computeAlignement = (field: string): string => {
+    const computeAlignment = (field: string): 'left' | 'right' | 'center' => {
       for (const row of gradeService.grade.students.data) {
         if (isNaN(Number(row[field]))) {
           return 'left';
@@ -693,23 +639,23 @@ export default defineComponent({
       let headers = [
         {
           name: '_actions',
-          align: 'left',
+          align: 'left'
         } as {
           name: string;
-          label?: string;
-          field?: string | ((f: string) => string);
-          align?: string | ((f: string) => string);
+          label: string;
+          field: string | ((f: string) => string);
+          align?: 'left' | 'right' | 'center';
           sortable?: boolean;
           headerClasses?: string;
-        },
+        }
       ]
         .concat(
           studentsFieldFiltered.value.map((f) => ({
             name: f,
             label: f,
             field: f,
-            align: computeAlignement(f), // TODO: optimize?
-            sortable: true,
+            align: computeAlignment(f), // TODO: optimize?
+            sortable: true
           }))
         )
         .concat([
@@ -719,7 +665,7 @@ export default defineComponent({
             headerClasses: '',
             field: 'FinalGrade',
             align: 'right',
-            sortable: true,
+            sortable: true
           },
           {
             name: 'Grade',
@@ -727,7 +673,7 @@ export default defineComponent({
             headerClasses: '',
             field: 'Grade',
             align: 'right',
-            sortable: true,
+            sortable: true
           },
           {
             label: 'Total',
@@ -735,14 +681,15 @@ export default defineComponent({
             headerClasses: '',
             field: 'Total',
             align: 'right',
-            sortable: true,
-          },
+            sortable: true
+          }
         ]);
       if (ui.displayQuestions) {
         headers = headers.concat(
           Object.keys(gradeService.grade.questions).map((qtitle) => ({
-            label: qtitle,
             name: qtitle,
+            label: qtitle,
+            field: qtitle
           }))
         );
       }
@@ -760,8 +707,8 @@ export default defineComponent({
           name: 'Grade',
           params: {
             project: route.params.project,
-            tab: 'students',
-          },
+            tab: 'students'
+          }
         });
       }
     });
@@ -784,8 +731,8 @@ export default defineComponent({
           name: 'Grade',
           params: {
             project: route.params.project,
-            tab: 'students',
-          },
+            tab: 'students'
+          }
         });
       },
       removeFile(file: GradeFile) {
@@ -796,17 +743,17 @@ export default defineComponent({
           ok: {
             label: 'Remove',
             color: 'negative',
-            flat: true,
+            flat: true
           },
-          cancel: 'Cancel',
+          cancel: 'Cancel'
         }).onOk(() => {
           gradeService.removeFile(file);
           router.push({
             name: 'Grade',
             params: {
               project: route.params.project,
-              tab: 'students',
-            },
+              tab: 'students'
+            }
           });
         });
       },
@@ -816,7 +763,8 @@ export default defineComponent({
           component: AssociationDialog,
           componentProps: {
             row,
-          },
+            gradeService
+          }
         }).onDismiss(() => {
           gradeService.calculateGrades();
           gradeService.grade.isLoading = false;
@@ -824,14 +772,15 @@ export default defineComponent({
       },
       showEditColumnsDialog() {
         $q.dialog({
-          component: EditColumsDialog,
+          component: EditColumnsDialog,
           componentProps: {
             fields: gradeService.grade.students.fields,
-          },
+            gradeService
+          }
         });
-      },
+      }
     };
-  },
+  }
 });
 </script>
 <style scoped>

@@ -7,55 +7,38 @@
       :control-icons-enabled="false"
       :dbl-click-zoom-enabled="false"
       :prevent-mouse-events-default="true"
-      @svgpanzoom="thumbnailSPZcreated"
+      @created="thumbnailSPZcreated"
     >
       <slot class="thumbnail" />
     </SPZ>
-    <Scope :bus="bus" :main-s-p-z="mainSPZ" :thumbnail-s-p-z="thumbnailSPZ" />
+    <Scope v-if="thumbnailSPZ" :main-s-p-z="mainSPZ" :thumbnail-s-p-z="thumbnailSPZ" />
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref, type PropType } from 'vue';
 import Scope from './Scope.vue';
+import SPZ from './SvgPanZoom.vue';
 
-export default {
-  components: { Scope },
-  props: {
-    //eslint-disable-next-line
-    onThumbnailShown: {
-      type: [Object, Function],
-    },
-    //eslint-disable-next-line
-    mainSPZ: {
-      type: [Object],
-    },
-    //eslint-disable-next-line
-    bus: {
-      type: [Object],
-    },
-  },
-  data: () => ({
-    thumbnailSPZ: null,
-  }),
-  beforeCreate: function () {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    this.$options.components.SPZ = require('./SvgPanZoom.vue').default;
-  },
-  mounted() {
-    if (this.onThumbnailShown) {
-      this.onThumbnailShown();
-    }
-  },
-  methods: {
-    zoomMain(evt) {
-      this.mainSPZ[evt.deltaY < 0 ? 'zoomIn' : 'zoomOut']();
-    },
-    thumbnailSPZcreated(spz) {
-      this.thumbnailSPZ = spz;
-      this.bus.$emit('thumbnailCreated', spz);
-    },
-  },
-};
+const props = defineProps({
+  mainSPZ: {
+    type: Object as PropType<SvgPanZoom.Instance>,
+    required: true
+  }
+});
+
+const emit = defineEmits(['thumbnailCreated']);
+
+const thumbnailSPZ = ref<SvgPanZoom.Instance | null>(null);
+
+function zoomMain(evt: WheelEvent) {
+  props.mainSPZ[evt.deltaY < 0 ? 'zoomIn' : 'zoomOut']();
+}
+
+function thumbnailSPZcreated(spz: SvgPanZoom.Instance) {
+  thumbnailSPZ.value = spz;
+  emit('thumbnailCreated', spz);
+}
 </script>
 
 <style>

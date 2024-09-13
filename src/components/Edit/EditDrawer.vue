@@ -1,18 +1,19 @@
 <template>
   <div class="column no-wrap fit">
     <q-toolbar class="bg-secondary">
-      <q-toolbar-title class="text-grey-8">Navigation</q-toolbar-title>
+      <q-toolbar-title class="text-grey-8 text-subtitle1">Navigation</q-toolbar-title>
       <!-- TODO-nice on small device move main button (print, ...) to here? -->
     </q-toolbar>
     <q-separator />
     <div class="edit-drawer-tree col scroll q-py-sm">
-      <template v-if="examService.exam.sections.length === 0">
-        <q-skeleton  type="text" />
-        <q-skeleton  type="text" />
-        <q-skeleton  type="text"/>
+      <template v-if="!examService.exam || examService.exam.sections.length === 0">
+        <q-skeleton type="text" />
+        <q-skeleton type="text" />
+        <q-skeleton type="text" />
       </template>
       <draggable
-        v-model="examService.exam.sections"
+        v-else
+        v-model="sections"
         group="section"
         tag="ol"
         item-key="id"
@@ -25,7 +26,7 @@
       </draggable>
     </div>
 
-    <q-separator/>
+    <q-separator />
     <div class="q-px-md q-py-sm bg-secondary">
       <q-toggle
         v-model="examService.copy.enabled"
@@ -34,10 +35,7 @@
         @update:model-value="API.getProjectList()"
       />
       <div v-if="examService.copy.enabled">
-        <p>
-          {{ copySummary.questions }} question(s) in
-          {{ copySummary.sections }} section(s).
-        </p>
+        <p>{{ copySummary.questions }} question(s) in {{ copySummary.sections }} section(s).</p>
         <q-select
           v-model="ui.copyToName"
           use-input
@@ -63,55 +61,78 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, reactive, inject } from 'vue';
+import { defineComponent, computed, reactive } from 'vue';
 import draggable from 'vuedraggable';
-import ExamEditor from '../../services/examEditor';
-import { useStore } from '../../store';
 import htmlToPlaintext from '../../utils/htmlToPlainText';
 import EditDrawerSection from './EditDrawerSection.vue';
+import { useStore } from '@/stores/store';
+import { useApiStore } from '@/stores/api';
+import { useExamStore } from '@/stores/exam';
+import { useRouter, useRoute } from 'vue-router';
 
 export default defineComponent({
   name: 'EditDrawer',
   components: {
     draggable,
-    EditDrawerSection,
+    EditDrawerSection
   },
   setup() {
-    const examService = inject('examService') as ExamEditor;
+    const examService = useExamStore();
+    const router = useRouter();
+    const route = useRoute();
     const store = useStore();
+    const API = useApiStore();
     const ui = reactive({
       copyToName: '',
-      copyOptions: [] as string[],
+      copyOptions: [] as string[]
     });
     const copySummary = computed(() => {
       const sectionsCount = Object.keys(examService.copy.data).length;
       return {
         sections: sectionsCount,
-        questions: examService.copy.selected.size - sectionsCount,
+        questions: examService.copy.selected.size - sectionsCount
       };
+    });
+
+    const sections = computed({
+      get: () => examService.exam.sections,
+      set: (values) => {
+        const section = examService.exam.sections[parseInt(String(route.params.sectionIndex), 10)];
+        examService.updateSectionsOrder(values);
+        router.push({
+          name: 'Edit',
+          params: {
+            project: route.params.project,
+            sectionIndex: String(values.indexOf(section))
+          }
+        });
+      }
     });
 
     return {
       ui,
+      sections,
+      examService,
+      API,
       htmlToPlaintext,
       copySummary,
       copyFilterFn(val: string, update: any) {
         if (val === '') {
           update(() => {
-            ui.copyOptions = store.state.projects.map((p) => p.project);
+            ui.copyOptions = store.projects.map((p) => p.project);
           });
           return;
         }
 
         update(() => {
           const needle = val.toLowerCase();
-          ui.copyOptions = store.state.projects
+          ui.copyOptions = store.projects
             .map((p) => p.project)
             .filter((v) => v.toLowerCase().indexOf(needle) > -1);
         });
-      },
+      }
     };
-  },
+  }
 });
 </script>
 <style>

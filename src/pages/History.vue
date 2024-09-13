@@ -2,20 +2,12 @@
   <q-page padding class="history">
     <h2 class="text-h4">History</h2>
     <q-timeline>
-      <q-timeline-entry
-        v-for="(c, index) in logs"
-        :key="index"
-        class="q-pa-none"
-      >
+      <q-timeline-entry v-for="(c, index) in logs" :key="index" class="q-pa-none">
         <q-skeleton v-if="isLoading" type="text" width="300px" />
         <template v-else>
           <strong>{{ c.msg }}</strong> by {{ c.username }} @
           {{ formatDate(c.date) }}
-          <q-btn
-            v-if="c.type === 'commit'"
-            flat
-            color="negative"
-            @click="openConfirm(c)"
+          <q-btn v-if="c.type === 'commit'" flat color="negative" @click="openConfirm(c)"
             >Restore</q-btn
           >
         </template>
@@ -25,16 +17,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, inject } from 'vue';
+import { defineComponent, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
-import Api from '../services/api';
-import { GitLog } from '../components/models';
+import type { GitLog } from '../components/models';
 import formatDate from '../utils/formatDate';
+import { useApiStore } from '@/stores/api';
 
 export default defineComponent({
   name: 'History',
   setup() {
-    const API = inject('API') as Api;
+    const API = useApiStore();
     const $q = useQuasar();
 
     const logsStart = [] as GitLog[];
@@ -44,7 +36,7 @@ export default defineComponent({
       msg: '',
       username: '',
       date: '',
-      type: 'loading',
+      type: 'loading'
     });
 
     const logs = ref<GitLog[]>(logsStart);
@@ -71,15 +63,15 @@ export default defineComponent({
           ok: {
             label: 'Replace',
             color: 'negative',
-            flat: true,
+            flat: true
           },
-          cancel: 'Cancel',
+          cancel: 'Cancel'
         }).onOk(() => {
           API.revertGit(commit.sha);
         });
-      },
+      }
     };
-  },
+  }
 });
 </script>
 <style>

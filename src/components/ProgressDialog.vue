@@ -1,10 +1,5 @@
 <template>
-  <q-dialog
-    ref="dialogRef"
-    persistent
-    :maximized="$q.screen.lt.sm"
-    @hide="onDialogHide"
-  >
+  <q-dialog ref="dialogRef" persistent :maximized="$q.screen.lt.sm" @hide="onDialogHide">
     <q-card class="q-dialog-plugin">
       <q-toolbar class="bg-primary text-white">
         <q-toolbar-title> Task Progress </q-toolbar-title>
@@ -12,7 +7,7 @@
           flat
           round
           dense
-          icon="mdi-close"
+          icon="sym_o_close"
           :disable="API.options.status.locked != '0'"
           @click="onDialogOK"
         />
@@ -103,16 +98,11 @@
             <p>
               {{ formatDate(log.start, 'HH:mm:ss') }}
               <span v-if="log.end"
-                >:
-                {{
-                  ((log.end.getTime() - log.start.getTime()) / 1000).toFixed(0)
-                }}s</span
+                >: {{ ((log.end.getTime() - log.start.getTime()) / 1000).toFixed(0) }}s</span
               >
             </p>
             <pre v-if="log.command != 'prepare'">{{ log.log }}</pre>
-            <pre v-if="log.command != 'prepare' && log.code > 0">{{
-              log.err
-            }}</pre>
+            <pre v-if="log.command != 'prepare' && log.code > 0">{{ log.err }}</pre>
           </div>
         </div>
       </q-card-section>
@@ -133,16 +123,16 @@
 
 <script lang="ts">
 import { useDialogPluginComponent } from 'quasar';
-import { defineComponent, inject } from 'vue';
-import Api from '../services/api';
+import { defineComponent } from 'vue';
 import formatDate from '../utils/formatDate';
+import { useApiStore } from '@/stores/api';
 
 export default defineComponent({
   name: 'ProgressDialog',
   emits: [
     // REQUIRED; need to specify some events that your
     // component will emit through useDialogPluginComponent()
-    ...useDialogPluginComponent.emits,
+    ...useDialogPluginComponent.emits
   ],
 
   setup() {
@@ -154,16 +144,16 @@ export default defineComponent({
     //                    example: onDialogOK() - no payload
     //                    example: onDialogOK({ /*.../* }) - with payload
     // onDialogCancel - Function to call to settle dialog with "cancel" outcome
-    const API = inject('API') as Api;
+    const API = useApiStore();
 
     return {
       dialogRef,
       onDialogHide,
       onDialogOK,
       API,
-      formatDate,
+      formatDate
     };
-  },
+  }
 });
 </script>
 <style scoped>

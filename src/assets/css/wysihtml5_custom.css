@@ -1,19 +1,19 @@
 latex {
-    font-family: monospace;
-    white-space: pre;
-    color: red;
-    font-size: 16px;
+  font-family: monospace;
+  white-space: pre;
+  color: red;
+  font-size: 16px;
 }
 
 pre {
-    margin:0;
-    display: inline;
+  margin: 0;
+  display: inline;
 }
 
 img {
-	width: 70%;
+  width: 70%;
 }
 code {
-    border: 1px solid black;
-    padding: 4px;
+  border: 1px solid black;
+  padding: 4px;
 }

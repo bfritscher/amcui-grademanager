@@ -3,6 +3,8 @@
     <q-tabs v-model="selectedTab" :breakpoint="0" align="left" inline-label>
       <q-tab label="Projects" name="projects" />
       <q-tab label="Users" name="users" />
+      <q-space />
+      <q-btn flat label="Test Trigger Error" color="negative" @click="triggerError" />
     </q-tabs>
     <q-separator />
     <q-tab-panels v-model="selectedTab" animated swipeable>
@@ -26,17 +28,15 @@
               placeholder="Search"
             >
               <template #append>
-                <q-icon name="search" />
+                <q-icon name="sym_o_search" />
               </template>
             </q-input>
           </template>
           <template #body-cell-size="props">
             <q-td :props="props" @click="props.row.detail = !props.row.detail">
-              <span
-                v-if="props.row.error === ERROR_NO_FOLDER"
-                class="text-red"
-                >{{ ERROR_NO_FOLDER }}</span
-              >
+              <span v-if="props.row.error === ERROR_NO_FOLDER" class="text-red">{{
+                ERROR_NO_FOLDER
+              }}</span>
               <span v-else>
                 {{ (props.row.size / 1024).toFixed(1) }}
               </span>
@@ -64,13 +64,13 @@
                 <q-btn @click="importProject(props.row)">Import</q-btn>
               </span>
               <q-btn
-                v-if="props.row.users.indexOf($store.state.user.username) < 0"
+                v-if="props.row.users.indexOf(store.user?.username) < 0"
                 size="sm"
                 @click="addToProject(props.row)"
                 >add self</q-btn
               >
               <q-btn
-                v-if="props.row.users.indexOf($store.state.user.username) > -1"
+                v-if="props.row.users.indexOf(store.user?.username) > -1"
                 size="sm"
                 @click="removeFromProject(props.row)"
                 >remove self</q-btn
@@ -82,12 +82,7 @@
                 @click="gitgcProject(props.row)"
                 >git gc</q-btn
               >
-              <q-btn
-                color="negative"
-                size="sm"
-                @click="deleteProject(props.row)"
-                >Delete</q-btn
-              >
+              <q-btn color="negative" size="sm" @click="deleteProject(props.row)">Delete</q-btn>
             </q-td>
           </template>
         </q-table>
@@ -112,24 +107,17 @@
               placeholder="Search"
             >
               <template #append>
-                <q-icon name="search" />
+                <q-icon name="sym_o_search" />
               </template>
             </q-input>
           </template>
           <template #body-cell-actions="props">
             <q-td :props="props">
-              <q-btn color="warning" size="sm" @click="removeMfa(props.row)"
-                >remove MFA</q-btn
-              >
-              <q-btn
-                color="warning"
-                size="sm"
-                @click="changePassword(props.row)"
+              <q-btn color="warning" size="sm" @click="removeMfa(props.row)">remove MFA</q-btn>
+              <q-btn color="warning" size="sm" @click="changePassword(props.row)"
                 >change password</q-btn
               >
-              <q-btn color="negative" size="sm" @click="deleteUser(props.row)"
-                >Delete</q-btn
-              >
+              <q-btn color="negative" size="sm" @click="deleteUser(props.row)">Delete</q-btn>
             </q-td>
           </template>
         </q-table>
@@ -138,19 +126,16 @@
   </q-page>
 </template>
 <script lang="ts">
-import {
-  AdminDu,
-  AdminProject,
-  AdminStats,
-  AdminUser,
-} from 'src/components/models';
-import { defineComponent, ref, reactive, inject, onMounted } from 'vue';
-import Api from '../services/api';
+import type { AdminDu, AdminProject, AdminStats, AdminUser } from '@/components/models';
+import { defineComponent, ref, reactive, onMounted } from 'vue';
+import { useApiStore } from '@/stores/api';
+import { useStore } from '@/stores/store';
 
 export default defineComponent({
   name: 'Admin',
   setup() {
-    const API = inject('API') as Api;
+    const API = useApiStore();
+    const store = useStore();
     const selectedTab = ref('projects');
 
     const tables = reactive({
@@ -162,7 +147,7 @@ export default defineComponent({
       initialPaginationProjects: {
         sortBy: 'name',
         descending: false,
-        rowsPerPage: 50,
+        rowsPerPage: 50
       },
       columnsProjects: [
         {
@@ -170,56 +155,69 @@ export default defineComponent({
           label: 'Name',
           align: 'left',
           field: 'name',
-          sortable: true,
+          sortable: true
+        },
+        {
+          name: 'v2',
+          label: 'v2',
+          align: 'left',
+          field: 'v2',
+          sortable: true
         },
         {
           name: 'size',
           label: 'Size (Mb)',
           align: 'right',
           field: 'size',
-          sortable: true,
+          sortable: true
         },
         {
           name: 'commits',
           label: 'Commits',
           align: 'right',
           field: 'commits',
-          sortable: true,
+          sortable: true
         },
         {
           name: 'students',
           label: 'Students',
           align: 'right',
           field: 'students',
-          sortable: true,
+          sortable: true
         },
         {
           name: 'nbUsers',
           label: 'Nb',
           align: 'right',
           field: (row: any) => row.users.length,
-          sortable: true,
+          sortable: true
         },
         {
           name: 'users',
           label: 'Users',
           align: 'left',
           field: 'users',
-          sortable: false,
+          sortable: false
         },
         {
           name: 'actions',
           label: 'Actions',
           align: 'left',
           field: 'users',
-          sortable: false,
-        },
-      ],
+          sortable: false
+        }
+      ] as {
+        name: string;
+        label: string;
+        align: 'left' | 'center' | 'right';
+        field: string | ((row: any) => any);
+        sortable: boolean;
+      }[],
       filterUsers: '',
       initialPaginationUsers: {
         sortBy: 'username',
         descending: false,
-        rowsPerPage: 50,
+        rowsPerPage: 50
       },
       columnsUsers: [
         {
@@ -227,14 +225,14 @@ export default defineComponent({
           label: 'Username',
           align: 'left',
           field: 'username',
-          sortable: true,
+          sortable: true
         },
         {
           name: 'nbProjects',
           label: 'Nb',
           align: 'right',
           field: (row: any) => row.projects.length,
-          sortable: true,
+          sortable: true
         },
         {
           name: 'projects',
@@ -242,16 +240,22 @@ export default defineComponent({
           align: 'left',
           field: 'projects',
           format: (val: string[]) => val.join(', '),
-          sortable: false,
+          sortable: false
         },
         {
           name: 'actions',
           label: 'Actions',
           align: 'left',
           field: 'projects',
-          sortable: false,
-        },
-      ],
+          sortable: false
+        }
+      ] as {
+        name: string;
+        label: string;
+        align: 'left' | 'center' | 'right';
+        field: string | ((row: any) => any);
+        sortable: boolean;
+      }[]
     });
 
     const ERROR_NO_FOLDER = 'Project has no folder!';
@@ -281,7 +285,7 @@ export default defineComponent({
           });
           tables.users.push({
             username: u,
-            projects: tables.stats.users[u].sort(),
+            projects: tables.stats.users[u].sort()
           });
         });
         tables.projects.forEach((p) => {
@@ -298,7 +302,7 @@ export default defineComponent({
                 users: [],
                 error: ERROR_NOT_IN_DB,
                 size: -1,
-                folders: [],
+                folders: []
               };
               tables.stats.projects[p] = project;
               tables.projects.push(project);
@@ -321,6 +325,7 @@ export default defineComponent({
     });
 
     return {
+      store,
       selectedTab,
       tables,
       ERROR_NO_FOLDER,
@@ -331,23 +336,21 @@ export default defineComponent({
       },
       addToProject(project: AdminProject) {
         API.$http.post(API.URL + '/admin/addtoproject', {
-          project: project.name,
+          project: project.name
         });
         loadData();
       },
       removeFromProject(project: AdminProject) {
         API.$http.post(API.URL + '/admin/removefromproject', {
-          project: project.name,
+          project: project.name
         });
         loadData();
       },
       deleteProject(project: AdminProject) {
         if (confirm(`Delete project ${project.name}`)) {
-          API.$http
-            .post(`${API.URL}/admin/project/${project.name}/delete`)
-            .then(() => {
-              tables.projects.splice(tables.projects.indexOf(project), 1);
-            });
+          API.$http.post(`${API.URL}/admin/project/${project.name}/delete`).then(() => {
+            tables.projects.splice(tables.projects.indexOf(project), 1);
+          });
         }
       },
       gitgcProject(project: AdminProject) {
@@ -355,30 +358,29 @@ export default defineComponent({
       },
       deleteUser(user: AdminUser) {
         if (confirm(`Delete user ${user.username}`)) {
-          API.$http
-            .post(`${API.URL}/admin/user/${user.username}/delete`)
-            .then(() => {
-              tables.users.splice(tables.users.indexOf(user), 1);
-            });
+          API.$http.post(`${API.URL}/admin/user/${user.username}/delete`).then(() => {
+            tables.users.splice(tables.users.indexOf(user), 1);
+          });
         }
       },
       removeMfa(user: AdminUser) {
-        API.$http
-          .post(`${API.URL}/admin/user/${user.username}/removemfa`)
-          .then(() => {
-            alert('done');
-          });
+        API.$http.post(`${API.URL}/admin/user/${user.username}/removemfa`).then(() => {
+          alert('done');
+        });
       },
       changePassword(user: AdminUser) {
         API.$http
           .post(`${API.URL}/admin/user/${user.username}/changepassword`, {
-            newPassword: prompt('New password?'),
+            newPassword: prompt('New password?')
           })
           .then(() => {
             alert('done');
           });
       },
+      triggerError() {
+        throw new Error('Sentry Test Error');
+      }
     };
-  },
+  }
 });
 </script>

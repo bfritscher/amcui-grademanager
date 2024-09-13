@@ -1,13 +1,13 @@
 <template>
   <tr>
     <td class="text-center">
-      <q-icon size="md" :style="`color: ${color}`" :name="icon"/>
+      <q-icon size="md" :style="`color: ${color}`" :name="icon" />
     </td>
     <td class="text-center">
-      {{ toBeTicked ? "yes" : "no" }}
+      {{ toBeTicked ? 'yes' : 'no' }}
     </td>
     <td class="text-center">
-      {{ ticked ? "yes" : "no" }}
+      {{ ticked ? 'yes' : 'no' }}
     </td>
     <td class="text-center">
       <q-select v-model="type" :options="options"></q-select>
@@ -18,7 +18,7 @@
         :key="index"
         class="q-mx-sm"
         :style="`background-color: ${btnColor}`"
-        :class="{selected: color === btnColor}"
+        :class="{ selected: color === btnColor }"
         flat
         @click="color = btnColor"
       >
@@ -27,70 +27,62 @@
   </tr>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-export default defineComponent({
-  name: 'AnnotationMarks',
+<script setup lang="ts">
+import { useApiStore } from '@/stores/api';
+import { ref, computed } from 'vue';
 
-  props: {
-    toBeTicked: {
-      type: Boolean,
-      required: true,
-    },
-    ticked: {
-      type: Boolean,
-      required: true,
-    },
-    value: {
-      type: Object,
-      required: true,
-      default() {
-        return {};
-      },
-    },
+const props = defineProps({
+  toBeTicked: {
+    type: Boolean,
+    required: true
   },
-  emits: ['change'],
-  data: () => ({
-    options: ['none', 'circle', 'mark', 'box'],
-    colors: ['#000000', '#ff0000', '#00ff00', '#0000ff'],
-  }),
-  computed: {
-    type: {
-      get() {
-        return this.value[
-          `symbole_${Number(this.toBeTicked)}_${Number(this.ticked)}_type`
-        ];
-      },
-      set(newValue: string) {
-        this.API.options.options[
-          `symbole_${Number(this.toBeTicked)}_${Number(this.ticked)}_type`
-        ] = newValue;
-        // to save options from parent
-        this.$emit('change');
-      },
-    },
-    color: {
-      get() {
-        return this.value[
-          `symbole_${Number(this.toBeTicked)}_${Number(this.ticked)}_color`
-        ];
-      },
-      set(newValue: string) {
-        this.API.options.options[
-          `symbole_${Number(this.toBeTicked)}_${Number(this.ticked)}_color`
-        ] = newValue;
-        // to save options from parent
-        this.$emit('change');
-      },
-    },
-    icon() {
-      let icon = '';
-      if (this.type === 'circle') icon = 'mdi-circle-outline';
-      else if (this.type === 'mark') icon = 'mdi-close';
-      else if (this.type === 'box') icon = 'mdi-square-outline';
-      return icon;
-    },
+  ticked: {
+    type: Boolean,
+    required: true
   },
+  value: {
+    type: Object,
+    required: true,
+    default() {
+      return {};
+    }
+  }
+});
+
+const emit = defineEmits(['change']);
+
+const API = useApiStore();
+
+const options = ref(['none', 'circle', 'mark', 'box']);
+const colors = ref(['#000000', '#ff0000', '#00ff00', '#0000ff']);
+const type = computed({
+  get() {
+    return props.value[`symbole_${Number(props.toBeTicked)}_${Number(props.ticked)}_type`];
+  },
+  set(newValue: string) {
+    API.options.options[`symbole_${Number(props.toBeTicked)}_${Number(props.ticked)}_type`] =
+      newValue;
+    // to save options from parent
+    emit('change');
+  }
+});
+const color = computed({
+  get() {
+    return props.value[`symbole_${Number(props.toBeTicked)}_${Number(props.ticked)}_color`];
+  },
+  set(newValue: string) {
+    API.options.options[`symbole_${Number(props.toBeTicked)}_${Number(props.ticked)}_color`] =
+      newValue;
+    // to save options from parent
+    emit('change');
+  }
+});
+const icon = computed(() => {
+  let icon = '';
+  if (type.value === 'circle') icon = 'sym_o_circle';
+  else if (type.value === 'mark') icon = 'sym_o_close';
+  else if (type.value === 'box') icon = 'sym_o_square';
+  return icon;
 });
 </script>
 <style scoped>

@@ -1,23 +1,11 @@
 <template>
   <q-separator />
-  <transition
-    mode="out-in"
-    enter-active-class="fadeIn"
-    leave-active-class="fadeOut"
-  >
-    <div
-      v-if="section"
-      :key="section.id"
-      class="section col col-grow relative-position"
-    >
-      <div
-        class="absolute absolute-top-right absolute-bottom-left overflow-auto"
-      >
+  <transition mode="out-in" enter-active-class="fadeIn" leave-active-class="fadeOut">
+    <div v-if="section" :key="section.id" class="section col col-grow relative-position">
+      <div class="absolute absolute-top-right absolute-bottom-left overflow-auto">
         <div class="page-width-limit q-pa-sm">
-          <div class="shadow-1 bg-white">
-            <div
-              class="section-header row no-wrap items-center justify-between"
-            >
+          <div class="shadow-1 bg-white q-pb-sm q-mb-lg">
+            <div class="section-header row no-wrap items-center justify-between q-pa-xs">
               <q-btn
                 v-if="previousSection"
                 class=""
@@ -27,25 +15,28 @@
                 :to="{
                   name: 'Edit',
                   params: {
-                    project: $route.params.project,
-                    sectionIndex: Number($route.params.sectionIndex) - 1,
-                  },
+                    project: route.params.project,
+                    sectionIndex: Number(route.params.sectionIndex) - 1
+                  }
                 }"
                 :label="previousSection.title"
               />
               <div v-else style="width: 180px"></div>
-              <q-input
-                v-model="section.title"
+              <awareness-q-input
+                :id="`${section.id}_title`"
+                :model-value="section.title"
                 type="text"
-                placeholder="Section title"
+                placeholder="Section Name"
                 class="col text-h5 text-bold text-black q-mx-md"
                 input-class="text-h5 text-bold"
                 dense
+                debounce="500"
+                @update:model-value="examStore.updateSection(section, { title: $event })"
               >
                 <template #before>
                   {{ section.number }}
                 </template>
-              </q-input>
+              </awareness-q-input>
               <q-btn
                 v-if="nextSection"
                 flat
@@ -55,9 +46,9 @@
                 :to="{
                   name: 'Edit',
                   params: {
-                    project: $route.params.project,
-                    sectionIndex: Number($route.params.sectionIndex) + 1,
-                  },
+                    project: route.params.project,
+                    sectionIndex: Number(route.params.sectionIndex) + 1
+                  }
                 }"
                 :label="nextSection.title"
               />
@@ -73,7 +64,7 @@
             </div>
             <q-toolbar class="section-options bg-secondary row gutter scroll no-wrap">
               <q-select
-                v-model="section.level"
+                :model-value="section.level"
                 flat
                 map-options
                 options-cover
@@ -83,26 +74,33 @@
                 :options="[
                   { label: 'Level 1', value: 0 },
                   { label: 'Level 2', value: 1 },
-                  { label: 'Level 3', value: 2 },
+                  { label: 'Level 3', value: 2 }
                 ]"
+                @update:model-value="examStore.updateSection(section, { level: $event })"
               />
               <q-checkbox
-                v-model="section.isNumbered"
+                :model-value="section.isNumbered"
                 :disable="section.isSectionTitleVisibleOnAMC"
+                @update:model-value="examStore.updateSection(section, { isNumbered: $event })"
                 >Show number</q-checkbox
               >
               <q-checkbox
-                v-model="section.isSectionTitleVisibleOnAMC"
+                :model-value="section.isSectionTitleVisibleOnAMC"
                 @update:model-value="
-                  section.isSectionTitleVisibleOnAMC
-                    ? (section.isNumbered = true)
-                    : ''
+                  examStore.updateSection(section, {
+                    isSectionTitleVisibleOnAMC: $event,
+                    isNumbered: $event ? true : section.isNumbered
+                  })
                 "
                 >On answer sheet</q-checkbox
               >
-              <q-checkbox v-model="section.shuffle">Shuffle</q-checkbox>
+              <q-checkbox
+                :model-value="section.shuffle"
+                @update:model-value="examStore.updateSection(section, { shuffle: $event })"
+                >Shuffle</q-checkbox
+              >
               <q-select
-                v-model="section.columns"
+                :model-value="section.columns"
                 emit-value
                 map-options
                 options-cover
@@ -110,10 +108,13 @@
                 placeholder="Columns"
                 :options="[
                   { label: 'One column', value: 1 },
-                  { label: 'Two columns', value: 2 },
+                  { label: 'Two columns', value: 2 }
                 ]"
+                @update:model-value="examStore.updateSection(section, { columns: $event })"
               />
-              <q-checkbox v-model="section.pageBreakBefore"
+              <q-checkbox
+                :model-value="section.pageBreakBefore"
+                @update:model-value="examStore.updateSection(section, { pageBreakBefore: $event })"
                 >Page break before</q-checkbox
               >
               <q-space />
@@ -121,19 +122,17 @@
                 aria-label="delete section"
                 flat
                 color="negative"
-                icon="mdi-delete"
+                icon="sym_o_delete_forever"
                 padding="sm"
                 @click="removeSection()"
               />
             </q-toolbar>
-
-            <my-rich-text-editor
-              v-model="section.content"
-              class="page-width-limit q-pa-sm"
-              :class="{
-                empty: section.content == '' || section.content == '<p></p>',
-              }"
-            ></my-rich-text-editor>
+            <LexicalEditor
+              :id="`${section.id}_content`"
+              :model-value="section.content"
+              class="editor-custom"
+              @update:model-value="examStore.updateSection(section, { content: $event })"
+            />
           </div>
 
           <div :class="{ 'two-columns': section.columns == 2 }">
@@ -150,7 +149,7 @@
               aria-label="add new question"
               flat
               color="primary"
-              @click="examService.addQuestion(section)"
+              @click="examStore.addQuestion(section)"
               >Add Question</q-btn
             >
           </q-toolbar>
@@ -161,20 +160,22 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, inject, computed, watchEffect } from 'vue';
+import { defineComponent, computed, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import ExamEditor from '../../services/examEditor';
-import MyRichTextEditor from './MyRichTextEditor.vue';
 import ExamQuestion from './ExamQuestion.vue';
+import AwarenessQInput from '@/components/AwarenessQInput.vue';
+import LexicalEditor from './lexical/LexicalEditor.vue';
+import { useExamStore } from '@/stores/exam';
 
 export default defineComponent({
   name: 'ExamSection',
   components: {
-    MyRichTextEditor,
     ExamQuestion,
+    LexicalEditor,
+    AwarenessQInput
   },
   setup() {
-    const examService = inject('examService') as ExamEditor;
+    const examStore = useExamStore();
     const route = useRoute();
     const router = useRouter();
 
@@ -184,36 +185,39 @@ export default defineComponent({
           name: 'Edit',
           params: {
             project: route.params.project,
-            sectionIndex: '0',
-          },
+            sectionIndex: '0'
+          }
         });
       }
-      if (route.name === 'Edit' && Number(route.params.sectionIndex) >= examService.exam.sections.length) {
+      if (
+        route.name === 'Edit' &&
+        Number(route.params.sectionIndex) >= examStore.exam.sections.length
+      ) {
         router.push({
           name: 'Edit',
           params: {
             project: route.params.project,
-            sectionIndex: examService.exam.sections.length - 1,
-          },
+            sectionIndex: Math.max(0, examStore.exam.sections.length - 1)
+          }
         });
       }
     });
 
     const section = computed(() => {
-      return examService.exam.sections[Number(route.params.sectionIndex)];
+      return examStore.exam.sections[Number(route.params.sectionIndex)];
     });
     const previousSection = computed(() => {
       const currentIndex = Number(route.params.sectionIndex);
       if (currentIndex > 0) {
-        return examService.exam.sections[currentIndex - 1];
+        return examStore.exam.sections[currentIndex - 1];
       }
       return undefined;
     });
 
     const nextSection = computed(() => {
       const currentIndex = Number(route.params.sectionIndex);
-      if (currentIndex < examService.exam.sections.length - 1) {
-        return examService.exam.sections[currentIndex + 1];
+      if (currentIndex < examStore.exam.sections.length - 1) {
+        return examStore.exam.sections[currentIndex + 1];
       }
       return undefined;
     });
@@ -223,8 +227,8 @@ export default defineComponent({
         name: 'Edit',
         params: {
           project: route.params.project,
-          sectionIndex: examService.addSection(examService.createSection()),
-        },
+          sectionIndex: examStore.addSection(examStore.createSection())
+        }
       });
     };
 
@@ -233,37 +237,42 @@ export default defineComponent({
         name: 'Edit',
         params: {
           project: route.params.project,
-          sectionIndex: examService.removeSection(section.value),
-        },
+          sectionIndex: examStore.removeSection(section.value)
+        }
       });
     };
 
     return {
-      examService,
+      route,
+      examStore,
       section,
       previousSection,
       nextSection,
       addSection,
-      removeSection,
+      removeSection
     };
-  },
+  }
 });
 </script>
 <style scoped>
 .page-width-limit {
-  max-width: 1000px;
+  max-width: 910px;
   margin: 8px auto;
 }
-.myrichtexteditor.page-width-limit {
-  max-width: 800px;
-  border: none;
-  margin: 50px 100px;
-  padding-bottom: 100px;
+
+.section {
+  background-color: #c2c2c2;
+}
+.editor-custom {
+  max-width: 733px;
+  margin: 48px auto 48px auto;
 }
 </style>
 <style>
-.myrichtexteditor.page-width-limit.empty .wysihtml5-editor {
+.lexical-editor .preview.empty {
   border: 1px solid #eee;
+  min-height: 2em;
+  cursor: pointer;
 }
 .section-header .q-field__marginal {
   color: rgba(0, 0, 0, 1);
@@ -274,19 +283,19 @@ export default defineComponent({
   }
 
   to {
-    opacity: 0.1;
+    opacity: 0.5;
   }
 }
 
 .fadeOut {
   animation-name: fadeOut;
-  animation-duration: 50ms;
+  animation-duration: 20ms;
   animation-iteration-count: 1;
 }
 
 @keyframes fadeIn {
   from {
-    opacity: 0.1;
+    opacity: 0.5;
   }
 
   to {
@@ -296,7 +305,7 @@ export default defineComponent({
 
 .fadeIn {
   animation-name: fadeIn;
-  animation-duration: 50ms;
+  animation-duration: 20ms;
   animation-iteration-count: 1;
 }
 </style>

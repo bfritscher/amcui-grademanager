@@ -15,17 +15,11 @@
     />
     <h2 class="text-h5">Raw exports</h2>
     <div>
-      <q-btn
-        color="primary"
-        class="q-mr-lg"
-        @click="downloadFromUrl(API.downloadURL())"
+      <q-btn color="primary" class="q-mr-lg" @click="downloadFromUrl(API.downloadURL())"
         >Download&nbsp;<small>project.zip</small>
       </q-btn>
 
-      <q-btn
-        color="primary"
-        class="q-mr-lg"
-        @click="downloadFromUrl(API.downloadODSURL())"
+      <q-btn color="primary" class="q-mr-lg" @click="downloadFromUrl(API.downloadODSURL())"
         >Download&nbsp;<small>export.ods</small>
       </q-btn>
 
@@ -54,8 +48,7 @@
 
     <h3 class="text-h6">Scan</h3>
     <p>
-      Threshold: {{ Math.round(parseFloat(API.options.options.seuil) * 100) }}%
-      black filled
+      Threshold: {{ Math.round(parseFloat(API.options.options.seuil) * 100) }}% black filled
       <q-slider
         label-always
         :step="0.05"
@@ -93,13 +86,9 @@
 
     <div>
       Click to add:
-      <q-chip
-        v-for="field in fields"
-        :key="field"
-        clickable
-        @click="addColToFileName(field)"
-        >{{ field }}</q-chip
-      >
+      <q-chip v-for="field in fields" :key="field" clickable @click="addColToFileName(field)">{{
+        field
+      }}</q-chip>
     </div>
 
     <q-input
@@ -111,8 +100,8 @@
 
     <p>
       %(ID) is replaced by the student's name.<br />
-      %(COLNAME) is replaced by the value of column COLNAME in the students list
-      for the current student.<br />
+      %(COLNAME) is replaced by the value of column COLNAME in the students list for the current
+      student.<br />
       %S is replaced by the student's total score.<br />
       %M is replaced by the maximum total score.<br />
       %s is replaced by the student's mark.<br />
@@ -121,13 +110,9 @@
 
     <div>
       Click to add:
-      <q-chip
-        v-for="field in fields"
-        :key="field"
-        clickable
-        @click="addColToAnnotation(field)"
-        >{{ field }}</q-chip
-      >
+      <q-chip v-for="field in fields" :key="field" clickable @click="addColToAnnotation(field)">{{
+        field
+      }}</q-chip>
     </div>
 
     <h4 class="text-h6">Annotation marks</h4>
@@ -182,57 +167,60 @@
         v-for="(value, key) in API.options.options"
         :key="key"
         v-model="API.options.options[key]"
-        :label="key"
-        :type="['verdict', 'email_text'].includes(key) ? 'textarea' : 'text'"
+        :label="String(key)"
+        :type="['verdict', 'email_text'].includes(String(key)) ? 'textarea' : 'text'"
         @blur="saveOptions()"
       />
     </div>
 
     <h2 class="text-h5">Advanced</h2>
     <p>
-      <q-btn
-        class="q-mr-lg"
-        color="primary"
-        @click="downloadFromUrl(API.scoringURL())"
+      <q-btn class="q-mr-lg" color="primary" @click="downloadFromUrl(API.scoringURL())"
         >Scoring&nbsp;<small>(force redo)</small>
       </q-btn>
-      <q-btn
-        class="q-mr-lg"
-        color="primary"
-        @click="downloadFromUrl(API.markURL())"
+      <q-btn class="q-mr-lg" color="primary" @click="downloadFromUrl(API.markURL())"
         >Marking&nbsp;<small>(force redo)</small>
       </q-btn>
-      <q-btn
-        color="warning"
-        class="q-mr-lg"
-        @click="downloadFromUrl(API.resetLockURL())"
+      <q-btn color="warning" class="q-mr-lg" @click="downloadFromUrl(API.resetLockURL())"
         >Reset&nbsp;<small>project's server locks</small>
       </q-btn>
-      <q-btn class="q-mr-lg" color="primary" @click="renameProject()"
-        >Rename project
+      <q-btn class="q-mr-lg" color="primary" @click="downloadFromUrl(API.dbVersionsURL())"
+        >DB versions
       </q-btn>
+      <q-btn class="q-mr-lg" color="primary" @click="renameProject()">Rename project </q-btn>
       <q-btn color="negative" @click="deleteProject()">Delete project! </q-btn>
     </p>
+    <q-uploader
+        class="q-mr-lg"
+        accept=".zip"
+        auto-upload
+        hide-upload-btn
+        label="Upload project.zip"
+        :factory="uploadFactory"
+        @uploaded="handleImportSuccess"
+      />
   </q-page>
 </template>
 
 <script lang="ts">
-import { defineComponent, inject, ref, onMounted } from 'vue';
+import { defineComponent, ref, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import AnnotationMarks from '../components/Options/AnnotationMarks.vue';
-import Api from '../services/api';
-import { useStore } from '../store';
+import { useApiStore } from '@/stores/api';
+import { useStore } from '@/stores/store';
+import { useExamStore } from '@/stores/exam';
 
 export default defineComponent({
   name: 'Options',
   components: {
-    AnnotationMarks,
+    AnnotationMarks
   },
   setup() {
-    const API = inject('API') as Api;
+    const API = useApiStore();
     const router = useRouter();
     const store = useStore();
+    const examStore = useExamStore();
     const $q = useQuasar();
     const showAllOptions = ref(false);
     const fields = ref<string[]>([]);
@@ -247,14 +235,14 @@ export default defineComponent({
           $q.notify({
             type: 'positive',
             message: 'Options saved!',
-            position: 'top-right',
+            position: 'top-right'
           });
         },
         (err) => {
           $q.notify({
             type: 'negative',
             message: err.message,
-            position: 'top-right',
+            position: 'top-right'
           });
         }
       );
@@ -270,7 +258,7 @@ export default defineComponent({
         API.options.users.push(value);
       },
       async removeUser({ value, index }: { value: string; index: number }) {
-        if (value === store.state.user.username) return;
+        if (value === store.user?.username) return;
         await API.removeUser(value, API.project);
         API.options.users.splice(index, 1);
       },
@@ -278,7 +266,8 @@ export default defineComponent({
         API.options.options.split = value;
         saveOptions();
       },
-      updateThreshold(value: number) {
+      updateThreshold(value: number | null) {
+        if (value === null) return;
         API.options.options.seuil = value.toString();
         saveOptions();
       },
@@ -301,9 +290,9 @@ export default defineComponent({
           ok: {
             label: 'Delete everything!',
             color: 'negative',
-            flat: true,
+            flat: true
           },
-          cancel: 'Cancel',
+          cancel: 'Cancel'
         }).onOk(() => {
           API.deleteProject().then(() => {
             router.push({ name: 'Home' });
@@ -316,12 +305,34 @@ export default defineComponent({
           API.renameProject(name).then((apiName) => {
             router.push({
               name: 'Options',
-              params: { project: apiName },
+              params: { project: apiName }
             });
           });
         }
       },
+      uploadFactory() {
+        return {
+          url: `${API.URL}/project/${API.project}/zip`,
+          headers: [
+            {
+              name: 'Authorization',
+              value: `Bearer ${store.token}`
+            }
+          ],
+          fieldName: 'file'
+        };
+      },
+      handleImportSuccess(response: any) {
+        console.log(response);
+        examStore.importJSON(response.xhr.response);
+        router.push({ name: 'Edit', params: { project: API.project } });
+        $q.notify({
+          type: 'positive',
+          message: 'Project imported!',
+          position: 'center'
+        });
+      }
     };
-  },
+  }
 });
 </script>

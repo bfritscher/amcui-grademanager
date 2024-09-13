@@ -13,7 +13,7 @@ export function match(
   const result = {
     match: false,
     score: 0,
-    wrapped: '',
+    wrapped: ''
   };
 
   let previous = '';
@@ -23,16 +23,11 @@ export function match(
   let previousMatched = 0;
   while (indexSource < source.length) {
     current = source[indexSource];
-    if (
-      current === ' ' &&
-      indexSearch < search.length &&
-      search[indexSearch] !== ' '
-    ) {
+    if (current === ' ' && indexSearch < search.length && search[indexSearch] !== ' ') {
       indexSearch = 0;
     }
     const isMatch =
-      indexSearch < search.length &&
-      current.toLowerCase() === search[indexSearch].toLowerCase();
+      indexSearch < search.length && current.toLowerCase() === search[indexSearch].toLowerCase();
     if (isMatch) {
       if (previousMatched === 0) {
         result.wrapped += '<strong>';

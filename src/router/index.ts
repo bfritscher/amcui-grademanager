@@ -1,40 +1,43 @@
-import { route } from 'quasar/wrappers';
-import {
-  createMemoryHistory,
-  createRouter,
-  createWebHashHistory,
-  createWebHistory,
-} from 'vue-router';
-import { StateInterface } from '../store';
+import { createRouter, createWebHistory } from 'vue-router';
 import routes from './routes';
 
-/*
- * If not building with SSR mode, you can
- * directly export the Router instantiation;
- *
- * The function below can be async too; either use
- * async/await or return a Promise which resolves
- * with the Router instance.
- */
+import { useStore } from '@/stores/store';
+import { useApiStore } from '@/stores/api';
 
-export default route<StateInterface>(function (/*{ store  , ssrContext  }*/) {
-  const createHistory = process.env.SERVER
-    ? createMemoryHistory
-    : process.env.VUE_ROUTER_MODE === 'history'
-    ? createWebHistory
-    : createWebHashHistory;
-
-  const Router = createRouter({
-    scrollBehavior: () => ({ left: 0, top: 0 }),
-    routes,
-
-    // Leave this as is and make changes in quasar.conf.js instead!
-    // quasar.conf.js -> build -> vueRouterMode
-    // quasar.conf.js -> build -> publicPath
-    history: createHistory(
-      process.env.MODE === 'ssr' ? void 0 : process.env.VUE_ROUTER_BASE
-    ),
-  });
-
-  return Router;
+const router = createRouter({
+  history: createWebHistory(import.meta.env.VITE_BASE_URL),
+  scrollBehavior: () => ({ left: 0, top: 0 }),
+  routes
 });
+
+router.beforeEach((to, from, next) => {
+  const store = useStore();
+  if (to.name === 'Login') {
+    if (store.isLoggedIn) {
+      next({ name: 'Home' });
+    } else {
+      next();
+    }
+    return;
+  }
+  // check auth
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    if (store.isLoggedIn) {
+      next();
+    } else {
+      next('/login');
+    }
+  } else {
+    next();
+  }
+  // if is a project url, check/load project
+  const API = useApiStore();
+  if (to.params.project) {
+    API.loadProject(to.params.project as string);
+    API.setAwarenessLocation([String(to.name)]);
+  } else {
+    API.unloadProject();
+  }
+});
+
+export default router;

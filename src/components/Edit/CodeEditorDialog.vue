@@ -1,19 +1,14 @@
 <template>
-  <q-dialog
-    ref="dialogRef"
-    :maximized="$q.screen.lt.sm"
-    persistent
-    @hide="onDialogHide"
-  >
+  <q-dialog ref="dialogRef" :maximized="$q.screen.lt.sm" persistent @hide="onDialogHide">
     <q-card class="q-dialog-plugin code-editor">
       <q-toolbar class="bg-primary text-white">
         <q-toolbar-title> Code editing </q-toolbar-title>
-        <q-btn flat round dense icon="mdi-close" @click="onDialogOK" />
+        <q-btn flat round dense icon="sym_o_close" @click="onDialogOK" />
       </q-toolbar>
       <q-card-section>
         <q-toolbar>
           <q-select
-            v-model="code.mode"
+            :model-value="code.mode"
             placeholder="Mode"
             :options="[
               'text/html',
@@ -21,12 +16,21 @@
               'text/javascript',
               'text/x-sql',
               'text/x-java',
-              'text/x-python',
+              'text/x-python'
             ]"
             dense
+            @update:model-value="examService.updateCode(code, { mode: $event })"
           />
-          <q-checkbox v-model="code.numbers">Line numbers</q-checkbox>
-          <q-checkbox v-model="code.border">Border</q-checkbox>
+          <q-checkbox
+            :model-value="code.numbers"
+            @update:model-value="examService.updateCode(code, { numbers: $event })"
+            >Line numbers</q-checkbox
+          >
+          <q-checkbox
+            :model-value="code.border"
+            @update:model-value="examService.updateCode(code, { border: $event })"
+            >Border</q-checkbox
+          >
         </q-toolbar>
         <div
           :class="{ border: code.border }"
@@ -51,26 +55,26 @@
 
 <script lang="ts">
 import { useDialogPluginComponent } from 'quasar';
-import { defineComponent, inject, computed, PropType, onMounted, ref, watchEffect } from 'vue';
-import ExamEditor from '../../services/examEditor';
+import { defineComponent, computed, type PropType, onMounted, ref, watchEffect } from 'vue';
 import Codemirror from '../Codemirror.vue';
-import { Code } from '../models';
+import type { Code } from '../models';
+import { useExamStore } from '@/stores/exam';
 
 export default defineComponent({
   name: 'CodeEditorDialog',
   components: {
-    Codemirror,
+    Codemirror
   },
   props: {
     codeId: {
       type: String as PropType<string>,
-      required: true,
-    },
+      required: true
+    }
   },
   emits: [
     // REQUIRED; need to specify some events that your
     // component will emit through useDialogPluginComponent()
-    ...useDialogPluginComponent.emits,
+    ...useDialogPluginComponent.emits
   ],
 
   setup(props) {
@@ -82,7 +86,7 @@ export default defineComponent({
     //                    example: onDialogOK() - no payload
     //                    example: onDialogOK({ /*.../* }) - with payload
     // onDialogCancel - Function to call to settle dialog with "cancel" outcome
-    const examService = inject('examService') as ExamEditor;
+    const examService = useExamStore();
 
     const showCode = ref(false);
     const localCode = ref('');
@@ -103,13 +107,13 @@ export default defineComponent({
         matchBrackets: true,
         autoCloseBrackets: true,
         autoCloseTags: true,
-        matchTags: { bothTags: true },
+        matchTags: { bothTags: true }
       };
     });
 
     onMounted(() => {
       window.setTimeout(() => {
-        showCode.value= true;
+        showCode.value = true;
       }, 500);
     });
 
@@ -118,21 +122,22 @@ export default defineComponent({
       localCode,
       code,
       dialogRef,
-      onDialogHide(){
-        code.value.content = localCode.value;
+      examService,
+      onDialogHide() {
+        examService.updateCode(code.value, { content: localCode.value });
         onDialogHide();
       },
       onCodeChange(newValue: string) {
         localCode.value = newValue;
       },
       onDialogOK,
-      options,
+      options
     };
-  },
+  }
 });
 </script>
 <style scoped>
- .code-editor .border {
+.code-editor .border {
   border: 1px solid #000;
 }
 </style>

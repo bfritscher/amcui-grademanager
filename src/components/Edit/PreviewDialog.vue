@@ -3,7 +3,7 @@
     <q-card class="q-dialog-plugin preview">
       <q-toolbar class="bg-primary text-white">
         <q-toolbar-title> Preview Document </q-toolbar-title>
-        <q-btn flat round dense icon="mdi-close" @click="onDialogOK" />
+        <q-btn flat round dense icon="sym_o_close" @click="onDialogOK" />
       </q-toolbar>
       <q-card-section
         v-if="!isLogVisible && API.logs.preview && API.logs.preview.code == 0"
@@ -15,13 +15,12 @@
           style="height: 80vh"
         >
           <p>
-            Your browser does not support PDFs. Download the PDF below or do not
-            use native preview.
+            Your browser does not support PDFs. Download the PDF below or do not use native preview.
           </p>
         </object>
       </q-card-section>
       <q-card-section
-        v-if="isLogVisible || ( API.logs.preview && API.logs.preview.code != 0 )"
+        v-if="isLogVisible || (API.logs.preview && API.logs.preview.code != 0)"
         class="latex-errors scroll"
       >
         <div class="text-h6 text-bold">Error</div>
@@ -53,16 +52,8 @@
           label="download"
           target="_blank"
         />
-        <q-btn
-          :label="isLogVisible ? 'pdf' : 'log'"
-          flat
-          @click="isLogVisible = !isLogVisible"
-        />
-        <q-btn
-          label="html"
-          flat
-          @click="exportHTML()"
-        />
+        <q-btn :label="isLogVisible ? 'pdf' : 'log'" flat @click="isLogVisible = !isLogVisible" />
+        <q-btn label="html" flat @click="exportHTML()" />
         <q-space />
         <q-btn
           color="primary"
@@ -78,21 +69,21 @@
 
 <script lang="ts">
 import { useDialogPluginComponent } from 'quasar';
-import { defineComponent, inject, reactive, ref } from 'vue';
-import Api from '../../services/api';
-import ExamEditor from '../../services/examEditor';
+import { defineComponent, reactive, ref } from 'vue';
 import formatDate from '../../utils/formatDate';
 import Codemirror from '../Codemirror.vue';
+import { useApiStore } from '@/stores/api';
+import { useExamStore } from '@/stores/exam';
 
 export default defineComponent({
   name: 'PreviewDialog',
   components: {
-    Codemirror,
+    Codemirror
   },
   emits: [
     // REQUIRED; need to specify some events that your
     // component will emit through useDialogPluginComponent()
-    ...useDialogPluginComponent.emits,
+    ...useDialogPluginComponent.emits
   ],
 
   setup() {
@@ -104,14 +95,14 @@ export default defineComponent({
     //                    example: onDialogOK() - no payload
     //                    example: onDialogOK({ /*.../* }) - with payload
     // onDialogCancel - Function to call to settle dialog with "cancel" outcome
-    const API = inject('API') as Api;
-    const examService = inject('examService') as ExamEditor;
+    const API = useApiStore();
+    const examService = useExamStore();
 
     const logOptions = reactive({
       lineNumbers: false,
       lineWrapping: false,
       viewportMargin: Infinity,
-      readOnly: true,
+      readOnly: true
     });
 
     const isLogVisible = ref(false);
@@ -156,7 +147,7 @@ export default defineComponent({
         examService.toHtml();
       }
     };
-  },
+  }
 });
 </script>
 <style scoped>

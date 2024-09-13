@@ -1,8 +1,8 @@
 <template>
-  <div class="answer row items-stretch q-mb-lg">
+  <div class="answer row items-stretch q-mb-lg no-wrap">
     <div
       class="q-pa-md row items-center cursor-pointer"
-      @click="answer.correct = !answer.correct"
+      @click="examService.updateAnswer(answer, { correct: !answer.correct })"
     >
       <q-btn
         flat
@@ -11,67 +11,79 @@
         padding="xs"
         class="answer-toggle text-white"
         :class="answer.correct ? 'bg-green-8' : 'bg-red'"
-        :icon="answer.correct ? 'mdi-check' : 'mdi-close'"
+        :icon="answer.correct ? 'sym_o_check' : 'sym_o_close'"
         :disable="isNone"
+        :aria-label="answer.correct ? 'correct' : 'incorrect'"
       />
     </div>
-    <div v-if="isNone" class="col-grow myrichtexteditor">
-      <div class="preview">None of the above</div>
+    <div class="col-grow">
+      <div v-if="isNone" class="col-grow editor-outlined custom-editor">
+        <div class="lexical-editor">
+          <div class="preview">None of the above</div>
+        </div>
+      </div>
+      <LexicalEditor
+        v-else
+        :id="`${answer.id}_content`"
+        :model-value="answer.content"
+        class="custom-editor"
+        @update:model-value="examService.updateAnswer(answer, { content: $event })"
+      />
     </div>
-    <my-rich-text-editor
-      v-else
-      v-model="answer.content"
-      class="col-grow q-pa-sm"
-    ></my-rich-text-editor>
     <q-btn
       color="negative"
       flat
-      icon="mdi-delete"
+      icon="sym_o_delete_forever"
       aria-label="delete answer"
       class="q-ma-sm"
       :disable="isNone"
-      @click="examService.removeAnswer(question, answer)"
+      @click="examService.removeAnswer(answer)"
     />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, inject, PropType } from 'vue';
-import { Question, Answer } from '../models';
-import ExamEditor from '../../services/examEditor';
-import MyRichTextEditor from './MyRichTextEditor.vue';
+import { defineComponent, type PropType } from 'vue';
+import type { Question, Answer } from '../models';
+import LexicalEditor from './lexical/LexicalEditor.vue';
+import { useExamStore } from '@/stores/exam';
 
 export default defineComponent({
   name: 'ExamAnswer',
   components: {
-    MyRichTextEditor,
+    LexicalEditor
   },
   props: {
     question: {
       type: Object as PropType<Question>,
-      required: true,
+      required: true
     },
     answer: {
       type: Object as PropType<Answer>,
-      required: true,
+      required: true
     },
     isNone: {
       type: Boolean,
       required: false,
-      default: false,
-    },
+      default: false
+    }
   },
   setup() {
-    const examService = inject('examService') as ExamEditor;
+    const examService = useExamStore();
 
     return {
-      examService,
+      examService
     };
-  },
+  }
 });
 </script>
 <style scoped>
 .answer-toggle {
   transition: all linear 0.3s;
+}
+.custom-editor {
+  min-width: 150px;
+  max-width: 673px;
+  margin-left: 16px;
 }
 </style>

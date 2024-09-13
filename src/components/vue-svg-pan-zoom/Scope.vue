@@ -1,5 +1,6 @@
 <template>
   <svg
+    ref="scopeSVG"
     class="thumbViewClass"
     @click="updateMainViewPan"
     @mousemove="updateMainViewPan"
@@ -8,81 +9,66 @@
   </svg>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref, onMounted, type PropType } from 'vue';
+
+const props = defineProps({
+  mainSPZ: { type: Object as PropType<SvgPanZoom.Instance>, required: true },
+  thumbnailSPZ: { type: Object as PropType<SvgPanZoom.Instance>, required: true }
+});
+const x = ref(0);
+const y = ref(0);
+const width = ref(0);
+const height = ref(0);
+
+const scopeSVG = ref<SVGElement | null>(null);
+
 function updateScope() {
-  let main = this.mainSPZ;
-  let thumb = this.thumbnailSPZ;
+  if (!props.mainSPZ || !props.thumbnailSPZ) return;
 
-  if (!main || !thumb) return;
+  const mainPanX = props.mainSPZ.getPan().x,
+    mainPanY = props.mainSPZ.getPan().y,
+    mainWidth = props.mainSPZ.getSizes().width,
+    mainHeight = props.mainSPZ.getSizes().height,
+    mainZoom = props.mainSPZ.getSizes().realZoom,
+    thumbPanX = props.thumbnailSPZ.getPan().x,
+    thumbPanY = props.thumbnailSPZ.getPan().y,
+    thumbZoom = props.thumbnailSPZ.getSizes().realZoom;
 
-  let mainPanX = main.getPan().x,
-    mainPanY = main.getPan().y,
-    mainWidth = main.getSizes().width,
-    mainHeight = main.getSizes().height,
-    mainZoom = main.getSizes().realZoom,
-    thumbPanX = thumb.getPan().x,
-    thumbPanY = thumb.getPan().y,
-    thumbZoom = thumb.getSizes().realZoom;
+  const thumByMainZoomRatio = thumbZoom / mainZoom;
 
-  let thumByMainZoomRatio = thumbZoom / mainZoom;
+  const scopeX = thumbPanX - mainPanX * thumByMainZoomRatio;
+  const scopeY = thumbPanY - mainPanY * thumByMainZoomRatio;
+  const scopeWidth = mainWidth * thumByMainZoomRatio;
+  const scopeHeight = mainHeight * thumByMainZoomRatio;
 
-  let scopeX = thumbPanX - mainPanX * thumByMainZoomRatio;
-  let scopeY = thumbPanY - mainPanY * thumByMainZoomRatio;
-  let scopeWidth = mainWidth * thumByMainZoomRatio;
-  let scopeHeight = mainHeight * thumByMainZoomRatio;
-
-  this.x = scopeX + 1;
-  this.y = scopeY + 1;
-  this.width = scopeWidth - 2;
-  this.height = scopeHeight - 2;
+  x.value = scopeX + 1;
+  y.value = scopeY + 1;
+  width.value = scopeWidth - 2;
+  height.value = scopeHeight - 2;
 }
 
-function updateMainViewPan(evt) {
-  if (evt.which == 0 && evt.button == 0) {
-    return false;
-  }
+function updateMainViewPan(evt: MouseEvent) {
+  if ((evt.which == 0 && evt.button == 0) || !scopeSVG.value) return;
 
-  let main = this.mainSPZ;
-  let thumb = this.thumbnailSPZ;
-
-  let dim = this.$el.getBoundingClientRect(),
-    // mainWidth = main.getSizes().width,
-    // mainHeight = main.getSizes().height,
-    mainZoom = main.getSizes().realZoom,
-    thumbWidth = thumb.getSizes().width,
-    thumbHeight = thumb.getSizes().height,
-    thumbZoom = thumb.getSizes().realZoom;
+  const dim = scopeSVG.value.getBoundingClientRect(),
+    mainZoom = props.mainSPZ.getSizes().realZoom,
+    thumbWidth = props.thumbnailSPZ.getSizes().width,
+    thumbHeight = props.thumbnailSPZ.getSizes().height,
+    thumbZoom = props.thumbnailSPZ.getSizes().realZoom;
 
   const thumbPanX = evt.clientX - dim.left - thumbWidth / 2;
   const thumbPanY = evt.clientY - dim.top - thumbHeight / 2;
   const mainPanX = (-thumbPanX * mainZoom) / thumbZoom;
   const mainPanY = (-thumbPanY * mainZoom) / thumbZoom;
-  main.pan({ x: mainPanX, y: mainPanY });
+  props.mainSPZ.pan({ x: mainPanX, y: mainPanY });
 }
 
-export default {
-  //eslint-disable-next-line vue/require-prop-types
-  props: ['bus', 'mainSPZ', 'thumbnailSPZ'],
-  data: () => ({ x: 0, y: 0, width: 0, height: 0 }),
-  watch: {
-    mainSPZ() {
-      updateScope.call(this);
-    },
-    thumbnailSPZ() {
-      updateScope.call(this);
-    },
-  },
-  mounted() {
-    const up = updateScope.bind(this);
-    ['mainZoom', 'mainPan', 'thumbnailCreated'].forEach((event) =>
-      this.bus.$on(event, up)
-    );
-    up();
-  },
-  methods: {
-    updateMainViewPan,
-  },
-};
+onMounted(() => {
+  updateScope();
+  props.mainSPZ.setOnPan(() => updateScope());
+  props.mainSPZ.setOnZoom(() => updateScope());
+});
 </script>
 <style scoped>
 .scope {

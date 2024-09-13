@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&display=swap');
+
+body {
+  font-family: 'Jost', sans-serif;
+  font-size: 16px;
+}
+
+.gutter > * {
+  margin-right: 1rem;
+}
+
+.gutter > *:last-child {
+  margin-right: 0;
+}
+
+.two-columns {
+  column-count: 2;
+  column-gap: 40px;
+}
+
+.q-table tbody td,
+.q-table th {
+  font-size: 16px;
+}
+
+.q-dialog__inner--minimized .q-card.q-dialog-plugin {
+  min-width: 600px;
+}
+
+code.border > .cm-editor {
+  border: 1px solid #dddddd;
+}
+
+.awareness-bg-color-0 {
+  background-color: #4363d8;
+}
+.awareness-bg-color-1 {
+  background-color: #3cb44b;
+}
+.awareness-bg-color-2 {
+  background-color: #911eb4;
+}
+.awareness-bg-color-3 {
+  background-color: #f58231;
+}
+.awareness-bg-color-4 {
+  background-color: #ffe119;
+}
+
+.awareness-color-0 {
+  color: #4363d8;
+}
+.awareness-color-1 {
+  color: #3cb44b;
+}
+.awareness-color-2 {
+  color: #911eb4;
+}
+.awareness-color-3 {
+  color: #f58231;
+}
+.awareness-color-4 {
+  color: #ffe119;
+}
+
+.awareness-border-color-0 {
+  border-color: #4363d8 !important;
+}
+.awareness-border-color-1 {
+  border-color: #3cb44b !important;
+}
+.awareness-border-color-2 {
+  border-color: #911eb4 !important;
+}
+.awareness-border-color-3 {
+  border-color: #f58231 !important;
+}
+.awareness-border-color-4 {
+  border-color: #ffe119 !important;
+}
+
+/* https://getbootstrap.com/docs/5.0/layout/containers/ */
+
+.container,
+.container-sm,
+.container-md,
+.container-lg,
+.container-xl,
+.container-fluid {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+@media (min-width: 576px) {
+  .container,
+  .container-sm {
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container,
+  .container-sm,
+  .container-md {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 992px) {
+  .container,
+  .container-sm,
+  .container-md,
+  .container-lg {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container,
+  .container-sm,
+  .container-md,
+  .container-lg,
+  .container-xl {
+    max-width: 1140px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .container,
+  .container-sm,
+  .container-md,
+  .container-lg,
+  .container-xl,
+  .container-xxl {
+    max-width: 1320px;
+  }
+}
+
+@media (min-width: 600px) {
+  .q-dialog .q-card__section.scroll {
+    max-height: calc(100vh - 160px);
+  }
+}

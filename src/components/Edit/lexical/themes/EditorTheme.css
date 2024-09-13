@@ -1,0 +1,496 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ *
+ */
+.le__ltr {
+  text-align: justify;
+}
+.le__rtl {
+  text-align: right;
+}
+.le__paragraph {
+  margin: 0;
+  position: relative;
+}
+.le__quote {
+  margin: 0;
+  margin-left: 20px;
+  margin-bottom: 10px;
+  font-size: 15px;
+  color: rgb(101, 103, 107);
+  border-left-color: rgb(206, 208, 212);
+  border-left-width: 4px;
+  border-left-style: solid;
+  padding-left: 16px;
+}
+.le__h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 2.5;
+  margin: 0;
+}
+.le__h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0;
+  line-height: 2;
+}
+.le__h3 {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.7;
+  margin: 0;
+}
+.le__indent {
+  --lexical-indent-base-value: 40px;
+}
+.le__textBold {
+  font-weight: bold;
+}
+.le__textItalic {
+  font-style: italic;
+}
+.le__textUnderline {
+  text-decoration: underline;
+}
+.le__textStrikethrough {
+  text-decoration: line-through;
+}
+.le__textUnderlineStrikethrough {
+  text-decoration: underline line-through;
+}
+.le__textSubscript {
+  font-size: 0.8em;
+  vertical-align: sub !important;
+}
+.le__textSuperscript {
+  font-size: 0.8em;
+  vertical-align: super;
+}
+.le__textCode {
+  font-family: 'Nimbus Mono', Menlo, Consolas, Monaco, monospace;
+}
+.le__hashtag {
+  background-color: rgba(88, 144, 255, 0.15);
+  border-bottom: 1px solid rgba(88, 144, 255, 0.3);
+}
+.le__link {
+  color: rgb(33, 111, 219);
+  text-decoration: none;
+}
+.le__link:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+.le__code {
+  font-family: 'Nimbus Mono', Menlo, Consolas, Monaco, monospace;
+  display: block;
+  padding: 8px 8px 8px 38px;
+  line-height: 1.53;
+  font-size: 14px;
+  font-weight: bold;
+  margin: 0;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  overflow-x: auto;
+  position: relative;
+  tab-size: 2;
+  white-space: pre;
+}
+.le__code span {
+  white-space: pre !important;
+}
+.le__code:before {
+  content: attr(data-gutter);
+  position: absolute;
+  background-color: #eee;
+  left: 0;
+  top: 0;
+  border-right: 1px solid #ccc;
+  padding: 8px;
+  color: #777;
+  white-space: pre-wrap;
+  text-align: right;
+  min-width: 25px;
+}
+.le__code[data-border='true'] {
+  border: 1px solid #000;
+}
+.le__code[data-numbers='false']:before {
+  display: none;
+}
+.le__code[data-numbers='false'] {
+  padding-left: 8px;
+}
+
+.le__table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  overflow-y: scroll;
+  overflow-x: scroll;
+  table-layout: fixed;
+  width: max-content;
+  margin: 30px auto;
+  word-break: normal;
+}
+.le__tableSelection *::selection {
+  background-color: transparent;
+}
+.le__tableSelected {
+  outline: 2px solid rgb(60, 132, 244);
+}
+.le__tableCell {
+  border: 1px solid black;
+  width: 75px;
+  min-width: 75px;
+  vertical-align: top;
+  text-align: start;
+  padding: 6px 8px;
+  position: relative;
+  outline: none;
+}
+.le__tableCellSortedIndicator {
+  display: block;
+  opacity: 0.5;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: #999;
+}
+.le__tableCellResizer {
+  position: absolute;
+  right: -4px;
+  height: 100%;
+  width: 8px;
+  cursor: ew-resize;
+  z-index: 10;
+  top: 0;
+}
+.le__tableCellHeader {
+  background-color: #f2f3f5;
+  text-align: start;
+}
+.le__tableCellSelected {
+  background-color: #c9dbf0;
+}
+.le__tableCellPrimarySelected {
+  border: 2px solid rgb(60, 132, 244);
+  display: block;
+  height: calc(100% - 2px);
+  position: absolute;
+  width: calc(100% - 2px);
+  left: -1px;
+  top: -1px;
+  z-index: 2;
+}
+.le__tableCellEditing {
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+  border-radius: 3px;
+}
+/*
+.le__tableAddColumns {
+  position: absolute;
+  top: 0;
+  width: 20px;
+  background-color: #eee;
+  height: 100%;
+  right: -25px;
+  animation: table-controls 0.2s ease;
+  border: 0;
+  cursor: pointer;
+}
+.le__tableAddColumns:after {
+  background-image: url(../assets/images/icons/plus.svg);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: block;
+  content: ' ';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.4;
+}
+.le__tableAddColumns:hover {
+  background-color: #c9dbf0;
+}
+.le__tableAddRows {
+  position: absolute;
+  bottom: -25px;
+  width: calc(100% - 25px);
+  background-color: #eee;
+  height: 20px;
+  left: 0;
+  animation: table-controls 0.2s ease;
+  border: 0;
+  cursor: pointer;
+}
+.le__tableAddRows:after {
+  background-image: url(../assets/images/icons/plus.svg);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: block;
+  content: ' ';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.4;
+}
+.le__tableAddRows:hover {
+  background-color: #c9dbf0;
+}
+@keyframes table-controls {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+  */
+.le__tableCellResizeRuler {
+  display: block;
+  position: absolute;
+  width: 1px;
+  background-color: rgb(60, 132, 244);
+  height: 100%;
+  top: 0;
+}
+.le__tableCellActionButtonContainer {
+  display: block;
+  right: 5px;
+  top: 6px;
+  position: absolute;
+  z-index: 4;
+  width: 20px;
+  height: 20px;
+}
+.le__tableCellActionButton {
+  background-color: #eee;
+  display: block;
+  border: 0;
+  border-radius: 20px;
+  width: 20px;
+  height: 20px;
+  color: #222;
+  cursor: pointer;
+}
+.le__tableCellActionButton:hover {
+  background-color: #ddd;
+}
+.le__characterLimit {
+  display: inline;
+  background-color: #ffbbbb !important;
+}
+.le__ol1 {
+  padding: 0;
+  margin: 0;
+  list-style-position: inside;
+}
+.le__ol2 {
+  padding: 0;
+  margin: 0;
+  list-style-type: upper-alpha;
+  list-style-position: inside;
+}
+.le__ol3 {
+  padding: 0;
+  margin: 0;
+  list-style-type: lower-alpha;
+  list-style-position: inside;
+}
+.le__ol4 {
+  padding: 0;
+  margin: 0;
+  list-style-type: upper-roman;
+  list-style-position: inside;
+}
+.le__ol5 {
+  padding: 0;
+  margin: 0;
+  list-style-type: lower-roman;
+  list-style-position: inside;
+}
+.le__ul {
+  padding: 0;
+  margin: 0;
+  list-style-position: inside;
+}
+.le__listItem {
+  margin: 0 0 0 30px;
+}
+.le__listItemChecked,
+.le__listItemUnchecked {
+  position: relative;
+  margin-left: 8px;
+  margin-right: 8px;
+  padding-left: 24px;
+  padding-right: 24px;
+  list-style-type: none;
+  outline: none;
+}
+.le__listItemChecked {
+  text-decoration: line-through;
+}
+.le__listItemUnchecked:before,
+.le__listItemChecked:before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  top: 2px;
+  left: 0;
+  cursor: pointer;
+  display: block;
+  background-size: cover;
+  position: absolute;
+}
+.le__listItemUnchecked[dir='rtl']:before,
+.le__listItemChecked[dir='rtl']:before {
+  left: auto;
+  right: 0;
+}
+.le__listItemUnchecked:focus:before,
+.le__listItemChecked:focus:before {
+  box-shadow: 0 0 0 2px #a6cdfe;
+  border-radius: 2px;
+}
+.le__listItemUnchecked:before {
+  border: 1px solid #999;
+  border-radius: 2px;
+}
+.le__listItemChecked:before {
+  border: 1px solid rgb(61, 135, 245);
+  border-radius: 2px;
+  background-color: #3d87f5;
+  background-repeat: no-repeat;
+}
+.le__listItemChecked:after {
+  content: '';
+  cursor: pointer;
+  border-color: #fff;
+  border-style: solid;
+  position: absolute;
+  display: block;
+  top: 6px;
+  width: 3px;
+  left: 7px;
+  right: 7px;
+  height: 6px;
+  transform: rotate(45deg);
+  border-width: 0 2px 2px 0;
+}
+.le__nestedListItem {
+  list-style-type: none;
+}
+.le__nestedListItem:before,
+.le__nestedListItem:after {
+  display: none;
+}
+.le__tokenComment {
+  color: slategray;
+}
+.le__tokenPunctuation {
+  color: #999;
+}
+.le__tokenProperty {
+  color: #905;
+}
+.le__tokenSelector {
+  color: #690;
+}
+.le__tokenOperator {
+  color: #9a6e3a;
+}
+.le__tokenAttr {
+  color: #07a;
+}
+.le__tokenVariable {
+  color: #e90;
+}
+.le__tokenFunction {
+  color: #dd4a68;
+}
+.le__mark {
+  background: rgba(255, 212, 0, 0.14);
+  border-bottom: 2px solid rgba(255, 212, 0, 0.3);
+  padding-bottom: 2px;
+}
+.le__markOverlap {
+  background: rgba(255, 212, 0, 0.3);
+  border-bottom: 2px solid rgba(255, 212, 0, 0.7);
+}
+.le__mark.selected {
+  background: rgba(255, 212, 0, 0.5);
+  border-bottom: 2px solid rgba(255, 212, 0, 1);
+}
+.le__markOverlap.selected {
+  background: rgba(255, 212, 0, 0.7);
+  border-bottom: 2px solid rgba(255, 212, 0, 0.7);
+}
+.le__embedBlock {
+  user-select: none;
+}
+.le__embedBlockFocus {
+  outline: 2px solid rgb(60, 132, 244);
+}
+.le__layoutContainer {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0;
+}
+.le__layoutItem {
+  border: 1px dashed #ddd;
+  padding: 8px 16px;
+}
+.le__hr {
+  padding: 2px 2px;
+  border: none;
+  margin: 1em 0;
+  cursor: pointer;
+}
+.le__hr:after {
+  content: '';
+  display: block;
+  height: 2px;
+  background-color: #ccc;
+  line-height: 2px;
+}
+.le__hr.selected {
+  outline: 2px solid rgb(60, 132, 244);
+  user-select: none;
+}
+
+.le__blockCursor {
+  display: block;
+  pointer-events: none;
+  position: absolute;
+}
+
+.le__blockCursor:after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: -2px;
+  width: 20px;
+  border-top: 1px solid black;
+  animation: CursorBlink 1.1s steps(2, start) infinite;
+}
+
+@keyframes CursorBlink {
+  to {
+    visibility: hidden;
+  }
+}

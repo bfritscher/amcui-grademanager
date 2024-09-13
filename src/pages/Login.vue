@@ -3,12 +3,12 @@
     <div class="row q-pa-md flex flex-center">
       <div class="col col-md-4">
         <q-form @submit="login()">
-          <q-card bordered class="q-pa-md q-mt-lg shadow-1">
+          <q-card square flat bordered class="q-pa-md q-mt-lg shadow-1">
             <q-card-section>
               <div class="text-h5 row">
                 Login <q-space />
                 <q-btn
-                  icon="settings"
+                  icon="sym_o_settings"
                   padding="xs"
                   size="sm"
                   flat
@@ -17,8 +17,19 @@
                 />
               </div>
               <q-input v-if="showApi" v-model="API.URL" label="API URL" />
-              <q-input v-model="username" type="text" label="Username" />
-              <q-input v-model="password" type="password" label="Password" />
+              <q-input
+                v-model="username"
+                class="q-my-md"
+                type="text"
+                label="Username"
+                autocomplete="username"
+              />
+              <q-input
+                v-model="password"
+                type="password"
+                label="Password"
+                autocomplete="current-password"
+              />
             </q-card-section>
             <q-card-section v-if="error">
               <p class="text-red">{{ error }}</p>
@@ -26,7 +37,13 @@
             <q-card-actions class="q-px-md">
               <q-btn flat label="create" type="submit" :disable="!username || !password" />
               <q-space />
-              <q-btn flat color="primary" label="Login" type="submit"  :disable="!username || !password" />
+              <q-btn
+                flat
+                color="primary"
+                label="Login"
+                type="submit"
+                :disable="!username || !password"
+              />
             </q-card-actions>
           </q-card>
         </q-form>
@@ -36,17 +53,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, inject, ref, watchEffect } from 'vue';
-import { useStore } from '../store';
+import { defineComponent, ref, watchEffect } from 'vue';
 import { useRouter } from 'vue-router';
-import Api from '../services/api';
 import { useQuasar } from 'quasar';
 import * as base64buffer from 'base64-arraybuffer';
+import { useApiStore } from '@/stores/api';
+import { useStore } from '@/stores/store';
 
 export default defineComponent({
   name: 'Login',
   setup() {
-    const API = inject('API') as Api;
+    const API = useApiStore();
     const username = ref('');
     const password = ref('');
     const showApi = ref(false);
@@ -56,7 +73,7 @@ export default defineComponent({
     const $q = useQuasar();
 
     watchEffect(() => {
-      if (store.getters.isLoggedIn()) {
+      if (store.isLoggedIn) {
         router.push({ name: 'Home' });
       }
     });
@@ -66,11 +83,12 @@ export default defineComponent({
       password,
       error,
       showApi,
+      API,
       login() {
         API.$http
           .post(API.URL + '/login', {
             username: username.value,
-            password: password.value,
+            password: password.value
           })
           .then(
             async (r) => {
@@ -80,10 +98,10 @@ export default defineComponent({
                   title: 'Authenticator Token',
                   prompt: {
                     model: '',
-                    type: 'text',
+                    type: 'text'
                   },
                   cancel: true,
-                  persistent: true,
+                  persistent: true
                 }).onOk((token: string) => {
                   API.$http
                     .post(API.URL + '/login', {
@@ -91,8 +109,8 @@ export default defineComponent({
                       password: password.value,
                       authenticator: {
                         type: 'authenticator',
-                        token,
-                      },
+                        token
+                      }
                     })
                     .catch((err) => {
                       error.value = err.data;
@@ -101,16 +119,15 @@ export default defineComponent({
               }
               if (r.data.fido2 && r.data.fido2.challenge) {
                 const loginOptions = r.data.fido2;
-                loginOptions.challenge = base64buffer.decode(
-                  loginOptions.challenge as string
-                );
-                loginOptions.allowCredentials =
-                  loginOptions.allowCredentials.map((item: { id: any }) => {
-                    item.id = base64buffer.decode(item.id as string)
+                loginOptions.challenge = base64buffer.decode(loginOptions.challenge as string);
+                loginOptions.allowCredentials = loginOptions.allowCredentials.map(
+                  (item: { id: any }) => {
+                    item.id = base64buffer.decode(item.id as string);
                     return item;
-                  });
+                  }
+                );
                 const credential: any = await navigator.credentials.get({
-                  publicKey: loginOptions,
+                  publicKey: loginOptions
                 });
                 if (credential) {
                   const passableCredential = {
@@ -123,14 +140,10 @@ export default defineComponent({
                       authenticatorData: base64buffer.encode(
                         credential.response.authenticatorData as ArrayBuffer
                       ),
-                      signature: base64buffer.encode(
-                        credential.response.signature as ArrayBuffer
-                      ),
-                      userHandle: base64buffer.encode(
-                        credential.response.userHandle as ArrayBuffer
-                      ),
+                      signature: base64buffer.encode(credential.response.signature as ArrayBuffer),
+                      userHandle: base64buffer.encode(credential.response.userHandle as ArrayBuffer)
                     },
-                    type: credential.type,
+                    type: credential.type
                   };
                   return API.$http
                     .post(`${API.URL}/login`, {
@@ -138,8 +151,8 @@ export default defineComponent({
                       password: password.value,
                       authenticator: {
                         type: 'fido2',
-                        response: passableCredential,
-                      },
+                        response: passableCredential
+                      }
                     })
                     .catch((err) => {
                       error.value = err.data;
@@ -155,8 +168,8 @@ export default defineComponent({
               }
             }
           );
-      },
+      }
     };
-  },
+  }
 });
 </script>

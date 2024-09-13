@@ -1,7 +1,8 @@
 <template>
   <q-page class="container">
+    <q-btn flat color="primary" class="q-mt-md" @click="router.back()">Back</q-btn>
     <q-form class="row q-py-lg" @submit="changePassword()">
-      <q-card class="col-12 col-md-8 offset-md-2">
+      <q-card flat bordered class="col-12 col-md-8 offset-md-2">
         <q-card-section>
           <div class="text-h5">Password Manager</div>
           <div class="row">
@@ -11,6 +12,7 @@
               label="Old Password"
               required
               class="col"
+              autocomplete="current-password"
               :rules="[(value) => !!value || 'Password is required']"
             />
             <q-input
@@ -19,6 +21,7 @@
               label="New Password"
               required
               class="col q-mx-lg"
+              autocomplete="new-password"
               :rules="[(value) => !!value || 'Password is required']"
             />
             <q-input
@@ -27,10 +30,8 @@
               label="New Password (repeat)"
               required
               class="col"
-              :rules="[
-                (value) =>
-                  value === profile.password || 'Does not match password',
-              ]"
+              autocomplete="new-password"
+              :rules="[(value) => value === profile.password || 'Does not match password']"
             />
           </div>
         </q-card-section>
@@ -50,13 +51,14 @@
       </q-card>
     </q-form>
     <div class="row q-py-lg">
-      <q-card class="col-12 col-md-8 offset-md-2">
+      <q-card flat bordered class="col-12 col-md-8 offset-md-2">
         <q-card-section>
           <div class="text-h5">2-Factor Authentication</div>
           <q-input
             v-model="profile.mfaPassword"
             type="password"
             label="Current Password"
+            autocomplete="current-password"
             required
           />
         </q-card-section>
@@ -69,20 +71,15 @@
           </h2>
           <q-img :src="profile.authentifierQRCode" style="max-width: 300px" />
         </q-card-section>
-        <q-card-section
-          v-if="$store.state.user && $store.state.user.authenticators"
-        >
+        <q-card-section v-if="store.user && store.user.authenticators">
           <q-list>
-            <q-item
-              v-for="(a, index) in $store.state.user.authenticators"
-              :key="index"
-            >
+            <q-item v-for="(a, index) in store.user.authenticators" :key="index">
               <q-item-section>
                 <q-item-label>{{ a.label }} [{{ a.type }}]</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-btn
-                  icon="delete"
+                  icon="sym_o_delete"
                   color="negative"
                   flat
                   :disable="profile.mfaPassword.length === 0"
@@ -114,16 +111,18 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, inject, reactive, onMounted } from 'vue';
-import Api from '../services/api';
-import { useStore } from '../store';
+import { defineComponent, reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import * as base64buffer from 'base64-arraybuffer';
+import { useApiStore } from '@/stores/api';
+import { useStore } from '@/stores/store';
 
 export default defineComponent({
   name: 'Profile',
   setup() {
-    const API = inject('API') as Api;
+    const API = useApiStore();
     const store = useStore();
+    const router = useRouter();
     const profile = reactive({
       error: '',
       oldPassword: '',
@@ -131,13 +130,15 @@ export default defineComponent({
       password2: '',
       mfaPassword: '',
       mfaError: '',
-      authentifierQRCode: '',
+      authentifierQRCode: ''
     });
     onMounted(() => {
       API.project = '';
     });
     return {
+      store,
       profile,
+      router,
       changePassword() {
         profile.error = '';
         API.changePassword(profile.oldPassword, profile.password).then(
@@ -155,7 +156,7 @@ export default defineComponent({
         API.$http
           .post(`${API.URL}/profile/addAuthenticator`, {
             password: profile.mfaPassword,
-            label: prompt('Label for this token'),
+            label: prompt('Label for this token')
           })
           .then((result) => {
             profile.authentifierQRCode = result.data.qrCodeDataUrl;
@@ -169,10 +170,10 @@ export default defineComponent({
           .post(`${API.URL}/profile/removeMFA`, {
             password: profile.mfaPassword,
             type: a.type,
-            label: a.label,
+            label: a.label
           })
           .then(() => {
-            store.dispatch('LOGOUT');
+            store.logout();
           })
           .catch((result) => {
             profile.mfaError = result.data;
@@ -190,7 +191,7 @@ export default defineComponent({
               registrationOptions.user.id as string
             );
             const credential: any = await navigator.credentials.create({
-              publicKey: registrationOptions,
+              publicKey: registrationOptions
             });
             if (credential) {
               const passableCredential = {
@@ -202,26 +203,26 @@ export default defineComponent({
                   ),
                   attestationObject: base64buffer.encode(
                     credential.response.attestationObject as ArrayBuffer
-                  ),
+                  )
                 },
-                type: credential.type,
+                type: credential.type
               };
               return API.$http
                 .post(`${API.URL}/profile/addFido2`, {
                   password: profile.mfaPassword,
                   label: prompt('Label for this token'),
-                  response: passableCredential,
+                  response: passableCredential
                 })
                 .then(() => {
-                  store.dispatch('LOGOUT');
+                  store.logout();
                 });
             }
           })
           .catch((result) => {
             profile.mfaError = result.data || result;
           });
-      },
+      }
     };
-  },
+  }
 });
 </script>

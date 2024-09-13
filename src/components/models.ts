@@ -67,6 +67,7 @@ export interface Section {
   pageBreakBefore: boolean;
   questions: Question[];
   number?: string;
+  order?: number;
 }
 
 export interface Question {
@@ -86,12 +87,16 @@ export interface Question {
   answer?: string;
   number?: number;
   isValid?: boolean;
+  section?: string;
+  order?: number;
 }
 
 export interface Answer {
   id: string;
   content: string;
   correct: boolean;
+  question?: string;
+  order?: number;
 }
 
 export interface Graphics {
@@ -100,6 +105,11 @@ export interface Graphics {
   width: number;
   name: string;
   options?: string;
+  updatedAt?: string;
+}
+
+export interface UsedGraphics extends Graphics {
+  used: boolean;
 }
 
 export interface Code {

@@ -3,7 +3,7 @@
     <q-card class="q-dialog-plugin">
       <q-toolbar class="bg-primary text-white">
         <q-toolbar-title> Manual Association </q-toolbar-title>
-        <q-btn flat round dense icon="mdi-close" @click="onDialogOK" />
+        <q-btn flat round dense icon="sym_o_close" @click="onDialogOK" />
       </q-toolbar>
       <q-card-section v-if="toBeMatched">
         <q-img :src="API.getStaticFileURL(`cr/${toBeMatched.image}`)" />
@@ -36,30 +36,27 @@
 import { useDialogPluginComponent } from 'quasar';
 import GradeService from '../../services/grade';
 import { match } from '../../utils/match';
-import {
-  defineComponent,
-  inject,
-  ref,
-  onMounted,
-  PropType,
-  computed,
-} from 'vue';
-import Api from '../../services/api';
-import { GradeRecord, Name } from '../models';
+import { defineComponent, ref, onMounted, type PropType, computed } from 'vue';
+import type { GradeRecord, Name } from '../models';
 import { matchLookups } from '../../utils/options';
+import { useApiStore } from '@/stores/api';
 
 export default defineComponent({
   name: 'AssociationDialog',
   props: {
     row: {
       type: Object as PropType<GradeRecord>,
-      required: true,
+      required: true
     },
+    gradeService: {
+      type: Object as PropType<GradeService>,
+      required: true
+    }
   },
   emits: [
     // REQUIRED; need to specify some events that your
     // component will emit through useDialogPluginComponent()
-    ...useDialogPluginComponent.emits,
+    ...useDialogPluginComponent.emits
   ],
 
   setup(props) {
@@ -71,8 +68,7 @@ export default defineComponent({
     //                    example: onDialogOK() - no payload
     //                    example: onDialogOK({ /*.../* }) - with payload
     // onDialogCancel - Function to call to settle dialog with "cancel" outcome
-    const API = inject('API') as Api;
-    const gradeService = inject('gradeService') as GradeService;
+    const API = useApiStore();
 
     const toBeMatched = ref();
     const unmatchedNames = ref<Name[]>([]);
@@ -98,35 +94,33 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      API.$http
-        .get(API.URL + '/project/' + API.project + '/names')
-        .then((r: any) => {
-          unmatchedNames.value = (r.data as Name[]).filter(
-            (item) => (!item.auto && !item.manual) || item.manual === 'NULL'
-          );
-          toBeMatched.value = extract(props.row) || nextUnmatched();
-        });
+      API.$http.get(API.URL + '/project/' + API.project + '/names').then((r: any) => {
+        unmatchedNames.value = (r.data as Name[]).filter(
+          (item) => (!item.auto && !item.manual) || item.manual === 'NULL'
+        );
+        toBeMatched.value = extract(props.row) || nextUnmatched();
+      });
     });
 
     const studentsWithoutScore = computed(() => {
-      const entries = gradeService.grade.students.data.filter(
+      const entries = props.gradeService.grade.students.data.filter(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        (row) => !gradeService.grade.scores.hasOwnProperty(row.id)
+        (row) => !props.gradeService.grade.scores.hasOwnProperty(row.id)
       );
       entries.sort((a, b) =>
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        itemAccesor(a).toLowerCase().localeCompare(itemAccesor(b).toLowerCase())
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        itemAccessor(a).toLowerCase().localeCompare(itemAccessor(b).toLowerCase())
       );
       return entries;
     });
 
     const options = ref<any[]>([]);
 
-    const itemAccesor = (item: {[key:string]: any}): string => {
+    const itemAccessor = (item: { [key: string]: any }): string => {
       const labels: string[] = [];
       Object.keys(item).forEach((key: string) => {
         if (item[key] && matchLookups.includes(key.toLowerCase())) {
-          labels.push(String(item[key]))
+          labels.push(String(item[key]));
         }
       });
       return labels.join(' ');
@@ -136,8 +130,8 @@ export default defineComponent({
       update(() => {
         if (needle) {
           options.value = studentsWithoutScore.value
-            .map((item: {[key:string]: any}) => {
-              const label = itemAccesor(item);
+            .map((item: { [key: string]: any }) => {
+              const label = itemAccessor(item);
               const result = match(needle, label);
               item._match = result.match;
               item._score = result.score;
@@ -157,16 +151,16 @@ export default defineComponent({
       if (item && item.id) {
         toBeMatched.value.manual = item.id;
         const key = `${toBeMatched.value.student}:${toBeMatched.value.copy}`;
-        const score = gradeService.grade.unmatched[key];
+        const score = props.gradeService.grade.unmatched[key];
         if (score) {
-            score.id = item.id;
-            gradeService.grade.scores[score.id] = score;
-            delete gradeService.grade.unmatched[key];
-            API.$http.post(API.URL + '/project/' + API.project + '/association/manual', {
-                student: score.student,
-                copy: score.copy,
-                id: score.id
-            });
+          score.id = item.id;
+          props.gradeService.grade.scores[score.id] = score;
+          delete props.gradeService.grade.unmatched[key];
+          API.$http.post(API.URL + '/project/' + API.project + '/association/manual', {
+            student: score.student,
+            copy: score.copy,
+            id: score.id
+          });
         }
         toBeMatched.value = nextUnmatched();
       }
@@ -177,7 +171,6 @@ export default defineComponent({
       onDialogHide,
       onDialogOK,
       API,
-      gradeService,
       unmatchedNames,
       toBeMatched,
       studentsWithoutScore,
@@ -186,6 +179,6 @@ export default defineComponent({
       filterFn,
       setName
     };
-  },
+  }
 });
 </script>

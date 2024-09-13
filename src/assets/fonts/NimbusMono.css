@@ -1,0 +1,59 @@
+@font-face {
+  font-family: 'Nimbus Mono';
+  src: url('NimbusMono-Regular.eot');
+  src:
+    local('Nimbus Mono Regular'),
+    local('NimbusMono-Regular'),
+    url('NimbusMono-Regular.eot?#iefix') format('embedded-opentype'),
+    url('NimbusMono-Regular.woff2') format('woff2'),
+    url('NimbusMono-Regular.woff') format('woff'),
+    url('NimbusMono-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nimbus Mono';
+  src: url('NimbusMono-BoldOblique.eot');
+  src:
+    local('Nimbus Mono Bold Oblique'),
+    local('NimbusMono-BoldOblique'),
+    url('NimbusMono-BoldOblique.eot?#iefix') format('embedded-opentype'),
+    url('NimbusMono-BoldOblique.woff2') format('woff2'),
+    url('NimbusMono-BoldOblique.woff') format('woff'),
+    url('NimbusMono-BoldOblique.ttf') format('truetype');
+  font-weight: bold;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nimbus Mono';
+  src: url('NimbusMono-Oblique.eot');
+  src:
+    local('Nimbus Mono Oblique'),
+    local('NimbusMono-Oblique'),
+    url('NimbusMono-Oblique.eot?#iefix') format('embedded-opentype'),
+    url('NimbusMono-Oblique.woff2') format('woff2'),
+    url('NimbusMono-Oblique.woff') format('woff'),
+    url('NimbusMono-Oblique.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nimbus Mono';
+  src: url('NimbusMono-Bold.eot');
+  src:
+    local('Nimbus Mono Bold'),
+    local('NimbusMono-Bold'),
+    url('NimbusMono-Bold.eot?#iefix') format('embedded-opentype'),
+    url('NimbusMono-Bold.woff2') format('woff2'),
+    url('NimbusMono-Bold.woff') format('woff'),
+    url('NimbusMono-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
