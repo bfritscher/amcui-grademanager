@@ -152,6 +152,7 @@
               @click="examStore.addQuestion(section)"
               >Add Question</q-btn
             >
+            <q-space />
             <q-btn
               aria-label="import questions"
               flat
@@ -175,6 +176,7 @@ import AwarenessQInput from '@/components/AwarenessQInput.vue';
 import LexicalEditor from './lexical/LexicalEditor.vue';
 import ExamImportDialog from './ExamImportDialog.vue';
 import { useExamStore } from '@/stores/exam';
+import type { Question } from '@/components/models';
 
 export default defineComponent({
   name: 'ExamSection',
@@ -256,19 +258,7 @@ export default defineComponent({
       $q.dialog({
         component: ExamImportDialog
       }).onOk((questions: Partial<Question>[]) => {
-        questions.forEach(q => {
-          const question = examStore.createQuestion();
-          question.content = q.content || '';
-          question.type = q.type || 'SINGLE';
-          examStore.saveQuestion(question);
-          
-          q.answers?.forEach(a => {
-            const answer = examStore.createAnswer(question);
-            answer.content = a.content || '';
-            answer.correct = a.correct || false;
-            examStore.saveAnswer(answer);
-          });
-        });
+        examStore.importPartialQuestions(section.value, questions);
       });
     };
 

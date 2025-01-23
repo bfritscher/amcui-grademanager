@@ -91,6 +91,12 @@ export interface Question {
   order?: number;
 }
 
+export type PartialAnswer = Partial<Answer>;
+
+export type PartialQuestion = Partial<Omit<Question, 'answers'>> & {
+  answers?: PartialAnswer[];
+};
+
 export interface Answer {
   id: string;
   content: string;

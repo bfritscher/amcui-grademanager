@@ -13,7 +13,8 @@ import type {
   Answer,
   Question,
   Graphics,
-  Code
+  Code,
+  PartialQuestion
 } from '../components/models';
 
 import { useStore } from '@/stores/store';
@@ -262,6 +263,23 @@ export const useExamStore = defineStore('exam', () => {
       });
     });
   }
+
+  function importPartialQuestions(section: Section, questions: PartialQuestion[]) {
+    questions.forEach(q => {
+      const question = createQuestion();
+      question.content = q.content || '';
+      question.type = q.type || 'SINGLE';
+      
+      question.answers = q.answers?.map(a => {
+        const answer = createAnswer(question);
+        answer.content = a.content || '';
+        answer.correct = a.correct || false;
+        return answer;
+      }) || [];
+      copyQuestion(section, question);
+    });
+  }
+
 
   function removeQuestion(question: Question) {
     ydoc.transact(() => {
@@ -952,6 +970,7 @@ export const useExamStore = defineStore('exam', () => {
     updateQuestion,
     updateQuestionsOrder,
     copyQuestion,
+    importPartialQuestions,
     removeQuestion,
     addAnswer,
     createAnswer,
