@@ -152,6 +152,13 @@
               @click="examStore.addQuestion(section)"
               >Add Question</q-btn
             >
+            <q-btn
+              aria-label="import questions"
+              flat
+              color="primary"
+              @click="showImportDialog"
+              >Import Questions</q-btn
+            >
           </q-toolbar>
         </div>
       </div>
@@ -162,9 +169,11 @@
 <script lang="ts">
 import { defineComponent, computed, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
 import ExamQuestion from './ExamQuestion.vue';
 import AwarenessQInput from '@/components/AwarenessQInput.vue';
 import LexicalEditor from './lexical/LexicalEditor.vue';
+import ExamImportDialog from './ExamImportDialog.vue';
 import { useExamStore } from '@/stores/exam';
 
 export default defineComponent({
@@ -178,6 +187,7 @@ export default defineComponent({
     const examStore = useExamStore();
     const route = useRoute();
     const router = useRouter();
+    const $q = useQuasar();
 
     watchEffect(() => {
       if (route.name === 'Edit' && !route.params.sectionIndex) {
@@ -242,6 +252,26 @@ export default defineComponent({
       });
     };
 
+    const showImportDialog = () => {
+      $q.dialog({
+        component: ExamImportDialog
+      }).onOk((questions: Partial<Question>[]) => {
+        questions.forEach(q => {
+          const question = examStore.createQuestion();
+          question.content = q.content || '';
+          question.type = q.type || 'SINGLE';
+          examStore.saveQuestion(question);
+          
+          q.answers?.forEach(a => {
+            const answer = examStore.createAnswer(question);
+            answer.content = a.content || '';
+            answer.correct = a.correct || false;
+            examStore.saveAnswer(answer);
+          });
+        });
+      });
+    };
+
     return {
       route,
       examStore,
@@ -249,7 +279,8 @@ export default defineComponent({
       previousSection,
       nextSection,
       addSection,
-      removeSection
+      removeSection,
+      showImportDialog
     };
   }
 });
