@@ -16,7 +16,8 @@ import type {
   NodeKey,
   SerializedLexicalNode,
   Spread,
-  LexicalCommand
+  LexicalCommand,
+  LexicalUpdateJSON,
 } from 'lexical';
 
 import { $applyNodeReplacement, DecoratorNode, createCommand } from 'lexical';
@@ -51,13 +52,7 @@ function $convertImageElement(domNode: HTMLElement): DOMConversionOutput {
 }
 
 export type SerializedImageNode = Spread<
-  {
-    id: string;
-    border: boolean;
-    width: number;
-    name: string;
-    options?: string;
-  },
+  { id: string; border: boolean; width: number; name: string; options?: string },
   SerializedLexicalNode
 >;
 
@@ -85,13 +80,19 @@ export class ImageNode extends DecoratorNode<Component> {
 
   static importJSON(serializedNode: SerializedImageNode): ImageNode {
     const { id, border, width, name, options } = serializedNode;
-    const node = $createImageNode({
-      id,
-      border,
-      width,
-      name,
-      options
-    });
+    const node = $createImageNode({ id, border, width, name, options }).updateFromJSON(
+      serializedNode
+    );
+    return node;
+  }
+
+  updateFromJSON(serializedNode: LexicalUpdateJSON<SerializedImageNode>): this {
+    const node = super.updateFromJSON(serializedNode);
+    node.setId(serializedNode.id);
+    node.setBorder(serializedNode.border);
+    node.setWidth(serializedNode.width);
+    node.setName(serializedNode.name);
+    node.setOptions(serializedNode.options || '');
     return node;
   }
 
@@ -106,12 +107,7 @@ export class ImageNode extends DecoratorNode<Component> {
   }
 
   static importDOM(): DOMConversionMap | null {
-    return {
-      img: () => ({
-        conversion: $convertImageElement,
-        priority: 0
-      })
-    };
+    return { img: () => ({ conversion: $convertImageElement, priority: 0 }) };
   }
 
   constructor(
@@ -132,13 +128,13 @@ export class ImageNode extends DecoratorNode<Component> {
 
   exportJSON(): SerializedImageNode {
     return {
+      ...super.exportJSON(),
       id: this.__id,
       border: this.__border,
       width: this.__width,
       name: this.__name,
       options: this.__options,
-      type: 'image',
-      version: 1
+      type: 'image'
     };
   }
 
@@ -173,6 +169,10 @@ export class ImageNode extends DecoratorNode<Component> {
   setName(name: string): void {
     const writable = this.getWritable();
     writable.__name = name;
+  }
+  setId(id: string): void {
+    const writable = this.getWritable();
+    writable.__id = id;
   }
   // View
 
