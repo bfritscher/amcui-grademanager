@@ -1,5 +1,5 @@
 export default function htmlToPlaintext(text: string): string {
-  return String(text)
-    .replace(/<[^>]+>/gm, '')
-    .replace(/&nbsp;/gm, ' ');
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = String(text).replace(/<[^>]+>/gm, '');
+  return textarea.value;
 }

@@ -63,7 +63,6 @@
 <script lang="ts">
 import { defineComponent, computed, reactive } from 'vue';
 import draggable from 'vuedraggable';
-import htmlToPlaintext from '../../utils/htmlToPlainText';
 import EditDrawerSection from './EditDrawerSection.vue';
 import { useStore } from '@/stores/store';
 import { useApiStore } from '@/stores/api';
@@ -114,7 +113,6 @@ export default defineComponent({
       sections,
       examService,
       API,
-      htmlToPlaintext,
       copySummary,
       copyFilterFn(val: string, update: any) {
         if (val === '') {
