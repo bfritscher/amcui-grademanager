@@ -1,3 +1,7 @@
+
+- [ ] test with none copy
+
+
 - [ ] git gc not working from admin?
 - [ ] git gc on annotate?
 - [ ] cleanup tempfile + scan source

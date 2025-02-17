@@ -35,6 +35,7 @@
         <q-space />
       </div>
     </q-banner>
+    <score-why-banner></score-why-banner>
     <router-view></router-view>
     <div v-if="!route.params.page" class="col flex flex-center">
       <h1 class="text-grey-6 text-h4 text-bold">No page selected for preview</h1>
@@ -48,8 +49,13 @@ import { useRoute } from 'vue-router';
 import { useApiStore } from '@/stores/api';
 import { useStore } from '@/stores/store';
 
+import ScoreWhyBanner from '@/components/ScoreWhyBanner.vue';
+
 export default defineComponent({
   name: 'Scan',
+  components: {
+    ScoreWhyBanner
+  },
   setup() {
     const API = useApiStore();
     const store = useStore();

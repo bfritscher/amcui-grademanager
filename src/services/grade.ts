@@ -1,4 +1,4 @@
-import { reactive } from 'vue';
+import { reactive, computed } from 'vue';
 import Papa from 'papaparse';
 import { debounce } from 'lodash-es';
 import type { GradeRecord, GradeQuestion, Score, GradeFile, Stat } from '../components/models';
@@ -7,6 +7,9 @@ import { useRouter } from 'vue-router';
 
 export default class GradeService {
   private API;
+  public whysCount;
+  public whysQueue;
+
   grade = reactive({
     isLoading: true,
     showLoading: false,
@@ -22,6 +25,7 @@ export default class GradeService {
     scores: {} as { [key: string]: GradeRecord },
     unmatched: {} as { [key: string]: GradeRecord },
     questions: {} as { [key: string]: GradeQuestion },
+    pages: {} as { [key: string]: number }, // copy:question -> page
     whys: {} as { [key: string]: string },
     maxPoints: 0,
     test: {}
@@ -29,6 +33,23 @@ export default class GradeService {
 
   constructor() {
     this.API = useApiStore();
+    this.whysCount = computed(() => {
+      return Object.values(this.grade.whys).reduce((acc, value) => {
+        if (!value) {
+          return acc;
+        }
+        if (acc[value]) {
+          acc[value]++;
+        } else {
+          acc[value] = 1;
+        }
+        return acc;
+      }, {});
+    });
+    this.whysQueue = computed(() => {
+      return Object.keys(this.grade.whys).filter((key) => this.grade.whys[key]).sort();
+    }
+    );
   }
 
   startLoading() {
@@ -91,6 +112,7 @@ export default class GradeService {
         this.grade.scores = {};
         this.grade.unmatched = {};
         this.grade.questions = {};
+        this.grade.pages = {};
         this.grade.whys = {};
         this.grade.maxPoints = 0;
         r.data.forEach((row: Score) => {
@@ -119,6 +141,10 @@ export default class GradeService {
               pages: {}
             };
             this.grade.maxPoints += row.max;
+          }
+          const pageKey = row.copy + ':' + row.question;
+          if (!this.grade.pages.hasOwnProperty(pageKey)) {
+            this.grade.pages[pageKey] = row.page;
           }
           this.grade.questions[row.title].pages[row.student] = row.page;
           this.grade[target][id].total += row.score;
