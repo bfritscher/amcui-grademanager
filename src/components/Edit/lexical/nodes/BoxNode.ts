@@ -54,7 +54,7 @@ export class BoxNode extends ElementNode {
   exportJSON(): SerializedElementNode {
     return {
       ...super.exportJSON(),
-      type: 'box',
+      type: 'box'
     };
   }
 

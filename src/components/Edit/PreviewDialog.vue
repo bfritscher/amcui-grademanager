@@ -117,7 +117,6 @@ export default defineComponent({
       isLogVisible,
       getErr() {
         if (API.logs && API.logs.preview) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           return new Set(API.logs.preview.log.match(/ERR(?::|>).*/g)).values();
         }
         return [];
@@ -125,10 +124,7 @@ export default defineComponent({
 
       getWarn() {
         if (API.logs && API.logs.preview) {
-          return new Set(
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            API.logs.preview.log.match(/pdfTeX warning.*/g)
-          ).values();
+          return new Set(API.logs.preview.log.match(/pdfTeX warning.*/g)).values();
         }
 
         return [];
@@ -136,10 +132,7 @@ export default defineComponent({
 
       getFull() {
         if (API.logs && API.logs.preview) {
-          return new Set(
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            API.logs.preview.log.match(/(?:Over|Under)full.*/g)
-          ).values();
+          return new Set(API.logs.preview.log.match(/(?:Over|Under)full.*/g)).values();
         }
         return [];
       },

@@ -171,7 +171,7 @@ export default defineComponent({
     }
 
     function loadTemplates() {
-      API.getTemplates().then((data) => {
+      API.getTemplates().then((data: any) => {
         editor.templateOptions = data;
       });
     }

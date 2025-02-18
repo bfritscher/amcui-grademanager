@@ -58,7 +58,7 @@ export class HorizontalRuleNode extends DecoratorNode<Component> {
   exportJSON(): SerializedLexicalNode {
     return {
       ...super.exportJSON(),
-      type: 'horizontalrule',
+      type: 'horizontalrule'
     };
   }
 

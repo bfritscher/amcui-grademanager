@@ -23,7 +23,6 @@ function createProject() {
 function destroyProject() {
   cy.visit(`${API_END_POINT}/${PROJECT_NAME}/options`);
   cy.contains('Delete project!').click();
-  // eslint-disable-next-line cypress/no-unnecessary-waiting
   cy.contains('Confirm project deletion!').should('be.visible');
   cy.contains('Delete everything!').click();
   cy.contains('Create Project').should('be.visible');
@@ -63,12 +62,12 @@ describe('AMCUI Exam Section', { testIsolation: false }, () => {
   it('can add section', () => {
     cy.visit(`${API_END_POINT}/${PROJECT_NAME}/edit`);
     cy.contains('Add Section').click();
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.wait(300);
     cy.get('input[placeholder="Section Name"]').clear().type('Test Section 2');
     cy.contains('Test Section 2').should('exist');
     cy.contains('Add Section').click();
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.wait(300);
     cy.get('input[placeholder="Section Name"]').clear().type('Test Section 3');
     cy.contains('Test Section 3').should('exist');
@@ -84,11 +83,11 @@ describe('AMCUI Exam Section', { testIsolation: false }, () => {
     cy.visit(`${API_END_POINT}/${PROJECT_NAME}/edit`);
     // cy.get('button[aria-label="toggle menu"]').click();
     cy.contains('.edit-drawer-tree a', 'Test Section 2').click();
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.wait(300);
     cy.get('input[placeholder="Section Name"]').should('have.value', 'Test Section 2');
     cy.contains('.edit-drawer-tree a', 'Test Section 3').click();
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.wait(300);
     cy.get('input[placeholder="Section Name"]').should('have.value', 'Test Section 3');
   });
@@ -97,7 +96,7 @@ describe('AMCUI Exam Section', { testIsolation: false }, () => {
   it('can switch dnd section through nav menu', () => {
     cy.visit(`${API_END_POINT}/${PROJECT_NAME}/edit`);
     // cy.get('button[aria-label="toggle menu"]').click();
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.get('li .sym_o_drag_pan').first().move({ deltaX: 10, deltaY: 200 });
     cy.contains('3 Test Section 1').should('exist');
     cy.contains('Add Section').should('be.visible');
@@ -107,10 +106,10 @@ describe('AMCUI Exam Section', { testIsolation: false }, () => {
     cy.visit(`${API_END_POINT}/${PROJECT_NAME}/edit/section/1`);
     cy.get('button[aria-label="delete section"]').click();
     cy.get('input[placeholder="Section Name"]').should('have.value', 'Test Section 1');
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.wait(300);
     cy.get('button[aria-label="delete section"]').click();
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.wait(300);
     cy.get('button[aria-label="delete section"]').click();
     cy.get('input[placeholder="Section Name"]').should('have.value', 'Section Name');
@@ -222,7 +221,7 @@ describe('AMCUI Exam Question', { testIsolation: false }, () => {
 
   it('can dnd question order', () => {
     //cy.get('button[aria-label="toggle menu"]').click();
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.get('li.question-menu .sym_o_drag_pan')
       .first()
       .trigger('pointerdown', { button: 0, force: true })
@@ -241,7 +240,7 @@ describe('AMCUI Exam Question', { testIsolation: false }, () => {
       })
       .wait(500)
       .trigger('pointerup', { force: true });
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.wait(500);
     cy.get('li.question-menu').first().should('contain', 'Test Question 2');
   });
@@ -251,19 +250,19 @@ describe('AMCUI Exam Question', { testIsolation: false }, () => {
   /*
 
   it('can dnd question to other section', () => {
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.wait(300);
     cy.get('button[aria-label="add section"]').click();
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.wait(300);
     cy.get('button[aria-label="add section"]').click();
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.wait(300);
     cy.get('button[aria-label="add section"]').click();
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.wait(300);
     // cy.get('button[aria-label="toggle menu"]').click();
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
+
     cy.get('li.question-menu .sym_o_drag_pan')
       .first()
       .trigger('pointerdown', { button: 0, force: true })
@@ -312,13 +311,13 @@ after(() => {
   cy.restoreLocalStorage();
   // cleanup because backend keeps data if new project recreated with same name (cache bug)
   cy.get('button[aria-label="delete section"]').click({ force: true });
-  // eslint-disable-next-line cypress/no-unnecessary-waiting
+
   cy.wait(300);
   cy.get('button[aria-label="delete section"]').click({ force: true });
-  // eslint-disable-next-line cypress/no-unnecessary-waiting
+
   cy.wait(300);
   cy.get('button[aria-label="delete section"]').click({ force: true });
-  // eslint-disable-next-line cypress/no-unnecessary-waiting
+
   cy.wait(300);
   cy.get('button[aria-label="delete section"]').click({ force: true });
   destroyProject();

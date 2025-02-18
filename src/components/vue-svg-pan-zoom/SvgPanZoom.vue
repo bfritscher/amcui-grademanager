@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import svg_pan_zoom from 'svg-pan-zoom';
-import { ref, onMounted, defineEmits, type PropType } from 'vue';
+import { ref, onMounted, type PropType } from 'vue';
 import SvgPanZoomThumbnail from './SvgPanZoomThumbnail.vue';
 
 export interface Props {
@@ -127,7 +127,7 @@ const props = defineProps({
     default: true
   },
   refreshRate: {
-    type: [Number, String] as PropType<Number | 'auto'>,
+    type: [Number, String] as PropType<number | 'auto'>,
     default: 'auto'
   }
 });

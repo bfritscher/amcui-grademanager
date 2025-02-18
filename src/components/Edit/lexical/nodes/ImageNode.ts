@@ -17,7 +17,7 @@ import type {
   SerializedLexicalNode,
   Spread,
   LexicalCommand,
-  LexicalUpdateJSON,
+  LexicalUpdateJSON
 } from 'lexical';
 
 import { $applyNodeReplacement, DecoratorNode, createCommand } from 'lexical';

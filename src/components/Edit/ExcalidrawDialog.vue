@@ -34,7 +34,7 @@ import { defineComponent, ref, onUnmounted, onMounted, type PropType } from 'vue
 import type { Graphics } from '../models';
 import { useApiStore } from '@/stores/api';
 import { useExamStore } from '@/stores/exam';
-import { type Root } from 'react-dom/client';
+import type { Root } from 'react-dom/client';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types';
 
 export default defineComponent({
@@ -82,6 +82,7 @@ export default defineComponent({
             `src/graphics/${props.graphic.id}.excalidraw`
           );
         }
+        //eslint-disable-next-line
       } catch (e) {
         // ignore 404
       }

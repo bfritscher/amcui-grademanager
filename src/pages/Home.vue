@@ -158,7 +158,7 @@ export default defineComponent({
           (r: any) => {
             openProject({ project: r.data });
           },
-          (data) => {
+          (data: any) => {
             form.error = data?.response?.data || data;
           }
         );

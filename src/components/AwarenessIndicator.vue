@@ -20,9 +20,9 @@ const props = defineProps({
     required: true
   }
 });
-const attrs = useAttrs();
+const attrs: any = useAttrs();
 const API = useApiStore();
-const floating = Object.hasOwnProperty.call(attrs, 'floating');
+const floating: boolean = Object.hasOwnProperty.call(attrs, 'floating');
 </script>
 <style scoped>
 .awareness-indicators {

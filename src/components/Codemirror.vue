@@ -103,7 +103,7 @@ export default defineComponent({
     });
 
     function extensionsFromOptions(options: any) {
-      let extensions = [
+      const extensions = [
         highlightActiveLineGutter(),
         highlightSpecialChars(),
         foldGutter(),

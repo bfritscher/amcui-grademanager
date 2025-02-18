@@ -265,7 +265,7 @@ export default defineComponent({
       tables.users = [];
       tables.projects = [];
       tables.loading = true;
-      API.$http.get(API.URL + '/admin/stats').then((res) => {
+      API.$http.get(API.URL + '/admin/stats').then((res: any) => {
         tables.stats = res.data;
         Object.keys(tables.stats.projects).forEach((k) => {
           const project = tables.stats.projects[k];
@@ -291,7 +291,7 @@ export default defineComponent({
         tables.projects.forEach((p) => {
           p.users.sort();
         });
-        API.$http.get(API.URL + '/admin/du').then((res) => {
+        API.$http.get(API.URL + '/admin/du').then((res: any) => {
           const data = res.data as AdminDu;
           Object.keys(data).forEach((p) => {
             if (!tables.stats.projects.hasOwnProperty(p)) {

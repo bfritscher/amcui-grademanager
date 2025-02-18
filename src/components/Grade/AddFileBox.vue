@@ -55,7 +55,6 @@ export default defineComponent({
 
     function handleFiles(files: FileList) {
       [...files].forEach((file: any) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         gradeService.addNewFile(file, file.name);
       });
     }

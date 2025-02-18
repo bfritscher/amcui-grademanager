@@ -3,12 +3,10 @@ import Papa from 'papaparse';
 import { debounce } from 'lodash-es';
 import type { GradeRecord, GradeQuestion, Score, GradeFile, Stat } from '../components/models';
 import { useApiStore } from '@/stores/api';
-import { useRouter } from 'vue-router';
+import router from '@/router';
 
 export default class GradeService {
   private API;
-  public whysCount;
-  public whysQueue;
 
   grade = reactive({
     isLoading: true,
@@ -31,10 +29,23 @@ export default class GradeService {
     test: {}
   });
 
-  constructor() {
-    this.API = useApiStore();
-    this.whysCount = computed(() => {
-      return Object.values(this.grade.whys).reduce((acc, value) => {
+  acknowledgedWhys = computed(() => {
+    return this.API.options.options.acknowledgedWhys?.split(',') || [];
+  });
+
+  acknowledgeWhy(why: string) {
+    const ack = this.acknowledgedWhys.value;
+    if (ack.indexOf(why) < 0) {
+      ack.push(why);
+      this.API.options.options.acknowledgedWhys = ack.join(',');
+      this.API.saveOptions();
+      router.push(this.nextWhyRoute.value);
+    }
+  }
+
+  whysCount = computed(() => {
+    return Object.values(this.grade.whys).reduce(
+      (acc, value) => {
         if (!value) {
           return acc;
         }
@@ -44,12 +55,41 @@ export default class GradeService {
           acc[value] = 1;
         }
         return acc;
-      }, {});
-    });
-    this.whysQueue = computed(() => {
-      return Object.keys(this.grade.whys).filter((key) => this.grade.whys[key]).sort();
-    }
+      },
+      {} as { [key: string]: number }
     );
+  });
+
+  whysQueue = computed(() => {
+    return Object.keys(this.grade.whys)
+      .filter((key) => this.grade.whys[key] && !this.acknowledgedWhys.value.includes(key))
+      .sort();
+  });
+
+  nextWhyRoute = computed(() => {
+    if (this.whysQueue.value.length > 0) {
+      const [student, copy, question] = this.whysQueue.value[0].split(':');
+      return {
+        name: 'ScanPreview',
+        params: {
+          project: this.API.project,
+          student,
+          page: this.grade.pages[student + ':' + question],
+          copy,
+          question
+        }
+      };
+    }
+    return {
+      name: 'Grade',
+      params: {
+        project: this.API.project
+      }
+    };
+  });
+
+  constructor() {
+    this.API = useApiStore();
   }
 
   startLoading() {
@@ -80,17 +120,19 @@ export default class GradeService {
       data: []
     };
     this.grade.studentsLookup = {};
-    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/csv').then((r) => {
+    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/csv').then((r: any) => {
       this.parseCSV(r.data as string);
-      this.loadScores();
+      this.loadScores().then(() => {
+        this.calculateGrades();
+      });
     });
 
-    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/stats').then((r) => {
+    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/stats').then((r: any) => {
       this.grade.stats = r.data;
     });
 
     this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/gradefiles').then(
-      (r) => {
+      (r: any) => {
         this.grade.files = r.data || [];
         this.grade.files.forEach((file) => {
           if (!file.meta.selected) {
@@ -106,7 +148,7 @@ export default class GradeService {
 
   loadScores() {
     this.startLoading();
-    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/scores').then(
+    return this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/scores').then(
       (r: any) => {
         //pivot data
         this.grade.scores = {};
@@ -142,7 +184,7 @@ export default class GradeService {
             };
             this.grade.maxPoints += row.max;
           }
-          const pageKey = row.copy + ':' + row.question;
+          const pageKey = row.student + ':' + row.question;
           if (!this.grade.pages.hasOwnProperty(pageKey)) {
             this.grade.pages[pageKey] = row.page;
           }
@@ -161,7 +203,6 @@ export default class GradeService {
         if (!this.API.options.options.final_grade_formula) {
           this.API.options.options.final_grade_formula = 'row.Grade';
         }
-        this.calculateGrades();
         this.stopLoading();
       },
       () => {
@@ -192,7 +233,7 @@ export default class GradeService {
         this.grade.students.fields.push(field);
       }
     });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
     result.data.forEach((row: any) => {
       if (!row.hasOwnProperty('id') || row.id === '' || row.id === null || row.id === undefined) {
         //new unique id
@@ -253,12 +294,10 @@ export default class GradeService {
   // file handling
 
   exportData() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     return Papa.unparse(JSON.parse(JSON.stringify(this.grade.students)));
   }
 
   exportAllData() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const data = JSON.parse(JSON.stringify(this.grade.students)) as {
       fields: string[];
       data: any[];
@@ -274,7 +313,6 @@ export default class GradeService {
 
   makeFunc(func: string) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
       return new Function(
         'row',
         'try{ return ' + func + '; } catch (e) { return `Error: ${e.message}`; }'
@@ -333,7 +371,6 @@ export default class GradeService {
         results.meta.selected = {};
         const index = this.grade.files.push(results as GradeFile);
         this.saveFiles();
-        const router = useRouter();
         router.push({
           name: 'Grade',
           params: {

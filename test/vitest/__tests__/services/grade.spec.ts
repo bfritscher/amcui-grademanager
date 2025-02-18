@@ -76,7 +76,7 @@ describe('Grade', () => {
           note_max: '6.0',
           note_grain: '0.1'
         }
-      });      
+      });
       const gs = new GradeService();
       expect(gs.minMaxRoundGrade(7.3)).toBe(6.0);
       expect(gs.minMaxRoundGrade(0.2)).toBe(1.0);
@@ -106,7 +106,7 @@ describe('Grade', () => {
           note_max: '6.0',
           note_grain: '0.1'
         }
-      });       
+      });
       const gs = new GradeService();
       expect(gs.computedRoundedScaledGrade(15, 20).toFixed(2)).toBe('4.80');
       expect(gs.computedRoundedScaledGrade(25, 20)).toBe(6.0);
@@ -269,7 +269,7 @@ describe('Grade', () => {
       data: [{ id: '1', name: 'test', Grade: '4.0' }]
     };
     gs.saveCSV();
-    expect(api.$http.mock.calls[0][0].data).toBe('id,Grade,name\r\n1,4.0,test');
+    expect((api.$http as any).mock.calls[0][0].data).toBe('id,Grade,name\r\n1,4.0,test');
   });
 
   describe('avg computation', () => {
@@ -341,7 +341,7 @@ describe('Grade', () => {
         final_grade_formula:
           'row.Grade*0.4 + row.Rapport*0.3 + row.Processus * 0.05  + row.Donnees * 0.05  + row.Integration * 0.05  + row.ERPsim * 0.15'
       }
-    });    
+    });
     const $http = vi.fn() as any;
     $http.get = vi.fn((url: string) => {
       if (url.includes('csv')) {

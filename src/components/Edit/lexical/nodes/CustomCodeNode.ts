@@ -159,7 +159,7 @@ export class CustomCodeNode extends CodeNode {
       id: this.getId(),
       border: this.getBorder(),
       numbers: this.getNumbers(),
-      type: 'custom-code',
+      type: 'custom-code'
     };
   }
 

@@ -12,6 +12,7 @@ import {
   type Spread
 } from 'lexical';
 
+// eslint-disable-next-line
 export type SerializedCustomTextNode = Spread<{}, SerializedTextNode>;
 
 export class CustomTextNode extends TextNode {

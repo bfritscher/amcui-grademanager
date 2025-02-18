@@ -58,7 +58,7 @@ const emit = defineEmits(['update:modelValue']);
 const API = useApiStore();
 const store = useStore();
 
-const attrs = useAttrs();
+const attrs: any = useAttrs();
 const lockingUser = computed(() => {
   if (API.awarenessIndex[attrs.id as string] && API.awarenessIndex[attrs.id as string].length > 0) {
     return API.awarenessIndex[attrs.id as string][0];
@@ -258,7 +258,7 @@ watch(showDebug, () => {
   }
 });
 
-let contentChanged = debounce((html: string) => {
+const contentChanged = debounce((html: string) => {
   emit('update:modelValue', html);
 }, 1000);
 

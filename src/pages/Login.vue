@@ -91,7 +91,7 @@ export default defineComponent({
             password: password.value
           })
           .then(
-            async (r) => {
+            async (r: any) => {
               // TODO-nice select if multiple methods activated
               if (r.data.authenticator && r.data.authenticator.length > 0) {
                 $q.dialog({
@@ -112,7 +112,7 @@ export default defineComponent({
                         token
                       }
                     })
-                    .catch((err) => {
+                    .catch((err: any) => {
                       error.value = err.data;
                     });
                 });
@@ -154,13 +154,13 @@ export default defineComponent({
                         response: passableCredential
                       }
                     })
-                    .catch((err) => {
+                    .catch((err: any) => {
                       error.value = err.data;
                     });
                 }
               }
             },
-            (err) => {
+            (err: any) => {
               if (err.status === 401) {
                 error.value = 'Wrong user or password';
               } else {

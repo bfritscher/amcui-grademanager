@@ -265,7 +265,7 @@ function loadPage() {
         ':' +
         route.params.copy
     )
-    .then((r) => {
+    .then((r: any) => {
       page.value = r.data;
     });
   API.$http
@@ -280,7 +280,7 @@ function loadPage() {
         ':' +
         route.params.copy
     )
-    .then((r) => {
+    .then((r: any) => {
       zones.value = r.data;
     });
 }

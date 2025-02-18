@@ -57,7 +57,7 @@ export class PageBreakNode extends DecoratorNode<Component> {
   exportJSON(): SerializedLexicalNode {
     return {
       ...super.exportJSON(),
-      type: this.getType(),
+      type: this.getType()
     };
   }
 
