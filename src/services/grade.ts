@@ -30,7 +30,7 @@ export default class GradeService {
   });
 
   acknowledgedWhys = computed(() => {
-    return this.API.options.options.acknowledgedWhys?.split(',') || [];
+    return this.API.options.options.acknowledgedWhys && this.API.options.options.acknowledgedWhys !== "" ? this.API.options.options.acknowledgedWhys?.split(',') : [];
   });
 
   acknowledgeWhy(why: string) {
@@ -61,8 +61,9 @@ export default class GradeService {
   });
 
   whysQueue = computed(() => {
+    const filter = ['E', 'V'];
     return Object.keys(this.grade.whys)
-      .filter((key) => this.grade.whys[key] && !this.acknowledgedWhys.value.includes(key))
+      .filter((key) => this.grade.whys[key] && filter.includes(this.grade.whys[key]) && !this.acknowledgedWhys.value.includes(key))
       .sort();
   });
 

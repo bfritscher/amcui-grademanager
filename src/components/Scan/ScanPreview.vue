@@ -210,11 +210,12 @@ const questions = computed(() => {
 
 const boxWhys = computed(() => {
   // for current page get all whys (student/copy/question)
+  const filter = ['E', 'V'];
   const questionsIds = Object.keys(questions.value);
   const whysOfPage = Object.entries(gradeService.grade.whys).filter(([key, value]) => {
-    const [student, copy, question] = key.split(':'); // TODO check if not copy?
+    const [student, copy, question] = key.split(':');
     return (
-      value &&
+      value && filter.includes(value) &&
       copy === route.params.copy &&
       student === route.params.student &&
       questionsIds.includes(question)
