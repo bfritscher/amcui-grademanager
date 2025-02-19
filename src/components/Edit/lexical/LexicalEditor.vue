@@ -51,19 +51,14 @@ import { java } from '@codemirror/lang-java';
 import { useApiStore } from '@/stores/api';
 import { useStore } from '@/stores/store';
 
-const props = defineProps({
-  modelValue: {
-    type: String,
-    required: true
-  }
-});
+const props = defineProps({ modelValue: { type: String, required: true } });
 
 const emit = defineEmits(['update:modelValue']);
 
 const API = useApiStore();
 const store = useStore();
 
-const attrs = useAttrs();
+const attrs: any = useAttrs();
 const lockingUser = computed(() => {
   if (API.awarenessIndex[attrs.id as string] && API.awarenessIndex[attrs.id as string].length > 0) {
     return API.awarenessIndex[attrs.id as string][0];
@@ -132,10 +127,14 @@ function setFromHTML(editor: LexicalEditor) {
       code.replaceWith(pre);
     }
   });
-  const nodes = $generateNodesFromDOM(editor, dom);
-  $getRoot().clear().select();
-  $insertNodes(nodes);
-  $setSelection(null);
+  setTimeout(() => {
+    editor.update(() => {
+      const nodes = $generateNodesFromDOM(editor, dom);
+      $getRoot().clear().select();
+      $insertNodes(nodes);
+      $setSelection(null);
+    });
+  });
 }
 
 const preview = ref<HTMLElement | null>(null);
@@ -209,9 +208,7 @@ function decoratePreview() {
     if (code) {
       codeElement.classList.toggle('border', code.border);
       if (codeElement.children.length === 0) {
-        const cm = new EditorView({
-          parent: codeElement
-        });
+        const cm = new EditorView({ parent: codeElement });
         const extensions = [
           syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
           EditorView.editable.of(false)
@@ -232,10 +229,7 @@ function decoratePreview() {
         if (code.numbers) {
           extensions.push(lineNumbers());
         }
-        const state = EditorState.create({
-          doc: code.content || '\n',
-          extensions
-        });
+        const state = EditorState.create({ doc: code.content || '\n', extensions });
         cm.setState(state);
       }
     }
@@ -264,7 +258,7 @@ watch(showDebug, () => {
   }
 });
 
-let contentChanged = debounce((html: string) => {
+const contentChanged = debounce((html: string) => {
   emit('update:modelValue', html);
 }, 1000);
 

@@ -18,9 +18,23 @@
         width="100%"
         height="100%"
       >
-        <filter id="dropshadow">
-          <feDropShadow dx="8" dy="6" stdDeviation="0" flood-opacity="0.1" />
-        </filter>
+        <defs>
+          <filter id="dropshadow">
+            <feDropShadow dx="8" dy="6" stdDeviation="0" flood-opacity="0.1" />
+          </filter>
+          <linearGradient id="whyVackGradient" gradientTransform="rotate(45)">
+            <stop offset="70%" stop-color="rgb(241, 233, 56)" />
+            <stop offset="70%" stop-color="rgb(76, 175, 80)" />
+          </linearGradient>
+          <linearGradient id="whyEackGradient" gradientTransform="rotate(45)">
+            <stop offset="70%" stop-color="rgb(255, 84, 84)" />
+            <stop offset="70%" stop-color="rgb(76, 175, 80)" />
+          </linearGradient>
+          <linearGradient id="whyPackGradient" gradientTransform="rotate(45)">
+            <stop offset="70%" stop-color="rgb(213, 188, 236)" />
+            <stop offset="70%" stop-color="rgb(76, 175, 80)" />
+          </linearGradient>
+        </defs>
         <g
           :transform="
             rotate
@@ -74,9 +88,37 @@
             :d="boxQuestion"
             style="pointer-events: none"
           />
+          <rect
+            v-for="[key, value] in boxWhys"
+            :key="key"
+            :x="keyToX(key)"
+            :y="keyToY(key)"
+            width="50px"
+            height="50px"
+            :fill="
+              gradeService.acknowledgedWhys.value.includes(key)
+                ? `url(#why${value}ackGradient)`
+                : value === 'E'
+                  ? 'rgba(255, 84, 84, 0.8)'
+                  : value === 'V'
+                    ? 'rgba(241, 233, 56, 0.8)'
+                    : ''
+            "
+            :title="value"
+            @click="gradeService.acknowledgeWhy(key)"
+          />
         </g>
       </svg>
     </svg-pan-zoom>
+    <div
+      v-if="boxWhys.length > 0"
+      class="absolute absolute-top-left text-caption"
+      style="width: 200px"
+    >
+      Fix the scan detectin problem by manually ticking the right boxes.<br />
+      Or if the scan is correct, click on the yellow/red square to acknowledge the problem is on the
+      original copy.
+    </div>
     <q-btn
       color="negative"
       class="absolute absolute-top-right"
@@ -90,12 +132,16 @@
 </template>
 <script setup lang="ts">
 import type { PageCapture, Zone } from '../models';
-import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
+import { ref, computed, watch, onUnmounted, onMounted, inject } from 'vue';
 import { useRoute } from 'vue-router';
 import { useApiStore } from '@/stores/api';
 import { useStore } from '@/stores/store';
+import GradeService from '@/services/grade';
 
 import SvgPanZoom from '../vue-svg-pan-zoom';
+
+const gradeService = inject('gradeService') as GradeService;
+gradeService.loadScores();
 
 const route = useRoute();
 const API = useApiStore();
@@ -145,6 +191,49 @@ const boxQuestion = computed(() => {
   return `M ${xmin} ${ymin} L${xmin} ${ymax} L${xmax} ${ymax} L${xmax} ${ymin} Z`;
 });
 
+const questions = computed(() => {
+  return zones.value.reduce(
+    (questions, z) => {
+      if (!questions.hasOwnProperty(z.question)) {
+        questions[z.question] = {
+          xmax: 0,
+          ymin: Infinity
+        };
+      }
+      questions[z.question].xmax = Math.max(questions[z.question].xmax, z.x0, z.x1, z.x2, z.x3);
+      questions[z.question].ymin = Math.min(questions[z.question].ymin, z.y0, z.y1, z.y2, z.y3);
+      return questions;
+    },
+    {} as Record<string, { xmax: number; ymin: number }>
+  );
+});
+
+const boxWhys = computed(() => {
+  // for current page get all whys (student/copy/question)
+  const filter = ['E', 'V'];
+  const questionsIds = Object.keys(questions.value);
+  const whysOfPage = Object.entries(gradeService.grade.whys).filter(([key, value]) => {
+    const [student, copy, question] = key.split(':');
+    return (
+      value && filter.includes(value) &&
+      copy === route.params.copy &&
+      student === route.params.student &&
+      questionsIds.includes(question)
+    );
+  });
+  return whysOfPage;
+});
+
+function keyToX(key: string) {
+  const [, , question] = key.split(':');
+  return questions.value[question].xmax + 30;
+}
+
+function keyToY(key: string) {
+  const [, , question] = key.split(':');
+  return questions.value[question].ymin - 4;
+}
+
 watch(route, () => {
   loadPage();
 });
@@ -177,7 +266,7 @@ function loadPage() {
         ':' +
         route.params.copy
     )
-    .then((r) => {
+    .then((r: any) => {
       page.value = r.data;
     });
   API.$http
@@ -192,7 +281,7 @@ function loadPage() {
         ':' +
         route.params.copy
     )
-    .then((r) => {
+    .then((r: any) => {
       zones.value = r.data;
     });
 }
@@ -235,6 +324,11 @@ function toggle(zone: Zone) {
     type: 4,
     id_a: zone.question,
     id_b: zone.answer
+  }).then(() => {
+    if (page.value) {
+      page.value.timestamp_manual = Date.now();
+    }
+    gradeService.loadScores();
   });
 }
 
@@ -246,6 +340,11 @@ function clear() {
     student: parseInt(route.params.student as string, 10),
     page: parseInt(route.params.page as string, 10),
     copy: parseInt(route.params.copy as string, 10)
+  }).then(() => {
+    if (page.value) {
+      page.value.timestamp_manual = 0;
+    }
+    gradeService.loadScores();
   });
 }
 </script>

@@ -7,7 +7,8 @@ import type {
   LexicalCommand,
   SerializedElementNode,
   DOMExportOutput,
-  LexicalEditor
+  LexicalEditor,
+  LexicalUpdateJSON
 } from 'lexical';
 
 import { createCommand } from 'lexical';
@@ -53,13 +54,16 @@ export class BoxNode extends ElementNode {
   exportJSON(): SerializedElementNode {
     return {
       ...super.exportJSON(),
-      type: 'box',
-      version: 1
+      type: 'box'
     };
   }
 
   static importJSON(serializedNode: SerializedElementNode): BoxNode {
-    const node = $createBoxNode();
+    return $createBoxNode().updateFromJSON(serializedNode);
+  }
+
+  updateFromJSON(serializedNode: LexicalUpdateJSON<SerializedElementNode>): this {
+    const node = super.updateFromJSON(serializedNode);
     node.setFormat(serializedNode.format);
     node.setIndent(serializedNode.indent);
     node.setDirection(serializedNode.direction);

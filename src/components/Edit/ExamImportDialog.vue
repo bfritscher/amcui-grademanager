@@ -15,21 +15,21 @@
             label="Paste questions and answers here"
             @update:model-value="parseText"
           />
-          <q-btn
-            flat
-            color="primary"
-            label="Load Sample"
-            class="q-mt-sm"
-            @click="loadSample"
-          />
+          <q-btn flat color="primary" label="Load Sample" class="q-mt-sm" @click="loadSample" />
           <q-card class="q-mt-sm text-grey-8" bordered flat>
             <q-card-section>
               <div class="text-subtitle2">Supported formats:</div>
               <div class="q-mt-sm text-body2">
                 <ul class="q-mb-none q-pl-md">
                   <li>Questions can start with numbers 1), 1. or Question X</li>
-                  <li>Answers can use letters A), b), c., numbers 1), 2., checkboxes [x], [ ], -[x], or symbols +, -, *</li>
-                  <li>Correct answers can be marked with Answer: or Réponse: followed by the letter/number at the end of all answers</li>
+                  <li>
+                    Answers can use letters A), b), c., numbers 1), 2., checkboxes [x], [ ], -[x],
+                    or symbols +, -, *
+                  </li>
+                  <li>
+                    Correct answers can be marked with Answer: or Réponse: followed by the
+                    letter/number at the end of all answers
+                  </li>
                   <li>Multiple questions should be separated by two empty lines</li>
                 </ul>
               </div>

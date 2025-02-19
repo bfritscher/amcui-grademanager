@@ -153,11 +153,7 @@
               >Add Question</q-btn
             >
             <q-space />
-            <q-btn
-              aria-label="import questions"
-              flat
-              color="primary"
-              @click="showImportDialog"
+            <q-btn aria-label="import questions" flat color="primary" @click="showImportDialog"
               >Import Questions</q-btn
             >
           </q-toolbar>

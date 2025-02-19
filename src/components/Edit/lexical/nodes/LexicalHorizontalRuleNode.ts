@@ -38,8 +38,8 @@ export class HorizontalRuleNode extends DecoratorNode<Component> {
     return new HorizontalRuleNode(node.__key);
   }
 
-  static importJSON(): HorizontalRuleNode {
-    return $createHorizontalRuleNode();
+  static importJSON(serializedNode: SerializedHorizontalRuleNode): HorizontalRuleNode {
+    return $createHorizontalRuleNode().updateFromJSON(serializedNode);
   }
 
   static importDOM(): DOMConversionMap | null {
@@ -57,8 +57,8 @@ export class HorizontalRuleNode extends DecoratorNode<Component> {
 
   exportJSON(): SerializedLexicalNode {
     return {
-      type: 'horizontalrule',
-      version: 1
+      ...super.exportJSON(),
+      type: 'horizontalrule'
     };
   }
 

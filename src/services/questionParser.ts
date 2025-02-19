@@ -18,17 +18,17 @@ function letterToIndex(letter: string): number {
 export function parseQuestions(text: string): PartialQuestion[] {
   const questions: PartialQuestion[] = [];
   const lines = text.split('\n');
-  
+
   let currentQuestion: PartialQuestion | null = null;
   let collectingAnswers = false;
   let lastLineWasEmpty = false;
   let consecutiveEmptyLines = 0;
   let answerPattern: string | null = null;
   let pendingText = '';
-  
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
+
     // Handle empty lines
     if (line.length === 0) {
       consecutiveEmptyLines++;
@@ -52,7 +52,9 @@ export function parseQuestions(text: string): PartialQuestion[] {
     consecutiveEmptyLines = 0;
 
     // Check for answer indicators (both English and French, case insensitive)
-    const answerIndicator = line.match(/^(?:answer|r[ée]ponses?).*:\s*(?:([A-Za-z])|(\d+))[).\s]?/i);
+    const answerIndicator = line.match(
+      /^(?:answer|r[ée]ponses?).*:\s*(?:([A-Za-z])|(\d+))[).\s]?/i
+    );
     if (answerIndicator && currentQuestion && currentQuestion.answers) {
       let correctIndex = -1;
       if (answerIndicator[1]) {
@@ -65,7 +67,7 @@ export function parseQuestions(text: string): PartialQuestion[] {
 
       if (correctIndex >= 0 && correctIndex < currentQuestion.answers.length) {
         // Reset all answers to incorrect first
-        currentQuestion.answers.forEach(a => a.correct = false);
+        currentQuestion.answers.forEach((a) => (a.correct = false));
         // Mark the correct answer
         currentQuestion.answers[correctIndex].correct = true;
       }
@@ -87,7 +89,7 @@ export function parseQuestions(text: string): PartialQuestion[] {
         }
 
         if (answerInfo.answer.correct && currentQuestion.type === 'SINGLE') {
-          const hasCorrectAnswer = currentQuestion.answers?.some(a => a.correct);
+          const hasCorrectAnswer = currentQuestion.answers?.some((a) => a.correct);
           if (hasCorrectAnswer) {
             currentQuestion.type = 'MULTIPLE';
           }
@@ -140,7 +142,7 @@ export function parseQuestions(text: string): PartialQuestion[] {
         }
 
         if (answerInfo.answer.correct && currentQuestion.type === 'SINGLE') {
-          const hasCorrectAnswer = currentQuestion.answers?.some(a => a.correct);
+          const hasCorrectAnswer = currentQuestion.answers?.some((a) => a.correct);
           if (hasCorrectAnswer) {
             currentQuestion.type = 'MULTIPLE';
           }
@@ -165,10 +167,10 @@ export function parseQuestions(text: string): PartialQuestion[] {
       };
       collectingAnswers = true;
     }
-    
+
     lastLineWasEmpty = false;
   }
-  
+
   // Add the last question if exists
   if (currentQuestion && currentQuestion.answers && currentQuestion.answers.length > 0) {
     if (pendingText) {
@@ -177,22 +179,25 @@ export function parseQuestions(text: string): PartialQuestion[] {
     currentQuestion.content = currentQuestion.content?.trim();
     questions.push(currentQuestion);
   }
-  
+
   return questions;
 }
 
 function isAnswerLine(line: string): boolean {
   const patterns = [
-    /^[A-Za-z][).]\s/,     // A) or a) or A. or a.
-    /^[-*+]\s/,            // - or * or +
-    /^(?:-\s*)?\[\s*[xX\s]\s*\]/,   // [ ] or [x] or [X] or - [ ] or - [x] or - [X]
-    /^[1-9]\d*[).]\s/      // 1) or 1. (must start with non-zero digit)
+    /^[A-Za-z][).]\s/, // A) or a) or A. or a.
+    /^[-*+]\s/, // - or * or +
+    /^(?:-\s*)?\[\s*[xX\s]\s*\]/, // [ ] or [x] or [X] or - [ ] or - [x] or - [X]
+    /^[1-9]\d*[).]\s/ // 1) or 1. (must start with non-zero digit)
   ];
-  return patterns.some(pattern => pattern.test(line));
+  return patterns.some((pattern) => pattern.test(line));
 }
 
-function parseAnswerLine(line: string, existingPattern: string | null): { 
-  answer?: PartialAnswer; 
+function parseAnswerLine(
+  line: string,
+  existingPattern: string | null
+): {
+  answer?: PartialAnswer;
   pattern?: string;
 } {
   const patterns = {
@@ -233,7 +238,7 @@ function parseAnswerLine(line: string, existingPattern: string | null): {
       correct = checked === 'x' || checked === 'X';
       content = answer || text;
     } else {
-      const [,,,, text, answer] = match;
+      const [, , , , text, answer] = match;
       correct = match[0].startsWith('*') || match[0].startsWith('+');
       content = answer || text;
     }
@@ -241,7 +246,7 @@ function parseAnswerLine(line: string, existingPattern: string | null): {
     // Handle both numeric and alphabetic formats the same way
     const [, , checked, text, answer] = match;
     // Only mark as correct if explicitly checked
-    correct = checked ? (checked === 'x' || checked === 'X') : false;
+    correct = checked ? checked === 'x' || checked === 'X' : false;
     content = answer || text;
   }
 

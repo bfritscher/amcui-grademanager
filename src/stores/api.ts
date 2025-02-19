@@ -19,7 +19,7 @@ export const useApiStore = defineStore('api', () => {
   const router = useRouter();
   const store = useStore();
 
-  const API_URL = ref(window.AMCUI_API);
+  const API_URL = ref((window as any).AMCUI_API);
 
   const PROJECT_URL = ref('');
   const project = ref('');
@@ -30,7 +30,7 @@ export const useApiStore = defineStore('api', () => {
       locked: '0'
     }
   });
-  const connected = ref<any>({});
+  const connected = ref<Record<string, { username: string; colorIndex: number }>>({});
   const yjsSynced = ref(false);
   const logs = ref<any>({});
   const sortedLogs = ref<any>([]);
@@ -161,7 +161,9 @@ export const useApiStore = defineStore('api', () => {
         allClientIds.push(awareness?.clientID);
       }
       const index: any = {};
-      const all: any = {};
+      const all: {
+        [key: string]: { username: string; colorIndex: number };
+      } = {};
       awareness.getStates().forEach((value, key) => {
         value.user.colorIndex = getColorIndex(key);
         all[key] = value.user;
@@ -316,7 +318,7 @@ export const useApiStore = defineStore('api', () => {
         .post(API_URL.value + '/project/' + project.value + '/copy/template', {
           template: name
         })
-        .then((response: any) => response.data);
+        .then((response: any) => response.data as string);
     },
     loadProject(projectName: string) {
       if (project.value === projectName) return;

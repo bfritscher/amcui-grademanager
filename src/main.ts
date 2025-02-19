@@ -25,11 +25,7 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 
-if (
-  import.meta.env.PROD &&
-  window.SENTRY_DSN &&
-  window.SENTRY_DSN.startsWith('http')
-) {
+if (import.meta.env.PROD && window.SENTRY_DSN && window.SENTRY_DSN.startsWith('http')) {
   Sentry.init({
     app,
     release: import.meta.env.VITE_COMMITHASH,
@@ -39,6 +35,7 @@ if (
     // of transactions for performance monitoring.
     // We recommend adjusting this value in production
     tracesSampleRate: 1.0,
+    // @ts-expect-error unknown option
     trackComponents: true,
     replaysOnErrorSampleRate: 1.0
   });

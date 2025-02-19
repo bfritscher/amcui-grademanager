@@ -1,12 +1,13 @@
-import { reactive } from 'vue';
+import { reactive, computed } from 'vue';
 import Papa from 'papaparse';
 import { debounce } from 'lodash-es';
 import type { GradeRecord, GradeQuestion, Score, GradeFile, Stat } from '../components/models';
 import { useApiStore } from '@/stores/api';
-import { useRouter } from 'vue-router';
+import router from '@/router';
 
 export default class GradeService {
   private API;
+
   grade = reactive({
     isLoading: true,
     showLoading: false,
@@ -22,9 +23,70 @@ export default class GradeService {
     scores: {} as { [key: string]: GradeRecord },
     unmatched: {} as { [key: string]: GradeRecord },
     questions: {} as { [key: string]: GradeQuestion },
+    pages: {} as { [key: string]: number }, // copy:question -> page
     whys: {} as { [key: string]: string },
     maxPoints: 0,
     test: {}
+  });
+
+  acknowledgedWhys = computed(() => {
+    return this.API.options.options.acknowledgedWhys && this.API.options.options.acknowledgedWhys !== "" ? this.API.options.options.acknowledgedWhys?.split(',') : [];
+  });
+
+  acknowledgeWhy(why: string) {
+    const ack = this.acknowledgedWhys.value;
+    if (ack.indexOf(why) < 0) {
+      ack.push(why);
+      this.API.options.options.acknowledgedWhys = ack.join(',');
+      this.API.saveOptions();
+      router.push(this.nextWhyRoute.value);
+    }
+  }
+
+  whysCount = computed(() => {
+    return Object.values(this.grade.whys).reduce(
+      (acc, value) => {
+        if (!value) {
+          return acc;
+        }
+        if (acc[value]) {
+          acc[value]++;
+        } else {
+          acc[value] = 1;
+        }
+        return acc;
+      },
+      {} as { [key: string]: number }
+    );
+  });
+
+  whysQueue = computed(() => {
+    const filter = ['E', 'V'];
+    return Object.keys(this.grade.whys)
+      .filter((key) => this.grade.whys[key] && filter.includes(this.grade.whys[key]) && !this.acknowledgedWhys.value.includes(key))
+      .sort();
+  });
+
+  nextWhyRoute = computed(() => {
+    if (this.whysQueue.value.length > 0) {
+      const [student, copy, question] = this.whysQueue.value[0].split(':');
+      return {
+        name: 'ScanPreview',
+        params: {
+          project: this.API.project,
+          student,
+          page: this.grade.pages[student + ':' + question],
+          copy,
+          question
+        }
+      };
+    }
+    return {
+      name: 'Grade',
+      params: {
+        project: this.API.project
+      }
+    };
   });
 
   constructor() {
@@ -59,17 +121,19 @@ export default class GradeService {
       data: []
     };
     this.grade.studentsLookup = {};
-    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/csv').then((r) => {
+    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/csv').then((r: any) => {
       this.parseCSV(r.data as string);
-      this.loadScores();
+      this.loadScores().then(() => {
+        this.calculateGrades();
+      });
     });
 
-    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/stats').then((r) => {
+    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/stats').then((r: any) => {
       this.grade.stats = r.data;
     });
 
     this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/gradefiles').then(
-      (r) => {
+      (r: any) => {
         this.grade.files = r.data || [];
         this.grade.files.forEach((file) => {
           if (!file.meta.selected) {
@@ -85,12 +149,13 @@ export default class GradeService {
 
   loadScores() {
     this.startLoading();
-    this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/scores').then(
+    return this.API.$http.get(this.API.URL + '/project/' + this.API.project + '/scores').then(
       (r: any) => {
         //pivot data
         this.grade.scores = {};
         this.grade.unmatched = {};
         this.grade.questions = {};
+        this.grade.pages = {};
         this.grade.whys = {};
         this.grade.maxPoints = 0;
         r.data.forEach((row: Score) => {
@@ -120,6 +185,10 @@ export default class GradeService {
             };
             this.grade.maxPoints += row.max;
           }
+          const pageKey = row.student + ':' + row.question;
+          if (!this.grade.pages.hasOwnProperty(pageKey)) {
+            this.grade.pages[pageKey] = row.page;
+          }
           this.grade.questions[row.title].pages[row.student] = row.page;
           this.grade[target][id].total += row.score;
           this.grade[target][id].questions[row.title] = row.score;
@@ -135,7 +204,6 @@ export default class GradeService {
         if (!this.API.options.options.final_grade_formula) {
           this.API.options.options.final_grade_formula = 'row.Grade';
         }
-        this.calculateGrades();
         this.stopLoading();
       },
       () => {
@@ -166,7 +234,7 @@ export default class GradeService {
         this.grade.students.fields.push(field);
       }
     });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
     result.data.forEach((row: any) => {
       if (!row.hasOwnProperty('id') || row.id === '' || row.id === null || row.id === undefined) {
         //new unique id
@@ -227,12 +295,10 @@ export default class GradeService {
   // file handling
 
   exportData() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     return Papa.unparse(JSON.parse(JSON.stringify(this.grade.students)));
   }
 
   exportAllData() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const data = JSON.parse(JSON.stringify(this.grade.students)) as {
       fields: string[];
       data: any[];
@@ -248,7 +314,6 @@ export default class GradeService {
 
   makeFunc(func: string) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
       return new Function(
         'row',
         'try{ return ' + func + '; } catch (e) { return `Error: ${e.message}`; }'
@@ -307,7 +372,6 @@ export default class GradeService {
         results.meta.selected = {};
         const index = this.grade.files.push(results as GradeFile);
         this.saveFiles();
-        const router = useRouter();
         router.push({
           name: 'Grade',
           params: {

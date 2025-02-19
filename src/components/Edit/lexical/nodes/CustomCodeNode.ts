@@ -9,7 +9,8 @@ import type {
   LexicalNode,
   NodeKey,
   SerializedElementNode,
-  Spread
+  Spread,
+  LexicalUpdateJSON
 } from 'lexical';
 
 import { addClassNamesToElement, isHTMLElement } from '@lexical/utils';
@@ -76,7 +77,7 @@ export class CustomCodeNode extends CodeNode {
     return dom;
   }
 
-  updateDOM(prevNode: CodeNode, dom: HTMLElement, config: EditorConfig): boolean {
+  updateDOM(prevNode: this, dom: HTMLElement, config: EditorConfig): boolean {
     super.updateDOM(prevNode, dom, config);
     dom.setAttribute(ID_ATTRIBUTE, this.__id || '');
     dom.setAttribute(BORDER_DATA_ATTRIBUTE, String(this.__border));
@@ -128,18 +129,9 @@ export class CustomCodeNode extends CodeNode {
           (/\r?\n/.test(node.textContent) ||
             hasChildDOMNodeTag(node, 'BR') ||
             (isHTMLElement(node) && node.classList.contains('le__code')));
-
-        return isMultiLine
-          ? {
-              conversion: $convertPreElement,
-              priority: 1
-            }
-          : null;
+        return isMultiLine ? { conversion: $convertPreElement, priority: 2 } : null;
       },
-      pre: () => ({
-        conversion: $convertPreElement,
-        priority: 0
-      })
+      pre: () => ({ conversion: $convertPreElement, priority: 0 })
     };
   }
 
@@ -149,10 +141,15 @@ export class CustomCodeNode extends CodeNode {
       serializedNode.id,
       serializedNode.border,
       serializedNode.numbers
-    );
-    node.setFormat(serializedNode.format);
-    node.setIndent(serializedNode.indent);
-    node.setDirection(serializedNode.direction);
+    ).updateFromJSON(serializedNode);
+    return node;
+  }
+
+  updateFromJSON(serializedNode: LexicalUpdateJSON<SerializedCustomCodeNode>): this {
+    const node = super.updateFromJSON(serializedNode);
+    node.setId(serializedNode.id);
+    node.setBorder(serializedNode.border);
+    node.setNumbers(serializedNode.numbers);
     return node;
   }
 
@@ -162,8 +159,7 @@ export class CustomCodeNode extends CodeNode {
       id: this.getId(),
       border: this.getBorder(),
       numbers: this.getNumbers(),
-      type: 'custom-code',
-      version: 1
+      type: 'custom-code'
     };
   }
 
@@ -177,6 +173,11 @@ export class CustomCodeNode extends CodeNode {
 
   getNumbers(): boolean {
     return this.getLatest().__numbers;
+  }
+
+  setId(id: string | null | undefined): void {
+    const writable = this.getWritable();
+    writable.__id = id;
   }
 
   setBorder(border: boolean): void {

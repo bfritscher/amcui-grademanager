@@ -35,15 +35,15 @@ import { useApiStore } from '@/stores/api';
 
 const API = useApiStore();
 const attrs = useAttrs();
-const lockingUser = computed(() => {
+const lockingUser = computed<any>(() => {
   if (API.awarenessIndex[attrs.id as string] && API.awarenessIndex[attrs.id as string].length > 0) {
     return API.awarenessIndex[attrs.id as string][0];
   }
   return undefined;
 });
 
-const forwardAttrs = computed(() => {
-  let forwardProps = { ...attrs };
+const forwardAttrs = computed<any>(() => {
+  const forwardProps = { ...attrs };
   delete forwardProps.disable;
   return forwardProps;
 });

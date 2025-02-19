@@ -265,21 +265,21 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   function importPartialQuestions(section: Section, questions: PartialQuestion[]) {
-    questions.forEach(q => {
+    questions.forEach((q) => {
       const question = createQuestion();
       question.content = q.content || '';
       question.type = q.type || 'SINGLE';
-      
-      question.answers = q.answers?.map(a => {
-        const answer = createAnswer(question);
-        answer.content = a.content || '';
-        answer.correct = a.correct || false;
-        return answer;
-      }) || [];
+
+      question.answers =
+        q.answers?.map((a) => {
+          const answer = createAnswer(question);
+          answer.content = a.content || '';
+          answer.correct = a.correct || false;
+          return answer;
+        }) || [];
       copyQuestion(section, question);
     });
   }
-
 
   function removeQuestion(question: Question) {
     ydoc.transact(() => {
@@ -708,7 +708,7 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   function loadTemplate(name: string) {
-    API.loadTemplate(name).then((source) => {
+    API.loadTemplate(name).then((source: string) => {
       updateSource(source);
     });
   }
@@ -768,7 +768,7 @@ export const useExamStore = defineStore('exam', () => {
     ysource.observe(() => {
       source.value = ysource.toString();
     });
-    
+
     source.value = ysource.toString();
     if (source.value !== '') {
       const updatedSource = sourceUpgrade(source.value);

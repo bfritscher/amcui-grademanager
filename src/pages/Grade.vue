@@ -119,6 +119,9 @@
               dense
               flat
             >
+              <template #top-left="">
+                <score-why-banner></score-why-banner>
+              </template>
               <template #top-right="props">
                 <q-input v-model="ui.filter" dense debounce="300" placeholder="Search">
                   <template #prepend>
@@ -344,7 +347,7 @@
                         class="text-right score"
                         :class="`why-${
                           gradeService.grade.whys[props.row.key + ':' + value.question]
-                        }`"
+                        } ${gradeService.acknowledgedWhys.value.includes(props.row.student + ':' + props.row.copy + ':' + value.question) ? 'acknowledged' : ''}`"
                       >
                         <router-link
                           :to="{
@@ -373,7 +376,7 @@
                                 gradeService.grade.scores[props.row.id].key + ':' + value.question
                               ]
                             : '404'
-                        }`"
+                        } ${gradeService.acknowledgedWhys.value.includes(gradeService.grade.scores[props.row.id]?.student + ':' + gradeService.grade.scores[props.row.id]?.copy + ':' + value.question) ? 'acknowledged' : ''}`"
                       >
                         <router-link
                           v-if="gradeService.grade.scores[props.row.id]"
@@ -455,6 +458,10 @@
                       </div>
                       <div><span class="why-V">V</span> means that no box are ticked.</div>
                       <div><span class="why-P">P</span> means that a floor has been applied.</div>
+                      <div>
+                        <span class="why-acknowledged">&nbsp;</span> has been manually acknowledged
+                        as a student error
+                      </div>
                     </div></q-td
                   >
                 </q-tr>
@@ -515,6 +522,7 @@ import AddFileBox from '../components/Grade/AddFileBox.vue';
 import LoadingProgress from '../components/LoadingProgress.vue';
 import { matchLookups } from '../utils/options';
 import { useApiStore } from '@/stores/api';
+import ScoreWhyBanner from '@/components/ScoreWhyBanner.vue';
 
 const Histogram = defineAsyncComponent(() => import('@/components/Grade/Histogram.vue'));
 
@@ -527,7 +535,8 @@ export default defineComponent({
     DataTable,
     AddFileBox,
     LoadingProgress,
-    Histogram
+    Histogram,
+    ScoreWhyBanner
   },
   setup() {
     const API = useApiStore();
@@ -794,6 +803,22 @@ export default defineComponent({
 
 .why-P {
   background-color: rgb(213, 188, 236);
+}
+
+.why-V.acknowledged {
+  background-image: linear-gradient(127deg, rgb(241, 233, 56) 49%, rgb(76 175 80) 51%);
+}
+
+.why-E.acknowledged {
+  background-image: linear-gradient(127deg, rgb(255, 84, 84) 49%, rgb(76 175 80) 51%);
+}
+
+.why-P.acknowledged {
+  background-image: linear-gradient(127deg, rgb(213, 188, 236) 49%, rgb(76 175 80) 51%);
+}
+
+.why-acknowledged {
+  background-image: linear-gradient(127deg, transparent 49%, rgb(76 175 80) 51%);
 }
 
 .grade-pass {

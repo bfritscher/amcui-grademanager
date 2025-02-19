@@ -88,7 +88,6 @@ export default defineComponent({
     }
 
     function skip() {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       unmatchedNames.value.push(toBeMatched.value);
       toBeMatched.value = nextUnmatched();
     }
@@ -104,11 +103,9 @@ export default defineComponent({
 
     const studentsWithoutScore = computed(() => {
       const entries = props.gradeService.grade.students.data.filter(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         (row) => !props.gradeService.grade.scores.hasOwnProperty(row.id)
       );
       entries.sort((a, b) =>
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         itemAccessor(a).toLowerCase().localeCompare(itemAccessor(b).toLowerCase())
       );
       return entries;

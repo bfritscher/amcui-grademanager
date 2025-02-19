@@ -79,7 +79,7 @@
           <q-avatar
             v-for="(user, id, n) in API.connected"
             :key="id"
-            :class="`awareness-avatar awareness-bg-color-${API.getColorIndex(id)}`"
+            :class="`awareness-avatar awareness-bg-color-${API.getColorIndex(Number(id))}`"
             text-color="white"
             :style="`right: ${n * 18}px`"
           >

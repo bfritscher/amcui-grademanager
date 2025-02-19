@@ -191,14 +191,14 @@
       <q-btn color="negative" @click="deleteProject()">Delete project! </q-btn>
     </p>
     <q-uploader
-        class="q-mr-lg"
-        accept=".zip"
-        auto-upload
-        hide-upload-btn
-        label="Upload project.zip"
-        :factory="uploadFactory"
-        @uploaded="handleImportSuccess"
-      />
+      class="q-mr-lg"
+      accept=".zip"
+      auto-upload
+      hide-upload-btn
+      label="Upload project.zip"
+      :factory="uploadFactory"
+      @uploaded="handleImportSuccess"
+    />
   </q-page>
 </template>
 
@@ -238,7 +238,7 @@ export default defineComponent({
             position: 'top-right'
           });
         },
-        (err) => {
+        (err: any) => {
           $q.notify({
             type: 'negative',
             message: err.message,
@@ -300,9 +300,9 @@ export default defineComponent({
         });
       },
       renameProject() {
-        let name = prompt('Rename project to', API.project);
+        const name = prompt('Rename project to', API.project);
         if (name) {
-          API.renameProject(name).then((apiName) => {
+          API.renameProject(name).then((apiName: string) => {
             router.push({
               name: 'Options',
               params: { project: apiName }

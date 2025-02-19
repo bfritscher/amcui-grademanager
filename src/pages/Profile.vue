@@ -147,7 +147,7 @@ export default defineComponent({
             profile.password = '';
             profile.password2 = '';
           },
-          (response) => {
+          (response: any) => {
             profile.error = response.data;
           }
         );
@@ -158,10 +158,10 @@ export default defineComponent({
             password: profile.mfaPassword,
             label: prompt('Label for this token')
           })
-          .then((result) => {
+          .then((result: any) => {
             profile.authentifierQRCode = result.data.qrCodeDataUrl;
           })
-          .catch((result) => {
+          .catch((result: any) => {
             profile.mfaError = result.data;
           });
       },
@@ -175,14 +175,14 @@ export default defineComponent({
           .then(() => {
             store.logout();
           })
-          .catch((result) => {
+          .catch((result: any) => {
             profile.mfaError = result.data;
           });
       },
       addFido2() {
         API.$http
           .get(`${API.URL}/profile/addFido2`)
-          .then(async (result) => {
+          .then(async (result: any) => {
             const registrationOptions = result.data;
             registrationOptions.challenge = base64buffer.decode(
               registrationOptions.challenge as string
@@ -218,7 +218,7 @@ export default defineComponent({
                 });
             }
           })
-          .catch((result) => {
+          .catch((result: any) => {
             profile.mfaError = result.data || result;
           });
       }

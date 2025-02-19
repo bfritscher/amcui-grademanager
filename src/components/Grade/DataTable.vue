@@ -9,42 +9,44 @@
           :class="c === maxPoints.toString() ? 'bg-grey-3' : ''"
         />
       </colgroup>
-      <tr>
-        <th>Points</th>
-        <th v-for="(c, index) in table[0]" :key="index" class="text-right">
-          {{ c }}
-        </th>
-      </tr>
-      <tr>
-        <th class="text-left">AVG</th>
-        <td v-for="(c, index) in table[1]" :key="index" class="text-right">
-          {{ c }}
-        </td>
-      </tr>
-      <tr>
-        <th class="text-left">Min</th>
-        <td v-for="(c, index) in table[5]" :key="index" class="text-right">
-          {{ c }}
-        </td>
-      </tr>
-      <tr>
-        <th class="text-left">Max</th>
-        <td v-for="(c, index) in table[6]" :key="index" class="text-right">
-          {{ c }}
-        </td>
-      </tr>
-      <tr>
-        <th class="text-left">Pass</th>
-        <td v-for="(c, index) in table[2]" :key="index" class="text-right">{{ c }}%</td>
-      </tr>
-      <tr>
-        <th class="text-left">Remed</th>
-        <td v-for="(c, index) in table[3]" :key="index" class="text-right">{{ c }}%</td>
-      </tr>
-      <tr>
-        <th class="text-left">Fail</th>
-        <td v-for="(c, index) in table[4]" :key="index" class="text-right">{{ c }}%</td>
-      </tr>
+      <tbody>
+        <tr>
+          <th>Points</th>
+          <th v-for="(c, index) in table[0]" :key="index" class="text-right">
+            {{ c }}
+          </th>
+        </tr>
+        <tr>
+          <th class="text-left">AVG</th>
+          <td v-for="(c, index) in table[1]" :key="index" class="text-right">
+            {{ c }}
+          </td>
+        </tr>
+        <tr>
+          <th class="text-left">Min</th>
+          <td v-for="(c, index) in table[5]" :key="index" class="text-right">
+            {{ c }}
+          </td>
+        </tr>
+        <tr>
+          <th class="text-left">Max</th>
+          <td v-for="(c, index) in table[6]" :key="index" class="text-right">
+            {{ c }}
+          </td>
+        </tr>
+        <tr>
+          <th class="text-left">Pass</th>
+          <td v-for="(c, index) in table[2]" :key="index" class="text-right">{{ c }}%</td>
+        </tr>
+        <tr>
+          <th class="text-left">Remed</th>
+          <td v-for="(c, index) in table[3]" :key="index" class="text-right">{{ c }}%</td>
+        </tr>
+        <tr>
+          <th class="text-left">Fail</th>
+          <td v-for="(c, index) in table[4]" :key="index" class="text-right">{{ c }}%</td>
+        </tr>
+      </tbody>
     </table>
   </div>
 </template>
@@ -56,12 +58,7 @@ import { useApiStore } from '@/stores/api';
 
 export default defineComponent({
   name: 'DataTable',
-  props: {
-    maxPoints: {
-      type: Number,
-      required: true
-    }
-  },
+  props: { maxPoints: { type: Number, required: true } },
   setup(props) {
     const gradeService = inject('gradeService') as GradeService;
     const API = useApiStore();
@@ -115,10 +112,7 @@ export default defineComponent({
       return table;
     });
 
-    return {
-      table: tableData,
-      gradeService
-    };
+    return { table: tableData, gradeService };
   }
 });
 </script>

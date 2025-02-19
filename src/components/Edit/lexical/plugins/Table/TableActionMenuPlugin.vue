@@ -79,10 +79,10 @@ watchEffect(() => {
 
   if (menuButtonElement != null && dropDownElement != null && rootElement != null) {
     dropDownElement.style.opacity = '1';
-    let leftPosition = 20; //  menuButtonRect.right + margin
+    const leftPosition = 20; //  menuButtonRect.right + margin
     dropDownElement.style.left = `${leftPosition}px`;
 
-    let topPosition = 5; //margin // menuButtonRect.top
+    const topPosition = 5; //margin // menuButtonRect.top
     dropDownElement.style.top = `${topPosition}px`;
   }
 });
@@ -119,7 +119,7 @@ const clearTableSelection = () => {
 
       const tableSelection = getTableObserverFromTableElement(tableElement);
       if (tableSelection !== null) {
-        tableSelection.clearHighlight();
+        tableSelection.$clearHighlight();
       }
 
       tableNode.markDirty();

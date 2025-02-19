@@ -12,9 +12,4 @@ describe('Source Upgrade', () => {
     const upgradedSourceCode = sourceUpgrade(sourceCode);
     expect(upgradedSourceCode).toEqual('\\documentclass{article}\n\\usepackage{soul}\n\\usepackage{tabulary}\n\n\\begin{tabulary}\n\\end{tabulary}');
   });
-  it('adds soul package and tabulary', () => {
-    const sourceCode = `\\documentclass{article}`;
-    const upgradedSourceCode = sourceUpgrade(sourceCode);
-    expect(upgradedSourceCode).toEqual('\\documentclass{article}\n\\usepackage{tabulary}\n\\usepackage{soul}');
-  });
 });

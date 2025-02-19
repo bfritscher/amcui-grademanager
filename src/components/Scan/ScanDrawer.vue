@@ -280,10 +280,10 @@ export default defineComponent({
       scan.loading = true;
       // TODO-nice move to service? #47
       Promise.all([
-        API.$http.get(API.URL + '/project/' + route.params.project + '/capture').then((r) => {
+        API.$http.get(API.URL + '/project/' + route.params.project + '/capture').then((r: any) => {
           scan.pages = r.data;
         }),
-        API.$http.get(API.URL + '/project/' + route.params.project + '/missing').then((r) => {
+        API.$http.get(API.URL + '/project/' + route.params.project + '/missing').then((r: any) => {
           scan.missing = r.data;
         })
       ]).then(() => {
