@@ -40,6 +40,7 @@ export interface GitLog {
   sha: string;
   type: string;
   username: string;
+  diff: string;
 }
 export interface Exam {
   sections: Section[];
