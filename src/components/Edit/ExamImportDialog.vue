@@ -13,6 +13,7 @@
             filled
             autogrow
             label="Paste questions and answers here"
+            class="custom-height"
             @update:model-value="parseText"
           />
           <q-btn flat color="primary" label="Load Sample" class="q-mt-sm" @click="loadSample" />
@@ -41,7 +42,7 @@
           <div v-for="(question, index) in parsedQuestions" :key="index" class="q-mb-md">
             <div class="text-weight-bold">{{ question.content }}</div>
             <div v-for="(answer, aindex) in question.answers" :key="aindex" class="q-pl-md">
-              <q-checkbox :model-value="answer.correct" dense readonly>
+              <q-checkbox v-model="answer.correct" dense>
                 {{ answer.content }}
               </q-checkbox>
             </div>
@@ -118,3 +119,8 @@ Another Question?
   }
 });
 </script>
+<style>
+.custom-height.q-textarea.q-field--labeled .q-field__native  {
+  min-height: 200px;
+}
+</style>

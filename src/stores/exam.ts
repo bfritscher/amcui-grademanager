@@ -269,6 +269,7 @@ export const useExamStore = defineStore('exam', () => {
       const question = createQuestion();
       question.content = q.content || '';
       question.type = q.type || 'SINGLE';
+      question.order = section.questions.length;
 
       question.answers =
         q.answers?.map((a) => {
