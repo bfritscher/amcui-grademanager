@@ -35,7 +35,8 @@ import type { Graphics } from '../models';
 import { useApiStore } from '@/stores/api';
 import { useExamStore } from '@/stores/exam';
 import type { Root } from 'react-dom/client';
-import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types';
+import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
+import "@excalidraw/excalidraw/index.css";
 
 export default defineComponent({
   name: 'ExcalidrawDialog',
