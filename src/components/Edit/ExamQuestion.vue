@@ -13,6 +13,14 @@
         <span v-if="question.type == 'MULTIPLE'">♣</span>
       </h3>
     </div>
+
+    <q-banner v-if="hasDuplicateAnswers" class="bg-warning text-white q-ma-none">
+      <template #avatar>
+        <q-icon name="sym_o_warning" color="white" />
+      </template>
+      Warning: This question contains duplicate answers, which may confuse students.
+    </q-banner>
+
     <q-toolbar class="question-options bg-secondary row gutter scroll no-wrap">
       <q-select
         :model-value="question.type"
@@ -272,6 +280,25 @@ export default defineComponent({
       }
     );
 
+    const hasDuplicateAnswers = computed(() => {
+      if (props.question.answers && props.question.answers.length > 1) {
+        const contents = new Set<string>();
+        for (const answer of props.question.answers) {
+          // Strip HTML tags and normalize whitespace for comparison
+          const normalizedContent = answer.content
+            .replace(/<[^>]*>/g, '')
+            .trim()
+            .toLowerCase();
+
+          if (normalizedContent && contents.has(normalizedContent)) {
+            return true;
+          }
+          contents.add(normalizedContent);
+        }
+      }
+      return false;
+    });
+
     return {
       qEl,
       points,
@@ -291,7 +318,8 @@ export default defineComponent({
       },
       range(nb: number) {
         return new Array(nb);
-      }
+      },
+      hasDuplicateAnswers
     };
   }
 });
