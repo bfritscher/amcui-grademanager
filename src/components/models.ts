@@ -104,6 +104,7 @@ export interface Answer {
   correct: boolean;
   question?: string;
   order?: number;
+  scoring?: string;
 }
 
 export interface Graphics {

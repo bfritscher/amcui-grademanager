@@ -31,6 +31,23 @@
       />
     </div>
     <q-btn
+      color="primary"
+      flat
+      size="sm"
+      padding="sm"
+      class="q-my-sm"
+      dense
+      no-caps
+      :label="answer.scoring || 'Pts'"
+      aria-label="custom scoring"
+      :disable="isNone"
+      @click="openScoringDialog"
+    >
+    <q-tooltip>
+      Custom Score
+    </q-tooltip>
+    </q-btn>
+    <q-btn
       color="negative"
       flat
       icon="sym_o_delete_forever"
@@ -39,11 +56,34 @@
       :disable="isNone"
       @click="examService.removeAnswer(answer)"
     />
+    <q-dialog v-model="scoringDialog" persistent>
+      <q-card style="min-width: 300px">
+        <q-card-section>
+          <div class="text-h6">Custom Scoring</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <q-input
+            v-model.number="customScoring"
+            type="number"
+            label="Points"
+            dense
+            autofocus
+            @keyup.enter="saveScoringAndClose"
+          />
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat v-close-popup label="Cancel" />
+          <q-btn flat label="Save" color="primary" @click="saveScoringAndClose" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, type PropType } from 'vue';
+import { defineComponent, type PropType, ref } from 'vue';
 import type { Question, Answer } from '../models';
 import LexicalEditor from './lexical/LexicalEditor.vue';
 import { useExamStore } from '@/stores/exam';
@@ -68,11 +108,27 @@ export default defineComponent({
       default: false
     }
   },
-  setup() {
+  setup(props) {
     const examService = useExamStore();
+    const scoringDialog = ref(false);
+    const customScoring = ref<string>();
+
+    const openScoringDialog = () => {
+      customScoring.value = props.answer.scoring;
+      scoringDialog.value = true;
+    };
+
+    const saveScoringAndClose = () => {
+      examService.updateAnswer(props.answer, { scoring: customScoring.value });
+      scoringDialog.value = false;
+    };
 
     return {
-      examService
+      examService,
+      scoringDialog,
+      customScoring,
+      openScoringDialog,
+      saveScoringAndClose
     };
   }
 });

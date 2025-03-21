@@ -324,6 +324,7 @@ export const useExamStore = defineStore('exam', () => {
     copy.content = answer.content;
     copy.correct = answer.correct;
     copy.order = answer.order;
+    copy.scoring = answer.scoring;
     return copy;
   }
 

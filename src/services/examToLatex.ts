@@ -542,11 +542,13 @@ function openQuestionToLatex(question: Question, head: string[]) {
   head.push('  \\end{question}');
 }
 function answerToLatex(answer: Answer, head: string[]) {
-  head.push(
-    '      \\' +
+  let content = '      \\' +
       (answer.correct ? 'bonne' : 'mauvaise') +
       '{' +
       html2Latex(answer.content, true) +
       '      }'
-  );
+  if (answer.scoring) {
+    content += '\\scoring{' + answer.scoring + '}';
+  }
+  head.push(content);
 }
