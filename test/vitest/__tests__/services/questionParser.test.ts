@@ -177,6 +177,87 @@ Réponse: A`;
         expect(result[0].answers![0].correct).toBe(true);
       });
     });
+
+    it('should handle multiple answers separated by commas', () => {
+      const input = `What are primary colors?
+A) Red
+B) Green
+C) Blue
+D) Yellow
+Answer: A, C, D`;
+
+      const result = parseQuestions(input);
+      expect(result[0].answers![0].correct).toBe(true);  // Red
+      expect(result[0].answers![1].correct).toBe(false); // Green
+      expect(result[0].answers![2].correct).toBe(true);  // Blue
+      expect(result[0].answers![3].correct).toBe(true);  // Yellow
+      expect(result[0].type).toBe('MULTIPLE');
+    });
+
+    it('should handle multiple numeric answers', () => {
+      const input = `Select valid options:
+1) Option One
+2) Option Two
+3) Option Three
+4) Option Four
+Answer: 1, 2, 4`;
+
+      const result = parseQuestions(input);
+      expect(result[0].answers![0].correct).toBe(true);
+      expect(result[0].answers![1].correct).toBe(true);
+      expect(result[0].answers![2].correct).toBe(false);
+      expect(result[0].answers![3].correct).toBe(true);
+    });
+
+    it('should ignore text before answer indicator', () => {
+      const input = `Question 2
+Quels éléments font partie d'un Système d'Information (SI) ?
+A. Données
+B. Processus métier
+C. Salle de réunion
+D. Utilisateurs
+Bonnes réponses : A, B, D`;
+
+      const result = parseQuestions(input);
+      expect(result).toHaveLength(1);
+      expect(result[0].content).toContain('Quels éléments');
+      expect(result[0].answers).toHaveLength(4);
+      expect(result[0].answers![0].correct).toBe(true);  // A. Données
+      expect(result[0].answers![1].correct).toBe(true);  // B. Processus métier
+      expect(result[0].answers![2].correct).toBe(false); // C. Salle de réunion
+      expect(result[0].answers![3].correct).toBe(true);  // D. Utilisateurs
+      expect(result[0].type).toBe('MULTIPLE');
+    });
+
+    it('should handle answers separated by "et" (and)', () => {
+      const input = `What are correct?
+A) First
+B) Second
+C) Third
+Answer: A et C`;
+
+      const result = parseQuestions(input);
+      expect(result[0].answers![0].correct).toBe(true);  // A
+      expect(result[0].answers![1].correct).toBe(false); // B
+      expect(result[0].answers![2].correct).toBe(true);  // C
+      expect(result[0].type).toBe('MULTIPLE');
+    });
+
+    it('should handle mixed comma and "et" separators', () => {
+      const input = `Select all that apply:
+1) Option 1
+2) Option 2
+3) Option 3
+4) Option 4
+Réponse: 1, 2 et 4`;
+
+      const result = parseQuestions(input);
+      expect(result[0].answers![0].correct).toBe(true);  // 1
+      expect(result[0].answers![1].correct).toBe(true);  // 2
+      expect(result[0].answers![2].correct).toBe(false); // 3
+      expect(result[0].answers![3].correct).toBe(true);  // 4
+      expect(result[0].type).toBe('MULTIPLE');
+    });
   });
 
   describe('multiple questions handling', () => {

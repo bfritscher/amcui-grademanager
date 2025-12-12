@@ -52,25 +52,48 @@ export function parseQuestions(text: string): PartialQuestion[] {
     consecutiveEmptyLines = 0;
 
     // Check for answer indicators (both English and French, case insensitive)
+    // Matches "Bonnes réponses : A, B, D" or "Answer: B" or "Réponse: 2", etc.
     const answerIndicator = line.match(
-      /^(?:answer|r[ée]ponses?).*:\s*(?:([A-Za-z])|(\d+))[).\s]?/i
+      /^.*?(?:answer|r[ée]ponses?).*:\s*(.+)$/i
     );
     if (answerIndicator && currentQuestion && currentQuestion.answers) {
-      let correctIndex = -1;
-      if (answerIndicator[1]) {
-        // Letter answer (A, B, C, etc.)
-        correctIndex = letterToIndex(answerIndicator[1]);
-      } else if (answerIndicator[2]) {
-        // Numeric answer (1, 2, 3, etc.)
-        correctIndex = parseInt(answerIndicator[2], 10) - 1;
+      // Extract the answer part (e.g., "A, B, D" or "A et C" or "B" or "2")
+      const answerText = answerIndicator[1].trim();
+
+      // Split by commas and/or 'et'/'and' to extract all answers
+      const answerParts = answerText
+        .split(/(?:,|\s+et\s+|\s+and\s+)/i)
+        .map(part => part.trim())
+        .filter(part => part.length > 0);
+      // Reset all answers to incorrect first
+      currentQuestion.answers.forEach((a) => (a.correct = false));
+
+      // Mark all specified answers as correct
+      for (const answerPart of answerParts) {
+        // Remove any trailing punctuation like ), ., etc.
+        const cleanAnswer = answerPart.replace(/[).\s]+$/, '');
+
+        let correctIndex = -1;
+        // Check if it's a letter (A, B, C, etc.)
+        if (/^[A-Za-z]$/.test(cleanAnswer)) {
+          correctIndex = letterToIndex(cleanAnswer);
+        }
+        // Check if it's a number (1, 2, 3, etc.)
+        else if (/^\d+$/.test(cleanAnswer)) {
+          correctIndex = parseInt(cleanAnswer, 10) - 1;
+        }
+
+        if (correctIndex >= 0 && correctIndex < currentQuestion.answers.length) {
+          currentQuestion.answers[correctIndex].correct = true;
+        }
       }
 
-      if (correctIndex >= 0 && correctIndex < currentQuestion.answers.length) {
-        // Reset all answers to incorrect first
-        currentQuestion.answers.forEach((a) => (a.correct = false));
-        // Mark the correct answer
-        currentQuestion.answers[correctIndex].correct = true;
+      // Update question type to MULTIPLE if more than one answer is marked as correct
+      const correctCount = currentQuestion.answers.filter(a => a.correct).length;
+      if (correctCount > 1) {
+        currentQuestion.type = 'MULTIPLE';
       }
+
       continue;
     }
 
