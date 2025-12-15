@@ -74,7 +74,7 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat v-close-popup label="Cancel" />
+          <q-btn v-close-popup flat label="Cancel" />
           <q-btn flat label="Save" color="primary" @click="saveScoringAndClose" />
         </q-card-actions>
       </q-card>

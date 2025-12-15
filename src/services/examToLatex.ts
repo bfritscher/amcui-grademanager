@@ -1,5 +1,6 @@
 import { useExamStore } from '@/stores/exam';
 import type { Section, Question, Answer } from '../components/models';
+import { sanitizeUnicode } from '@/utils/unicodeSanitizer';
 import {
   WIDTH_DATA_ATTRIBUTE,
   OPTIONS_DATA_ATTRIBUTE,
@@ -57,6 +58,7 @@ function escapeLatex(text: string | null) {
       text = text.replace(regex, escapeChars[char]);
     }
   }
+  text = sanitizeUnicode(text);
 
   return text;
 }
