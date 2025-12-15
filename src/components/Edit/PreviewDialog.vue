@@ -5,6 +5,16 @@
         <q-toolbar-title> Preview Document </q-toolbar-title>
         <q-btn flat round dense icon="sym_o_close" @click="onDialogOK" />
       </q-toolbar>
+      <q-card-section v-if="API.replaceUnicodeErrorWithText" class="q-pa-md bg-orange-2">
+        <div class="text-h6 text-bold text-orange-9">
+          <q-icon name="sym_o_warning" size="sm" class="q-mr-sm" />
+          Unicode Character Errors Detected
+        </div>
+        <div class="q-mt-sm">
+          Your exam contains special Unicode characters (emojis, card suits, etc.) that cannot be
+          rendered in LaTeX PDF. These appear as <span class="text-red">[unsupported character]</span> in the generated PDF.
+        </div>
+      </q-card-section>
       <q-card-section
         v-if="!isLogVisible && API.logs.preview && API.logs.preview.code == 0"
         class="column scroll q-pa-none"

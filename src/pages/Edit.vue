@@ -81,14 +81,14 @@
       <span>{{ formatDate(editor.lastPreview, 'HH:mm:ss') }}</span>
       <q-btn
         aria-label="preview"
-        :color="API.logs.preview?.code > 0 ? 'warning' : ''"
+        :color="API.logs.preview?.code > 0 || API.replaceUnicodeErrorWithText ? 'warning' : ''"
         flat
         @click="showPreviewDialog()"
         >{{
           editor.previewWait
             ? 'wait'
             : API.logs.preview?.code == 0
-              ? 'Preview'
+              ? ( API.replaceUnicodeErrorWithText ? 'Preview (Unicode errors replaced)' : 'Preview')
               : API.logs.preview?.code > 0
                 ? 'error'
                 : 'compiling'

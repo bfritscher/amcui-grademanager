@@ -30,6 +30,9 @@ export const useApiStore = defineStore('api', () => {
       locked: '0'
     }
   });
+
+  const replaceUnicodeErrorWithText = ref(false);
+
   const connected = ref<Record<string, { username: string; colorIndex: number }>>({});
   const yjsSynced = ref(false);
   const logs = ref<any>({});
@@ -237,6 +240,7 @@ export const useApiStore = defineStore('api', () => {
   });
 
   return {
+    replaceUnicodeErrorWithText,
     getYdoc() {
       return ydoc;
     },
@@ -515,8 +519,33 @@ export const useApiStore = defineStore('api', () => {
         formData
       );
     },
-    preview(data: ExamData) {
-      return $http.value.post(API_URL.value + '/project/' + project.value + '/preview', data);
+    preview(data: ExamData, setReplaceUnicodeErrorWithText: boolean = false) {
+      replaceUnicodeErrorWithText.value = setReplaceUnicodeErrorWithText;
+      if (setReplaceUnicodeErrorWithText) {
+            // Add Unicode suppression commands to the LaTeX preamble
+            const unicodeSuppressionCommands = `
+% Unicode error suppression - replaces unsupported characters with red markers
+\\makeatletter
+\\def\\UTFviii@undefined@err#1{{\\color{red}[unsupported character]}}
+\\makeatother
+`;
+
+            // Create new data with suppression commands prepended to source
+            data = {
+              ...data,
+              source: unicodeSuppressionCommands + (data.source || '')
+            };
+      }
+      return $http.value.post(API_URL.value + '/project/' + project.value + '/preview', data).then(()=> {
+                if (logs.value.preview && logs.value.preview.log) {
+          if(/ERR(?::|>).*Unicode character/i.test(logs.value.preview.log)) {
+            console.log('Unicode character error detected in preview log');
+            if (!setReplaceUnicodeErrorWithText) {
+              this.preview(data, true); // Retry with suppression
+            }
+          }
+        }
+      })
     },
     print(data: ExamData) {
       return $http.value
