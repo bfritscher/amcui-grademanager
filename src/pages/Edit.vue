@@ -12,9 +12,6 @@
         <q-btn color="primary" type="a" :href="API.getDownloadZipURL()" class="q-mx-sm"
           >Download&nbsp;<small>(Zip with all PDFs)</small></q-btn
         >
-        <q-btn color="primary" @click="examService.toMoodleQuiz()"
-          >export moodle&nbsp;<small>quiz.xml</small></q-btn
-        >
       </div>
       <template #action>
         <q-btn flat color="white" icon="sym_o_close" @click="editor.hidePrintNotification = true" />
@@ -94,6 +91,24 @@
                 : 'compiling'
         }}</q-btn
       >
+      <q-btn
+        aria-label="Export"
+        color="primary"
+        flat
+        class="gt-xs"
+        label="Export"
+      >
+        <q-menu>
+          <q-list dense>
+            <q-item clickable v-close-popup @click="examService.toMoodleQuiz()">
+              <q-item-section>Export Moodle quiz.xml</q-item-section>
+            </q-item>
+            <q-item clickable v-close-popup @click="examService.toImportText()">
+              <q-item-section>Export as text</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
       <q-btn
         aria-label="LaTeX options"
         color="primary"

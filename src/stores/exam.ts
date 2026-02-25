@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import latexToExam from '../services/latexToExam';
 import examToLatex from '../services/examToLatex';
 import examToMoodle from '../services/examToMoodle';
+import examToImportText from '../services/examToImportText';
 import examToHTML from '../services/examToHTML';
 import { Notify, Dialog } from 'quasar';
 import type {
@@ -460,6 +461,17 @@ export const useExamStore = defineStore('exam', () => {
 
   function toMoodleQuiz() {
     examToMoodle();
+  }
+
+  function toImportText() {
+    const { exportedQuestions, exportedOpenQuestions } = examToImportText();
+    Notify.create({
+      type: 'positive',
+      message:
+        exportedOpenQuestions > 0
+          ? `Exported ${exportedQuestions} question(s), including ${exportedOpenQuestions} open question(s).`
+          : `Exported ${exportedQuestions} question(s) in text format.`
+    });
   }
 
   function toHtml() {
@@ -983,6 +995,7 @@ export const useExamStore = defineStore('exam', () => {
     print,
     loadTemplate,
     toMoodleQuiz,
+    toImportText,
     syncGraphics,
     addGraphics,
     updateGraphics,
