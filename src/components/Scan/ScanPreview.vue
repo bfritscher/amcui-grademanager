@@ -127,6 +127,13 @@
       >remove manual
       <q-tooltip>Remove manually set ticks</q-tooltip>
     </q-btn>
+    <div
+      v-if="apiQueueLength > 2"
+      class="absolute absolute-top-right text-caption text-orange q-mt-xl q-mr-md"
+      style="top: 40px; right: 0;"
+    >
+      <q-spinner-dots size="1.5em" class="q-mr-xs" /> Syncing {{ apiQueueLength }} changes...
+    </div>
     <q-checkbox v-model="rotate" label="rotate" class="absolute absolute-bottom-left"></q-checkbox>
   </div>
 </template>
@@ -146,6 +153,39 @@ gradeService.loadScores();
 const route = useRoute();
 const API = useApiStore();
 const store = useStore();
+
+let apiQueue = Promise.resolve();
+let loadScoresTimeout: ReturnType<typeof setTimeout> | null = null;
+const apiQueueLength = ref(0);
+
+function debouncedLoadScores() {
+  if (loadScoresTimeout) clearTimeout(loadScoresTimeout);
+  loadScoresTimeout = setTimeout(() => {
+    gradeService.loadScores();
+  }, 500);
+}
+
+function queueApiCall(task: () => Promise<any>, retries = 5) {
+  apiQueueLength.value++;
+  apiQueue = apiQueue.then(async () => {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        await task();
+        // Small delay between successful requests
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return; // Success, exit retry loop
+      } catch (err) {
+        console.error(`API call failed (attempt ${i + 1}):`, err);
+        if (i < retries) {
+          // Longer delay before retrying
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+    }
+  }).finally(() => {
+    apiQueueLength.value--;
+  });
+}
 
 const page = ref<PageCapture | undefined>();
 const zones = ref<Zone[]>([]);
@@ -316,7 +356,7 @@ function toggle(zone: Zone) {
   } else {
     zone.manual = zone.black >= parseFloat(API.options.options.seuil) * zone.total ? 0 : 1;
   }
-  API.setZoneManual(route.params.project as string, {
+  queueApiCall(() => API.setZoneManual(route.params.project as string, {
     student: parseInt(route.params.student as string, 10),
     page: parseInt(route.params.page as string, 10),
     copy: parseInt(route.params.copy as string, 10),
@@ -328,15 +368,15 @@ function toggle(zone: Zone) {
     if (page.value) {
       page.value.timestamp_manual = Date.now();
     }
-    gradeService.loadScores();
-  });
+    debouncedLoadScores();
+  }));
 }
 
 function clear() {
   zones.value.forEach((z) => {
     z.manual = -1;
   });
-  API.setPageAuto(route.params.project as string, {
+  queueApiCall(() => API.setPageAuto(route.params.project as string, {
     student: parseInt(route.params.student as string, 10),
     page: parseInt(route.params.page as string, 10),
     copy: parseInt(route.params.copy as string, 10)
@@ -344,7 +384,7 @@ function clear() {
     if (page.value) {
       page.value.timestamp_manual = 0;
     }
-    gradeService.loadScores();
-  });
+    debouncedLoadScores();
+  }));
 }
 </script>
