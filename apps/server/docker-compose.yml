@@ -1,0 +1,38 @@
+services:
+  redis:
+    image: redis
+    volumes:
+      - ./data:/data
+    ports:
+      - "6379:6379"
+  redis-commander:
+    image: ghcr.io/joeferner/redis-commander:latest
+    environment:
+    - REDIS_HOSTS=local:redis:6379
+    - CLIENT_MAX_BODY_SIZE=100mb
+    depends_on:
+      - redis
+    ports:
+    - "8081:8081"
+  amcuiserver:
+    build: .
+    env_file: .env
+    command: npm run dev
+    working_dir: /amc
+    volumes:
+      - ./data/db:/data/db
+      - ./src:/amc/src
+      - ./projects:/amc/projects
+      - ./templates:/amc/templates
+      - ./coverage:/amc/coverage
+    ports:
+      - "8181:8181"
+      - "5858:5858"
+      - "9001:9001"
+    depends_on:
+      - redis
+      - svg2pdf
+  svg2pdf:
+    build: ./svg2pdf
+    ports:
+      - "3000:3000"

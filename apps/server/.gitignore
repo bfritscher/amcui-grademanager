@@ -1,0 +1,11 @@
+projects/
+.tmp/
+frontend/
+node_modules/
+.env
+.production.env
+data/
+coverage/
+docker-compose.override.yml
+dist
+tsconfig.tsbuildinfo

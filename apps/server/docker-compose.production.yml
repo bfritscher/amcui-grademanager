@@ -1,0 +1,88 @@
+version: "3"
+
+services:
+  reverse-proxy:
+    image: traefik:v2.5
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - web
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/traefik.yml:/traefik.yml
+      - ./traefik/acme.json:/acme.json
+      - ./traefik/conf.yml:/conf.yml
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1G"
+        max-file: "3"
+  redis:
+    image: redis
+    restart: always
+    volumes:
+      - ./data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+  svg2pdf:
+    image: ghcr.io/bfritscher/amcui-svg2pdf:latest
+    cap_add:
+      - SYS_ADMIN
+    restart: always
+  amcuiserver:
+    image: ghcr.io/bfritscher/amcui-server:latest
+    env_file: .env
+    restart: always
+    volumes:
+      - ./projects:/amc/projects
+      - ./data/db:/data/db      
+      - ./templates:/amc/templates
+    depends_on:
+      - redis
+      - svg2pdf
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.middlewares.https_redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.https_redirect.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.services.amcui_api.loadbalancer.server.port=${SERVER_PORT}"
+      - "traefik.http.routers.amcui_api.rule=Host(`${FRONTEND_DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.amcui_api.entrypoints=web"
+      - "traefik.http.routers.amcui_api.middlewares=https_redirect"
+      - "traefik.http.routers.amcui_api_secured.rule=Host(`${FRONTEND_DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.amcui_api_secured.middlewares=api-stripprefix"
+      - "traefik.http.routers.amcui_api_secured.entrypoints=websecure"
+      - "traefik.http.routers.amcui_api_secured.tls=true"
+      - "traefik.http.routers.amcui_api_secured.tls.certresolver=myresolver"
+    networks:
+      - web
+      - default
+  grademanager:
+    image: ghcr.io/bfritscher/amcui-grademanager:latest
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.middlewares.https_redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.https_redirect.redirectscheme.permanent=true"
+      - "traefik.http.services.amcui.loadbalancer.server.port=80"
+      - "traefik.http.routers.amcui.rule=Host(`${FRONTEND_DOMAIN}`)"
+      - "traefik.http.routers.amcui.entrypoints=web"
+      - "traefik.http.routers.amcui.middlewares=https_redirect"
+      - "traefik.http.routers.amcui_secured.rule=Host(`${FRONTEND_DOMAIN}`)"
+      - "traefik.http.routers.amcui_secured.entrypoints=websecure"
+      - "traefik.http.routers.amcui_secured.tls=true"
+      - "traefik.http.routers.amcui_secured.tls.certresolver=myresolver"
+    environment:
+      - AMCUI_API=/api      
+    networks:
+      - web
+      - default
+networks:
+  web:
+    external: true
+
