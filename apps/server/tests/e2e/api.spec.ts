@@ -782,8 +782,6 @@ describe('Project folder/files', () => {
       .get(`/project/${PROJECT_NAME}/zip`)
       .set('Authorization', `Bearer ${token}`)
       .responseType('blob')
-      // Abort the HTTP request before Jest's timeout so failures release sockets.
-      .timeout({deadline: 15000})
       .expect(200)
       .expect('Content-Type', /application\/zip/)
       .expect((res) => {

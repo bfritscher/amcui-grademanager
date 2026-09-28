@@ -16,5 +16,13 @@
 // Import commands.js using ES2015 syntax:
 import './commands';
 
+// Public test endpoint; Cypress 16 exposes public configuration separately from secrets.
+Cypress.on('window:before:load', (win) => {
+  const apiUrl = Cypress.expose('apiUrl');
+  if (apiUrl) {
+    Object.defineProperty(win, 'AMCUI_API', { value: apiUrl, writable: false });
+  }
+});
+
 // Alternatively you can use CommonJS syntax:
 // require('./commands')

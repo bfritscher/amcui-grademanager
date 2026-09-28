@@ -2,13 +2,14 @@
 import { ref, watch, nextTick, computed, useAttrs } from 'vue';
 import {
   LexicalComposer,
-  LexicalContentEditable,
-  LexicalAutoFocusPlugin,
-  LexicalHistoryPlugin,
-  LexicalListPlugin,
-  LexicalRichTextPlugin,
-  LexicalTabIndentationPlugin,
-  LexicalTablePlugin
+  type InitialConfigType,
+  ContentEditable,
+  AutoFocusPlugin,
+  HistoryPlugin,
+  ListPlugin,
+  RichTextPlugin,
+  TabIndentationPlugin,
+  TablePlugin
 } from 'lexical-vue';
 
 import PlaygroundEditorTheme from './themes/EditorTheme';
@@ -34,7 +35,7 @@ import {
 } from 'lexical';
 import RemoteContentPlugin from './plugins/RemoteContentPlugin.vue';
 
-import type { LexicalEditor, CreateEditorArgs } from 'lexical';
+import type { LexicalEditor } from 'lexical';
 import { $generateNodesFromDOM } from '@lexical/html';
 import {
   WIDTH_DATA_ATTRIBUTE,
@@ -161,11 +162,13 @@ watch(
   }
 );
 
-const config: CreateEditorArgs = {
+const config: InitialConfigType = {
+  namespace: 'amcui',
+  onError,
   theme: PlaygroundEditorTheme,
   nodes: [...PlaygroundNodes],
   editable: true,
-  editorState: setFromHTML as any
+  editorState: setFromHTML
 };
 
 function onError(error: Error) {
@@ -361,25 +364,25 @@ const oulinedClass = computed(() => {
                 <TreeViewPlugin />
               </div>
               <div v-show="!showDebug">
-                <LexicalRichTextPlugin>
+                <RichTextPlugin>
                   <template #contentEditable>
                     <div class="editor-scroller">
                       <div ref="editorRef" class="editor">
-                        <LexicalContentEditable class="ContentEditable__root" />
+                        <ContentEditable class="ContentEditable__root" />
                       </div>
                     </div>
                   </template>
                   <template #placeholder>
                     <div class="editor-placeholder">Enter some text...</div>
                   </template>
-                </LexicalRichTextPlugin>
+                </RichTextPlugin>
               </div>
-              <LexicalHistoryPlugin />
-              <LexicalTabIndentationPlugin />
-              <LexicalAutoFocusPlugin />
+              <HistoryPlugin />
+              <TabIndentationPlugin />
+              <AutoFocusPlugin />
               <CodeHighlightPlugin />
-              <LexicalListPlugin />
-              <LexicalTablePlugin />
+              <ListPlugin />
+              <TablePlugin />
               <ListMaxIndentLevelPlugin :max-depth="3" />
               <DraggableBlockPlugin v-if="editorRef" :anchor-elem="editorRef" />
               <TableActionMenuPlugin v-if="editorRef" :anchor-elem="editorRef" />

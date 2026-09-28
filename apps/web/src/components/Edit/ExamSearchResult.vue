@@ -3,12 +3,12 @@
     <div v-if="searchResults.length > 0" class="search-result">
       <div v-for="(r, index) in searchResults" :key="index">
         <div v-for="(obj1, s) in r.chain" :key="s">
-          <b>{{ examService.exam.sections[s].number }} {{ examService.exam.sections[s].title }}</b>
+          <b>{{ examService.exam.sections[Number(s)].number }} {{ examService.exam.sections[Number(s)].title }}</b>
           <span v-if="obj1.title"
             ><b>: </b
             ><router-link
               class="text-primary"
-              :to="examService.linkToQuestion(examService.exam.sections[s])"
+              :to="examService.linkToQuestion(examService.exam.sections[Number(s)])"
               >{{ highlightSearch(obj1.title) }}</router-link
             ></span
           >
@@ -16,20 +16,20 @@
             ><b>: </b
             ><router-link
               class="text-primary"
-              :to="examService.linkToQuestion(examService.exam.sections[s])"
+              :to="examService.linkToQuestion(examService.exam.sections[Number(s)])"
               >{{ highlightSearch(obj1.content) }}</router-link
             ></span
           >
           <span v-for="(obj2, q) in obj1.questions" :key="q">
-            <b>> Question {{ examService.exam.sections[s].questions[q].number }}</b>
+            <b>> Question {{ examService.exam.sections[Number(s)].questions[Number(q)].number }}</b>
             <span v-if="obj2.content"
               ><b>: </b
               ><router-link
                 class="text-primary"
                 :to="
                   examService.linkToQuestion(
-                    examService.exam.sections[s],
-                    examService.exam.sections[s].questions[q]
+                    examService.exam.sections[Number(s)],
+                    examService.exam.sections[Number(s)].questions[Number(q)]
                   )
                 "
                 >{{ highlightSearch(obj2.content) }}</router-link
@@ -41,8 +41,8 @@
                 class="text-primary"
                 :to="
                   examService.linkToQuestion(
-                    examService.exam.sections[s],
-                    examService.exam.sections[s].questions[q]
+                    examService.exam.sections[Number(s)],
+                    examService.exam.sections[Number(s)].questions[Number(q)]
                   )
                 "
                 >{{ highlightSearch(obj3.content) }}</router-link

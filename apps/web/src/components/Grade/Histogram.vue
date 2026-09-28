@@ -43,11 +43,11 @@ export default defineComponent({
       const layout = {
         bargroupgap: 0.1,
         xaxis: {
-          title: 'Points',
+          title: { text: 'Points' },
           fixedrange: true,
           range: [options.min, options.max]
         },
-        yaxis: { title: 'Count', fixedrange: true },
+        yaxis: { title: { text: 'Count' }, fixedrange: true },
         margin: {
           t: 40,
           b: 40,

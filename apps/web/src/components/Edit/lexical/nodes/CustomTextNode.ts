@@ -1,5 +1,6 @@
 import {
   TextNode,
+  $applyNodeReplacement,
   $isTextNode,
   type DOMConversionMap,
   type DOMConversionOutput,
@@ -29,7 +30,7 @@ export class CustomTextNode extends TextNode {
   }
 
   static importDOM(): DOMConversionMap | null {
-    const parent = super.importDOM();
+    const parent = super.importDOM?.();
     if (!parent) {
       return null;
     }
@@ -45,7 +46,7 @@ export class CustomTextNode extends TextNode {
   }
 
   static importJSON(serializedNode: SerializedCustomTextNode): CustomTextNode {
-    return super.importJSON(serializedNode);
+    return $applyNodeReplacement(new CustomTextNode('')).updateFromJSON(serializedNode);
   }
 
   exportJSON(): SerializedCustomTextNode {

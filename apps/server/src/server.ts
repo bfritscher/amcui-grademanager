@@ -21,9 +21,9 @@ import multer from 'multer';
 import tmp from 'tmp';
 import childProcess from 'child_process';
 import {simpleGit} from 'simple-git';
-import archiver from 'archiver';
+import {ZipArchive} from 'archiver';
 import slug from 'slug';
-import { imageSize as sizeOf } from 'image-size';
+import { imageSizeFromFile } from 'image-size/fromFile';
 import {fileURLToPath} from 'url';
 import {dirname} from 'path';
 import {authenticator} from 'otplib';
@@ -1047,7 +1047,7 @@ app.get('/profile/addFido2', async (req, res) => {
     .attestationOptions()
     .then((regOptions: any) => {
       regOptions.user = {
-        id: base64buffer.encode(str2ab(user.username)),
+        id: base64buffer.encode(str2ab(user.username).buffer),
         name: user.username,
         displayName: user.username,
       };
@@ -1605,7 +1605,7 @@ app.get('/project/:project/zip', aclProject, async (req, res, next) => {
   await gitLocks.get(req.params.project);
   const snapshot = await documents.withDocument(req.params.project, doc => readExam(doc));
   const rendered = renderSnapshot(snapshot);
-  const zip = archiver('zip');
+  const zip = new ZipArchive();
   res.attachment(req.params.project + '.zip');
   const generated = {'data.json': rendered.json, 'source.tex': rendered.source, 'questions_definition.tex': rendered.questions_definition, 'questions_layout.tex': rendered.questions_layout};
   for (const [name, content] of Object.entries(generated)) zip.append(content, {name});
@@ -2010,7 +2010,7 @@ app.post('/project/:project/print', aclProject, async (req, res) => {
 });
 
 app.get('/project/:project/zip/pdf', aclProject, (req, res) => {
-  const zip = archiver('zip');
+  const zip = new ZipArchive();
   res.on('close', function () {
     return res.end();
   });
@@ -2272,13 +2272,13 @@ app.get(
         },
         (row) => {
           if (row) {
-            sizeOf(
+            imageSizeFromFile(
               PROJECTS_FOLDER +
                 '/' +
                 req.params.project +
                 '/cr/' +
-                row.layout_image,
-              function (_err, dimensions) {
+                row.layout_image
+            ).catch(() => undefined).then((dimensions) => {
                 row.ratiox = 1;
                 row.ratioy = 1;
                 if (dimensions && dimensions.width && dimensions.height) {
@@ -2288,8 +2288,7 @@ app.get(
                   row.height = dimensions.height;
                 }
                 res.json(row);
-              }
-            );
+              });
           } else {
             res.sendStatus(404);
           }
@@ -3014,7 +3013,7 @@ REPORT_ANONYMIZED_PDF       => 4,
 });
 
 app.get('/project/:project/zip/annotate', aclProject, (req, res) => {
-  const zip = archiver('zip');
+  const zip = new ZipArchive();
   res.on('close', function () {
     return res.end();
   });

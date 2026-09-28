@@ -48,7 +48,7 @@ const imgRef = ref(null);
 const examService = useExamStore();
 const $q = useQuasar();
 
-const { isSelected, setSelected, clearSelection } = useLexicalNodeSelection(props.nodeKey);
+const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(props.nodeKey);
 
 const $onDelete = (event: KeyboardEvent) => {
   if (isSelected.value && $isNodeSelection($getSelection())) {

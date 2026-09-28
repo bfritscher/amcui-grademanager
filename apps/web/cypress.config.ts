@@ -1,6 +1,9 @@
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
+  expose: {
+    apiUrl: process.env.AMCUI_E2E_API_URL,
+  },
   e2e: {
     specPattern: 'test/cypress/e2e/**/*.{cy,spec}.{js,jsx,ts,tsx}',
     baseUrl: 'http://localhost:4173',

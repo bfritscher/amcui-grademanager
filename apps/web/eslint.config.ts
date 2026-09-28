@@ -1,9 +1,7 @@
 import pluginVue from 'eslint-plugin-vue'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 import pluginVitest from '@vitest/eslint-plugin'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import pluginCypress from 'eslint-plugin-cypress/flat'
+import pluginCypress from 'eslint-plugin-cypress'
 import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
 
 // To allow more languages other than `ts` in `.vue` files, uncomment the following lines:
@@ -33,8 +31,8 @@ export default defineConfigWithVueTs(
   {
     ...pluginCypress.configs.recommended,
     files: [
-      'cypress/e2e/**/*.{cy,spec}.{js,ts,jsx,tsx}',
-      'cypress/support/**/*.{js,ts,jsx,tsx}'
+      'test/cypress/e2e/**/*.{cy,spec}.{js,ts,jsx,tsx}',
+      'test/cypress/support/**/*.{js,ts,jsx,tsx}'
     ],
   },
   skipFormatting,

@@ -1,10 +1,11 @@
 import {it, expect, vi} from 'vitest';
 import nativeFs from 'node:fs';
+import {syncBuiltinESMExports} from 'node:module';
 import fs from 'fs-extra';
 import path from 'node:path';
 import os from 'node:os';
 import AdmZip from 'adm-zip';
-import archiver from 'archiver';
+import {ZipArchive} from 'archiver';
 import {Writable} from 'node:stream';
 import * as Y from 'yjs';
 import {
@@ -23,7 +24,7 @@ it('finishes streaming a readable archive', async () => {
       callback();
     },
   });
-  const zip = archiver('zip');
+  const zip = new ZipArchive();
   zip.append('exam contents', {name: 'data.json'});
   await streamArchive(zip, output);
   expect(output.writableFinished).toBe(true);
@@ -33,7 +34,7 @@ it('finishes streaming a readable archive', async () => {
 it('rejects a file disappearing during glob traversal instead of leaving a download open', async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'amcui-archive-missing-'));
   const output = new Writable({write(_chunk, _encoding, callback) {callback();}});
-  const zip = archiver('zip');
+  const zip = new ZipArchive();
   const vanished = path.join(root, 'index.lock');
   await fs.writeFile(vanished, 'temporary Git state');
   const originalLstat = nativeFs.lstat;
@@ -43,6 +44,8 @@ it('rejects a file disappearing during glob traversal instead of leaving a downl
       nativeFs.unlinkSync(vanished);
     return Reflect.apply(originalLstat, nativeFs, args);
   });
+  // Archiver 8 imports fs functions as ESM bindings.
+  syncBuiltinESMExports();
   zip.glob('**/*', {cwd: root, dot: true});
   try {
     await expect(streamArchive(zip, output)).rejects.toMatchObject({code: 'ENOENT'});
@@ -50,6 +53,7 @@ it('rejects a file disappearing during glob traversal instead of leaving a downl
     expect(zip.destroyed).toBe(true);
   } finally {
     lstat.mockRestore();
+    syncBuiltinESMExports();
     zip.abort();
     output.destroy();
     await fs.remove(root);
@@ -62,7 +66,7 @@ it('stops the archive when the download destination disconnects', async () => {
       callback(new Error('Client disconnected'));
     },
   });
-  const zip = archiver('zip');
+  const zip = new ZipArchive();
   zip.append('exam contents', {name: 'data.json'});
   await expect(streamArchive(zip, output)).rejects.toThrow('Client disconnected');
   expect(zip.destroyed).toBe(true);

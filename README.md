@@ -10,7 +10,7 @@ separately deployed service.
 | `apps/server` | Express, existing AMC workflows, live documents, OAuth and MCP |
 | `packages/exam-core` | Domain types, factories, validation, typed operations, migrations and LaTeX renderer |
 
-Use Node 20 or later and run commands from this directory:
+Use Node 24 LTS and run commands from this directory:
 
 ```sh
 npm ci --legacy-peer-deps

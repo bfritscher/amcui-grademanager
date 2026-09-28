@@ -25,7 +25,7 @@ const { nodeKey } = props;
 
 const editor = useLexicalComposer();
 
-const { isSelected, setSelected, clearSelection } = useLexicalNodeSelection(props.nodeKey);
+const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(props.nodeKey);
 
 const $onDelete = (event: KeyboardEvent) => {
   if (isSelected.value && $isNodeSelection($getSelection())) {
