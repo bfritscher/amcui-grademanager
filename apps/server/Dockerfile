@@ -1,11 +1,14 @@
-FROM node:20-bookworm
+FROM node:24-trixie
 LABEL org.opencontainers.image.source=https://github.com/bfritscher/amcui-grademanager
 RUN apt-get update && apt-get install -y \
     auto-multiple-choice \
     graphicsmagick \
     ghostscript \
     && rm -rf /var/lib/apt/lists/*
-RUN sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
+RUN policy_file=$(find /etc -path '*ImageMagick*/policy.xml' 2>/dev/null | head -n1); \
+    if [ -n "$policy_file" ] && grep -q 'disable ghostscript format types' "$policy_file"; then \
+        sed -i '/disable ghostscript format types/,+6d' "$policy_file"; \
+    fi
 RUN git config --global user.email "root@amcui.ig.he-arc.ch"
 RUN git config --global user.name "GradeManager (AMCUI)"
 RUN mkdir -p /amc

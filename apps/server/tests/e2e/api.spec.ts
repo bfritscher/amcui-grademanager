@@ -5,21 +5,57 @@ import * as previewJSON from './fixtures/preview.json';
 import AdmZip from 'adm-zip';
 import pdf from 'pdf-page-counter';
 import {io, Socket} from 'socket.io-client';
-import fs from 'fs';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-//const ENDPONIT_API_URL = 'https://amcui.ig.he-arc.ch';
+//const ENDPONIT_API_URL = 'https://amcui.ig.he-arc.ch/api';
 const ENDPONIT_API_URL = 'http://localhost:9001';
 const PROJECT_NAME = 'ci-api-test';
-const TEST_USER = 'admin';
-const TEST_PASSWORD = 'admin';
+const TEST_USER = 'e2-test-user';
+const TEST_PASSWORD = 'e2-test-user';
 
 const api = request(ENDPONIT_API_URL);
 let token: string;
 let socket: Socket;
 
 const studentCsv = 'id,name\n101,Alice\n102,Bob\n';
+
+// Register before starting the request so fast jobs cannot finish unnoticed.
+async function runAmcJob(
+  event: 'log' | 'print' | 'annotate',
+  matches: (message: any) => boolean,
+  start: () => PromiseLike<unknown>,
+): Promise<any> {
+  let cleanup = () => {};
+  const completed = new Promise<any>((resolve, reject) => {
+    let output = '';
+    const timer = setTimeout(() => reject(new Error(`Timed out waiting for ${event}\n${output}`)), 30000);
+    const onLog = (message: any) => {
+      if (message.data) output = (output + message.data + '\n').slice(-8000);
+      if (message.action === 'end' && message.code !== undefined && message.code !== 0)
+        reject(new Error(`${message.msg} exited with ${message.code}\n${output}`));
+    };
+    const onEnd = (message: any) => {
+      if (message.action === 'end' && matches(message)) resolve(message);
+    };
+    const onDisconnect = (reason: string) => reject(new Error(`Socket disconnected: ${reason}`));
+    socket.on('log', onLog);
+    socket.on(event, onEnd);
+    socket.on('disconnect', onDisconnect);
+    cleanup = () => {
+      clearTimeout(timer);
+      socket.off('log', onLog);
+      socket.off(event, onEnd);
+      socket.off('disconnect', onDisconnect);
+    };
+  });
+  try {
+    const [, message] = await Promise.all([Promise.resolve().then(start), completed]);
+    return message;
+  } finally {
+    cleanup();
+  }
+}
 
 describe('Login', () => {
   it('should respond', async () => {
@@ -39,11 +75,6 @@ describe('Login', () => {
       .send({username: TEST_USER, password: TEST_PASSWORD})
       .expect(200);
     token = res.body.token;
-    socket = io(ENDPONIT_API_URL + "/", {auth: {token: `Bearer ${token}`}});
-    socket.on('connect_error', (err) => {
-      console.log('connect_error', err);
-    });
-    socket.emit('listen', PROJECT_NAME);
   });
 
   it('should not change password if password wrong', async () => {
@@ -116,6 +147,20 @@ describe('Project', () => {
           ])
         );
       });
+    // Subscribe only after project creation and its permissions are confirmed.
+    socket = io(ENDPONIT_API_URL + '/', {
+      auth: {token: `Bearer ${token}`},
+      autoConnect: false,
+    });
+    await new Promise<void>((resolve, reject) => {
+      socket.once('connect_error', reject);
+      socket.once('connect', () => {
+        socket.off('connect_error', reject);
+        socket.emit('listen', PROJECT_NAME);
+        resolve();
+      });
+      socket.connect();
+    });
   });
 
   // TODO: test auto-match
@@ -155,17 +200,13 @@ describe('Project', () => {
       });
   });
 
-  it('should set project options', (done) => {
-    api
+  it('should set project options', async () => {
+    await api
       .post(`/project/${PROJECT_NAME}/options`)
       .send({options})
       .set('Accept', 'application/json')
       .set('Authorization', `Bearer ${token}`)
-      .expect(200)
-      .end(() => {
-        // wait for git init to be done
-        setTimeout(done, 2000);
-      });
+      .expect(200);
   });
 
   it('should get project options', async () => {
@@ -389,120 +430,42 @@ describe('Project AMC Edit', () => {
       });
   });
 
-  it('can generate a preview file', (done) => {
-    function listener(log: any) {
-      if (log.action === 'end' && log.msg === 'preview') {
-        socket.off('log', listener);
-        api
-          .get(`/project/${PROJECT_NAME}/static/out/out.pdf`)
-          .set('Authorization', `Bearer ${token}`)
-          .responseType('blob')
-          .expect(200)
-          .expect(async (res) => {
-            try {
-              const data = await pdf(res.body);
-              expect(data.numpages).toBe(6);
-              done();
-            } catch (e) {
-              done(e);
-            }
-          })
-          .end((err) => {
-            if (err) {
-              done(err);
-            }
-          });
-      }
-    }
-    socket.on('log', listener);
-    api
-      .post(`/project/${PROJECT_NAME}/upload/graphics`) //TODO fix url?/
+  it('can generate a preview file', async () => {
+    await api
+      .post(`/project/${PROJECT_NAME}/upload/graphics`)
       .set('Authorization', `Bearer ${token}`)
       .attach('file', './tests/e2e/fixtures/test.pdf')
       .field({id: 'gaff4f316-f5bc-4981-bd27-f81c53072d69'})
-      .expect(200)
-      .end((err) => {
-        if (err) {
-          done(err);
-        }
-        api
-          .post(`/project/${PROJECT_NAME}/preview`)
-          .set('Content-Type', 'application/json')
-          .set('Authorization', `Bearer ${token}`)
-          .send(previewJSON)
-          .expect(200)
-          .end((err) => {
-            if (err) {
-              done(err);
-            }
-            // fix if socket listen is not working
-            setTimeout(() => {
-              listener({
-                action: "end",
-                msg: "preview"
-              });
-            }, 10000);
-          });
-      });
-  }, 20000);
+      .expect(200);
+    await runAmcJob('log', (log) => log.msg === 'preview', () =>
+      api.post(`/project/${PROJECT_NAME}/preview`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(previewJSON)
+        .expect(200),
+    );
+    const res = await api
+      .get(`/project/${PROJECT_NAME}/static/out/out.pdf`)
+      .set('Authorization', `Bearer ${token}`)
+      .responseType('blob')
+      .expect(200);
+    expect((await pdf(res.body)).numpages).toBe(6);
+  }, 35000);
 
-  it('can generate a print', (done) => {
-    function listener(log: any) {
-      if (log.action === 'end') {
-        socket.off('print', listener);
-        api
-          .get(`/project/${PROJECT_NAME}/static/pdf/${log.pdfs[0]}`)
-          .set('Authorization', `Bearer ${token}`)
-          .responseType('blob')
-          .expect(200)
-          .expect(async (res) => {
-            try {
-              fs.writeFileSync('./tests/e2e/fixtures/scan.pdf', res.body);
-              const data = await pdf(res.body);
-              expect(data.numpages).toBe(6);
-              done();
-            } catch (e) {
-              done(e);
-            }
-          })
-          .end((err) => {
-            if (err) {
-              done(err);
-            }
-          });
-      }
-    }
-    socket.on('print', listener);
-    api
-      .post(`/project/${PROJECT_NAME}/upload/graphics`) //TODO fix url?/
+  it('can generate a print', async () => {
+    const log = await runAmcJob('print', () => true, () =>
+      api.post(`/project/${PROJECT_NAME}/print`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(previewJSON)
+        .expect(200),
+    );
+    expect(log.pdfs).toContain('sheet-0001.pdf');
+    const res = await api
+      .get(`/project/${PROJECT_NAME}/static/pdf/${log.pdfs[0]}`)
       .set('Authorization', `Bearer ${token}`)
-      .attach('file', './tests/e2e/fixtures/test.pdf')
-      .field({id: 'gaff4f316-f5bc-4981-bd27-f81c53072d69'})
-      .expect(200)
-      .end((err) => {
-        if (err) {
-          done(err);
-        }
-        api
-          .post(`/project/${PROJECT_NAME}/print`)
-          .set('Content-Type', 'application/json')
-          .set('Authorization', `Bearer ${token}`)
-          .send(previewJSON)
-          .expect(200)
-          .end((err) => {
-            if (err) {
-              done(err);
-            }
-            // fix if socket listen is not working
-            setTimeout(() => {
-              listener({
-                action: "end",
-                pdfs: ["sheet-0001.pdf"]
-              });
-            }, 10000);
-          });
-      });
-  }, 20000);
+      .responseType('blob')
+      .expect(200);
+    expect((await pdf(res.body)).numpages).toBe(6);
+  }, 35000);
 
   it('should get print as a zip', async () => {
     await api
@@ -578,7 +541,7 @@ describe('Project AMC Scan', () => {
         expect(res.body).toEqual(
           expect.objectContaining({
             layout_image: 'page-1-5.jpg',
-            src: '%PROJET/scans/scan_0001.tif',
+            src: expect.stringMatching(/^%PROJET\/scans\/(?:scan_0001|1_scan)\.tif$/),
           })
         );
       });
@@ -775,51 +738,21 @@ describe('Project AMC Grade', () => {
       .expect(200);
   });
 
-  it('can generate annotation single', (done) => {
-    function listener(log: any) {
-      if (log.action === 'end') {
-        socket.off('annotate', listener);
-        api
-          .get(`/project/${PROJECT_NAME}/static/${log.file}`)
-          .set('Authorization', `Bearer ${token}`)
-          .responseType('blob')
-          .expect(200)
-          .expect(async (res) => {
-            try {
-              fs.writeFileSync('./tests/e2e/fixtures/annotate.pdf', res.body);
-              const data = await pdf(res.body);
-              expect(data.numpages).toBe(1);
-              done();
-            } catch (e) {
-              done(e);
-            }
-          })
-          .end((err) => {
-            if (err) {
-              done(err);
-            }
-          });
-      }
-    }
-    socket.on('annotate', listener);
-    api
-      .post(`/project/${PROJECT_NAME}/annotate`)
+  it('can generate annotation single', async () => {
+    const log = await runAmcJob('annotate', () => true, () =>
+      api.post(`/project/${PROJECT_NAME}/annotate`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ids: [1]})
+        .expect(200),
+    );
+    expect(log.file).toBe('cr/corrections/pdf/101_Alice.pdf');
+    const res = await api
+      .get(`/project/${PROJECT_NAME}/static/${log.file}`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ids: [1]})
-      .expect(200)
-      .end((err) => {
-        if (err) {
-          done(err);
-        }
-                    // fix if socket listen is not working
-                    setTimeout(() => {
-                      listener({
-                        action: "end",
-                        file: "cr/corrections/pdf/101_Alice.pdf"
-                      });
-                    }, 10000);
-      });
-  }, 20000);
+      .responseType('blob')
+      .expect(200);
+    expect((await pdf(res.body)).numpages).toBe(1);
+  }, 35000);
 
   it('should get annotate as a zip', async () => {
     await api
@@ -849,6 +782,8 @@ describe('Project folder/files', () => {
       .get(`/project/${PROJECT_NAME}/zip`)
       .set('Authorization', `Bearer ${token}`)
       .responseType('blob')
+      // Abort the HTTP request before Jest's timeout so failures release sockets.
+      .timeout({deadline: 15000})
       .expect(200)
       .expect('Content-Type', /application\/zip/)
       .expect((res) => {
@@ -857,15 +792,15 @@ describe('Project folder/files', () => {
           .map((e) => e.entryName);
         expect(zipEntries).toEqual(
           expect.arrayContaining([
-            `${PROJECT_NAME}/options.xml`,
-            `${PROJECT_NAME}/students.csv`,
-            `${PROJECT_NAME}/data/association.sqlite`,
-            `${PROJECT_NAME}/data/capture.sqlite`,
-            `${PROJECT_NAME}/data/scoring.sqlite`,
+            'options.xml',
+            'students.csv',
+            'data/association.sqlite',
+            'data/capture.sqlite',
+            'data/scoring.sqlite',
           ])
         );
       });
-  }, 10000);
+  }, 20000);
 
   it('should get file', async () => {
     await api
@@ -926,7 +861,7 @@ describe('Project cleanup', () => {
 });
 
 afterAll(() => {
-  socket.disconnect();
+  socket?.disconnect();
 });
 // at end call /debug-exit to generate coverage report
 

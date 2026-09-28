@@ -9,6 +9,10 @@ import express from 'express';
 import request from 'supertest';
 import type {McpDependencies} from '../src/mcp/routes.js';
 import {StreamableHTTPClientTransport} from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import {ExamAssets} from '../src/exam/assets.js';
+import {renderSnapshot} from '../src/exam/previews.js';
+import {readExam} from '@amcui/exam-core';
+import {codeExample, examGuideUri, questionExample} from '../src/mcp/guide.js';
 
 function fixture() {
   const documents = new ExamDocuments(
@@ -102,6 +106,52 @@ it('exposes interoperable schemas and executes retry-safe edits through an MCP S
         })
       ).isError,
     ).toBe(true);
+  } finally {
+    await client.close();
+    await server.close();
+    await deps.documents.close();
+  }
+});
+it('exposes the editing guide and executes its inline and multiline code examples', async () => {
+  const {deps, auth} = fixture();
+  deps.assets = new ExamAssets('', async () => {}, async (data) => data);
+  const server = createExamMcp(deps, auth);
+  const [a, b] = InMemoryTransport.createLinkedPair();
+  const client = new Client({name: 'guide-test', version: '1'});
+  await server.connect(a);
+  await client.connect(b);
+  try {
+    expect(client.getInstructions()).toContain('exam_help');
+    const help = await client.callTool({name: 'exam_help', arguments: {}});
+    expect(help.isError).not.toBe(true);
+    const guide = (help.structuredContent as {guide: string}).guide;
+    expect((await client.listResources()).resources.some((r) => r.uri === examGuideUri)).toBe(true);
+    const resource = await client.readResource({uri: examGuideUri});
+    expect(resource.contents[0].text).toBe(guide);
+    const tools = await client.listTools();
+    const editSchema = tools.tools.find((t) => t.name === 'exam_apply_changes')!.inputSchema;
+    expect(JSON.stringify(editSchema)).toContain('inline monospace');
+
+    // Execute the JSON examples exactly as published, substituting real IDs.
+    const examples = [...guide.matchAll(/```json\n([\s\S]*?)\n```/g)].map((match) => JSON.parse(match[1]));
+    expect(examples).toEqual([questionExample, codeExample]);
+    const exam = (await client.callTool({name: 'exam_get', arguments: {projectId: 'exam'}})).structuredContent as any;
+    const createArgs = examples[0];
+    createArgs.projectId = 'exam';
+    createArgs.operations[0].sectionId = exam.sections[0].id;
+    const created = await client.callTool({name: 'exam_apply_changes', arguments: createArgs});
+    expect(created.isError).not.toBe(true);
+    const question = (created.structuredContent as any).questions[0];
+    expect(question.isValid).toBe(true);
+    const blockArgs = {...examples[1], projectId: 'exam', entityId: question.id};
+    const block = await client.callTool({name: 'code_block_upsert', arguments: blockArgs});
+    expect(block.isError).not.toBe(true);
+    const blockId = (block.structuredContent as any).id;
+    const rendered = await deps.documents.withDocument('exam', (doc) => renderSnapshot(readExam(doc)));
+    expect(rendered.questions_definition).toContain('\\texttt{x = 2}');
+    expect(rendered.questions_definition).toContain(`src/codes/${blockId}`);
+    expect(rendered.codes[blockId].content).toBe(codeExample.content);
+    expect(rendered.codes[blockId].mode).toBe('text/x-python');
   } finally {
     await client.close();
     await server.close();

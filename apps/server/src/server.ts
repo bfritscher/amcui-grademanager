@@ -33,7 +33,7 @@ import * as base64buffer from 'base64-arraybuffer';
 import {WebSocketServer} from 'ws';
 import fetch from 'node-fetch';
 import { readExam, replaceExam } from '@amcui/exam-core';
-import { importArchive } from './exam/archives.js';
+import { importArchive, streamArchive } from './exam/archives.js';
 
 import {URL} from 'url';
 import { LeveldbPersistence } from 'y-leveldb';
@@ -357,6 +357,16 @@ function database(
         res.status(500).end(JSON.stringify(err));
         return;
       }
+      // Release attached databases when the response ends, including disconnects.
+      // Open SQLite handles prevent project renames on Windows bind mounts.
+      const closeDatabase = () => db.close((error) => {
+        if (error) console.log(error);
+      });
+      if (res.destroyed) {
+        closeDatabase();
+        return;
+      }
+      res.once('close', closeDatabase);
       db.exec(
         "ATTACH DATABASE '" +
           PROJECTS_FOLDER +
@@ -1513,12 +1523,14 @@ flag as archive
 app.get('/project/:project/gitlogs', aclProject, async (req, res) => {
   // TODO? use cI when git version supports it
   try {
+    await gitLocks.get(req.params.project);
     const g = simpleGit(PROJECTS_FOLDER + '/' + req.params.project);
     const data = await g.raw([
       'log',
       '--walk-reflogs',
       '--pretty=format:%H%+gs%+an%+ci',
       '--unified=0',
+      '--',
       'data.json',
       'options.xml'
     ]);
@@ -1588,15 +1600,13 @@ async function performGitRevert(project: string, sha: string): Promise<void> {
 
 app.get('/project/:project/zip', aclProject, async (req, res, next) => {
   try {
+  // Annotation/printing announce completion before their Git commit finishes.
+  // Wait before traversing .git so temporary commit files have settled.
+  await gitLocks.get(req.params.project);
   const snapshot = await documents.withDocument(req.params.project, doc => readExam(doc));
   const rendered = renderSnapshot(snapshot);
   const zip = archiver('zip');
-  res.on('close', function () {
-    return res.end();
-  });
   res.attachment(req.params.project + '.zip');
-  zip.pipe(res);
-  zip.on('error', next);
   const generated = {'data.json': rendered.json, 'source.tex': rendered.source, 'questions_definition.tex': rendered.questions_definition, 'questions_layout.tex': rendered.questions_layout};
   for (const [name, content] of Object.entries(generated)) zip.append(content, {name});
   for (const [id, code] of Object.entries(rendered.codes)) {
@@ -1604,7 +1614,7 @@ app.get('/project/:project/zip', aclProject, async (req, res, next) => {
     zip.append(code.content, {name: `src/codes/${id}`});
   }
   zip.glob('**/*', {cwd: path.join(PROJECTS_FOLDER, req.params.project), dot: true, ignore: [...Object.keys(generated), 'src/codes/**']});
-  zip.finalize();
+  await streamArchive(zip, res);
   } catch (error) {next(error);}
 });
 
@@ -1901,6 +1911,8 @@ app.post('/project/:project/print', aclProject, async (req, res) => {
             '--prefix',
             PROJECT_FOLDER,
             '--latex-stdout',
+            '--data',
+            PROJECT_FOLDER + 'data',
           ],
           () => {
             //create capture and scoring db
@@ -2951,6 +2963,7 @@ app.post('/project/:project/annotate', aclProject, async (req, res) => {
               (err) => {
                 if (err) {
                   callback(undefined);
+                  return;
                 }
                 /*
                     type:
@@ -2967,7 +2980,10 @@ REPORT_ANONYMIZED_PDF       => 4,
                     if (rows && rows.length > 0) {
                       filename = 'cr/corrections/pdf/' + rows[0].file;
                     }
-                    callback(filename);
+                    db.close((error) => {
+                      if (error) console.log(error);
+                      callback(filename);
+                    });
                   }
                 );
               }

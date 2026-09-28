@@ -228,10 +228,12 @@ export class ExamPreviews {
     ).toString('base64');
   }
 }
-export function compilePreview(
+export async function compilePreview(
   folder: string,
   log: (chunk: string) => void,
 ): Promise<void> {
+  const dataFolder = path.join(folder, 'data');
+  await fs.ensureDir(dataFolder);
   return new Promise((resolve, reject) => {
     const child = spawn(
       'auto-multiple-choice',
@@ -249,6 +251,8 @@ export function compilePreview(
         '1',
         'source.tex',
         '--latex-stdout',
+        '--data',
+        dataFolder,
       ],
       {
         cwd: folder,
