@@ -3,7 +3,10 @@
     <div v-if="searchResults.length > 0" class="search-result">
       <div v-for="(r, index) in searchResults" :key="index">
         <div v-for="(obj1, s) in r.chain" :key="s">
-          <b>{{ examService.exam.sections[Number(s)].number }} {{ examService.exam.sections[Number(s)].title }}</b>
+          <b
+            >{{ examService.exam.sections[Number(s)].number }}
+            {{ examService.exam.sections[Number(s)].title }}</b
+          >
           <span v-if="obj1.title"
             ><b>: </b
             ><router-link

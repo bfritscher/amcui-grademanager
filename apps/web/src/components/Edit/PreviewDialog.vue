@@ -12,7 +12,8 @@
         </div>
         <div class="q-mt-sm">
           Your exam contains special Unicode characters (emojis, card suits, etc.) that cannot be
-          rendered in LaTeX PDF. These appear as <span class="text-red">[unsupported character]</span> in the generated PDF.
+          rendered in LaTeX PDF. These appear as
+          <span class="text-red">[unsupported character]</span> in the generated PDF.
         </div>
       </q-card-section>
       <q-card-section

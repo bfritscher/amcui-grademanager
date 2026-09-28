@@ -120,7 +120,7 @@ Another Question?
 });
 </script>
 <style>
-.custom-height.q-textarea.q-field--labeled .q-field__native  {
+.custom-height.q-textarea.q-field--labeled .q-field__native {
   min-height: 200px;
 }
 </style>

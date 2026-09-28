@@ -43,9 +43,7 @@
       :disable="isNone"
       @click="openScoringDialog"
     >
-    <q-tooltip>
-      Custom Score
-    </q-tooltip>
+      <q-tooltip> Custom Score </q-tooltip>
     </q-btn>
     <q-btn
       color="negative"

@@ -42,9 +42,20 @@ export interface GitLog {
   username: string;
   diff: string;
 }
-export type { Exam, Section, Question, Answer, Graphics, Code, PartialAnswer, PartialQuestion } from '@amcui/exam-core';
+export type {
+  Exam,
+  Section,
+  Question,
+  Answer,
+  Graphics,
+  Code,
+  PartialAnswer,
+  PartialQuestion
+} from '@amcui/exam-core';
 import type { Graphics } from '@amcui/exam-core';
-export interface UsedGraphics extends Graphics { used: boolean; }
+export interface UsedGraphics extends Graphics {
+  used: boolean;
+}
 
 export interface ExamData {
   questions_definition: string;

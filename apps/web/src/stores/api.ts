@@ -521,30 +521,35 @@ export const useApiStore = defineStore('api', () => {
     preview(data: ExamData, setReplaceUnicodeErrorWithText: boolean = false) {
       replaceUnicodeErrorWithText.value = setReplaceUnicodeErrorWithText;
       if (setReplaceUnicodeErrorWithText) {
-            // Add Unicode suppression commands to the LaTeX preamble
-            const unicodeSuppressionCommands = `
+        // Add Unicode suppression commands to the LaTeX preamble
+        const unicodeSuppressionCommands = `
 % Unicode error suppression - replaces unsupported characters with red markers
 \\makeatletter
 \\def\\UTFviii@undefined@err#1{{\\color{red}[unsupported character]}}
 \\makeatother
 `;
 
-            // Create new data with suppression commands prepended to source
-            data = {
-              ...data,
-              source: unicodeSuppressionCommands + (data.source || '')
-            };
+        // Create new data with suppression commands prepended to source
+        data = {
+          ...data,
+          source: unicodeSuppressionCommands + (data.source || '')
+        };
       }
-      return $http.value.post(API_URL.value + '/project/' + project.value + '/preview', setReplaceUnicodeErrorWithText ? data : {}).then(()=> {
-                if (logs.value.preview && logs.value.preview.log) {
-          if(/ERR(?::|>).*Unicode character/i.test(logs.value.preview.log)) {
-            console.log('Unicode character error detected in preview log');
-            if (!setReplaceUnicodeErrorWithText) {
-              this.preview(data, true); // Retry with suppression
+      return $http.value
+        .post(
+          API_URL.value + '/project/' + project.value + '/preview',
+          setReplaceUnicodeErrorWithText ? data : {}
+        )
+        .then(() => {
+          if (logs.value.preview && logs.value.preview.log) {
+            if (/ERR(?::|>).*Unicode character/i.test(logs.value.preview.log)) {
+              console.log('Unicode character error detected in preview log');
+              if (!setReplaceUnicodeErrorWithText) {
+                this.preview(data, true); // Retry with suppression
+              }
             }
           }
-        }
-      })
+        });
     },
     print(data: ExamData) {
       return $http.value

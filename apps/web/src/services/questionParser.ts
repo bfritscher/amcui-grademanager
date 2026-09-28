@@ -53,9 +53,7 @@ export function parseQuestions(text: string): PartialQuestion[] {
 
     // Check for answer indicators (both English and French, case insensitive)
     // Matches "Bonnes réponses : A, B, D" or "Answer: B" or "Réponse: 2", etc.
-    const answerIndicator = line.match(
-      /^.*?(?:answer|r[ée]ponses?).*:\s*(.+)$/i
-    );
+    const answerIndicator = line.match(/^.*?(?:answer|r[ée]ponses?).*:\s*(.+)$/i);
     if (answerIndicator && currentQuestion && currentQuestion.answers) {
       // Extract the answer part (e.g., "A, B, D" or "A et C" or "B" or "2")
       const answerText = answerIndicator[1].trim();
@@ -63,8 +61,8 @@ export function parseQuestions(text: string): PartialQuestion[] {
       // Split by commas and/or 'et'/'and' to extract all answers
       const answerParts = answerText
         .split(/(?:,|\s+et\s+|\s+and\s+)/i)
-        .map(part => part.trim())
-        .filter(part => part.length > 0);
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0);
       // Reset all answers to incorrect first
       currentQuestion.answers.forEach((a) => (a.correct = false));
 
@@ -89,7 +87,7 @@ export function parseQuestions(text: string): PartialQuestion[] {
       }
 
       // Update question type to MULTIPLE if more than one answer is marked as correct
-      const correctCount = currentQuestion.answers.filter(a => a.correct).length;
+      const correctCount = currentQuestion.answers.filter((a) => a.correct).length;
       if (correctCount > 1) {
         currentQuestion.type = 'MULTIPLE';
       }

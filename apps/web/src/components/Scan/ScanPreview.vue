@@ -130,7 +130,7 @@
     <div
       v-if="apiQueueLength > 2"
       class="absolute absolute-top-right text-caption text-orange q-mt-xl q-mr-md"
-      style="top: 40px; right: 0;"
+      style="top: 40px; right: 0"
     >
       <q-spinner-dots size="1.5em" class="q-mr-xs" /> Syncing {{ apiQueueLength }} changes...
     </div>
@@ -167,24 +167,26 @@ function debouncedLoadScores() {
 
 function queueApiCall(task: () => Promise<any>, retries = 5) {
   apiQueueLength.value++;
-  apiQueue = apiQueue.then(async () => {
-    for (let i = 0; i <= retries; i++) {
-      try {
-        await task();
-        // Small delay between successful requests
-        await new Promise(resolve => setTimeout(resolve, 100));
-        return; // Success, exit retry loop
-      } catch (err) {
-        console.error(`API call failed (attempt ${i + 1}):`, err);
-        if (i < retries) {
-          // Longer delay before retrying
-          await new Promise(resolve => setTimeout(resolve, 2000));
+  apiQueue = apiQueue
+    .then(async () => {
+      for (let i = 0; i <= retries; i++) {
+        try {
+          await task();
+          // Small delay between successful requests
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          return; // Success, exit retry loop
+        } catch (err) {
+          console.error(`API call failed (attempt ${i + 1}):`, err);
+          if (i < retries) {
+            // Longer delay before retrying
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          }
         }
       }
-    }
-  }).finally(() => {
-    apiQueueLength.value--;
-  });
+    })
+    .finally(() => {
+      apiQueueLength.value--;
+    });
 }
 
 const page = ref<PageCapture | undefined>();
@@ -255,7 +257,8 @@ const boxWhys = computed(() => {
   const whysOfPage = Object.entries(gradeService.grade.whys).filter(([key, value]) => {
     const [student, copy, question] = key.split(':');
     return (
-      value && filter.includes(value) &&
+      value &&
+      filter.includes(value) &&
       copy === route.params.copy &&
       student === route.params.student &&
       questionsIds.includes(question)
@@ -356,35 +359,39 @@ function toggle(zone: Zone) {
   } else {
     zone.manual = zone.black >= parseFloat(API.options.options.seuil) * zone.total ? 0 : 1;
   }
-  queueApiCall(() => API.setZoneManual(route.params.project as string, {
-    student: parseInt(route.params.student as string, 10),
-    page: parseInt(route.params.page as string, 10),
-    copy: parseInt(route.params.copy as string, 10),
-    manual: zone.manual,
-    type: 4,
-    id_a: zone.question,
-    id_b: zone.answer
-  }).then(() => {
-    if (page.value) {
-      page.value.timestamp_manual = Date.now();
-    }
-    debouncedLoadScores();
-  }));
+  queueApiCall(() =>
+    API.setZoneManual(route.params.project as string, {
+      student: parseInt(route.params.student as string, 10),
+      page: parseInt(route.params.page as string, 10),
+      copy: parseInt(route.params.copy as string, 10),
+      manual: zone.manual,
+      type: 4,
+      id_a: zone.question,
+      id_b: zone.answer
+    }).then(() => {
+      if (page.value) {
+        page.value.timestamp_manual = Date.now();
+      }
+      debouncedLoadScores();
+    })
+  );
 }
 
 function clear() {
   zones.value.forEach((z) => {
     z.manual = -1;
   });
-  queueApiCall(() => API.setPageAuto(route.params.project as string, {
-    student: parseInt(route.params.student as string, 10),
-    page: parseInt(route.params.page as string, 10),
-    copy: parseInt(route.params.copy as string, 10)
-  }).then(() => {
-    if (page.value) {
-      page.value.timestamp_manual = 0;
-    }
-    debouncedLoadScores();
-  }));
+  queueApiCall(() =>
+    API.setPageAuto(route.params.project as string, {
+      student: parseInt(route.params.student as string, 10),
+      page: parseInt(route.params.page as string, 10),
+      copy: parseInt(route.params.copy as string, 10)
+    }).then(() => {
+      if (page.value) {
+        page.value.timestamp_manual = 0;
+      }
+      debouncedLoadScores();
+    })
+  );
 }
 </script>

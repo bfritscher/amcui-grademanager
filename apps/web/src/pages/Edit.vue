@@ -85,25 +85,21 @@
           editor.previewWait
             ? 'wait'
             : API.logs.preview?.code == 0
-              ? ( API.replaceUnicodeErrorWithText ? 'Preview (Unicode errors replaced)' : 'Preview')
+              ? API.replaceUnicodeErrorWithText
+                ? 'Preview (Unicode errors replaced)'
+                : 'Preview'
               : API.logs.preview?.code > 0
                 ? 'error'
                 : 'compiling'
         }}</q-btn
       >
-      <q-btn
-        aria-label="Export"
-        color="primary"
-        flat
-        class="gt-xs"
-        label="Export"
-      >
+      <q-btn aria-label="Export" color="primary" flat class="gt-xs" label="Export">
         <q-menu>
           <q-list dense>
-            <q-item clickable v-close-popup @click="examService.toMoodleQuiz()">
+            <q-item v-close-popup clickable @click="examService.toMoodleQuiz()">
               <q-item-section>Export Moodle quiz.xml</q-item-section>
             </q-item>
-            <q-item clickable v-close-popup @click="examService.toImportText()">
+            <q-item v-close-popup clickable @click="examService.toImportText()">
               <q-item-section>Export as text</q-item-section>
             </q-item>
           </q-list>

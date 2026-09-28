@@ -1,6 +1,9 @@
 <template>
   <q-page padding class="history">
-    <div class="row"><h2 class="text-h4">History</h2> <q-checkbox v-model="showDiff" label="show Diff" /></div>
+    <div class="row">
+      <h2 class="text-h4">History</h2>
+      <q-checkbox v-model="showDiff" label="show Diff" />
+    </div>
     <q-timeline>
       <q-timeline-entry v-for="(c, index) in logs" :key="index" class="q-pa-none">
         <q-skeleton v-if="isLoading" type="text" width="300px" />

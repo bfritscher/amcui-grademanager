@@ -46,7 +46,9 @@ export default function examToImportText() {
 
 function questionToImportText(questionNumber: number, question: Question): string {
   const questionText = cleanText(question.content) || 'Question';
-  const answers = question.answers.map((answer, index) => `${index + 1}) ${cleanText(answer.content)}`);
+  const answers = question.answers.map(
+    (answer, index) => `${index + 1}) ${cleanText(answer.content)}`
+  );
   const correctAnswers = question.answers
     .map((answer, index) => (answer.correct ? String(index + 1) : ''))
     .filter(Boolean)
