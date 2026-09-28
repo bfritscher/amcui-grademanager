@@ -62,7 +62,8 @@
     "vue-router": "4.5.0",
     "vuedraggable": "4.1.0",
     "y-websocket": "2.1.0",
-    "yjs": "13.6.23"
+    "yjs": "13.6.23",
+    "@amcui/exam-core": "1.0.0"
   },
   "devDependencies": {
     "@pinia/testing": "1.0.0",
@@ -99,28 +100,5 @@
     "vite-plugin-vue-devtools": "7.7.2",
     "vitest": "3.0.6",
     "vue-tsc": "2.2.2"
-  },
-  "overrides": {
-    "lexical-vue": {
-      "lexical": "$lexical",
-      "@lexical/clipboard": "$lexical",
-      "@lexical/code": "$lexical",
-      "@lexical/dragon": "$lexical",
-      "@lexical/hashtag": "$lexical",
-      "@lexical/history": "$lexical",
-      "@lexical/html": "$lexical",
-      "@lexical/link": "$lexical",
-      "@lexical/list": "$lexical",
-      "@lexical/mark": "$lexical",
-      "@lexical/markdown": "$lexical",
-      "@lexical/overflow": "$lexical",
-      "@lexical/plain-text": "$lexical",
-      "@lexical/rich-text": "$lexical",
-      "@lexical/selection": "$lexical",
-      "@lexical/table": "$lexical",
-      "@lexical/text": "$lexical",
-      "@lexical/utils": "$lexical",
-      "@lexical/yjs": "$lexical"
-    }
   }
 }

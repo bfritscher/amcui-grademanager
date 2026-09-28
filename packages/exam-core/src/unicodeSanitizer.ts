@@ -39,7 +39,7 @@ export const UNICODE_REPLACEMENTS: UnicodeReplacement[] = [
   // Quotes
   { char: '\u201C', replacement: "''", description: 'Left double quotation mark' },
   { char: '\u201D', replacement: "''", description: 'Right double quotation mark' },
-  { char: '\u2018', replacement: "`", description: 'Left single quotation mark' },
+  { char: '\u2018', replacement: '`', description: 'Left single quotation mark' },
   { char: '\u2019', replacement: "'", description: 'Right single quotation mark' },
 
   // Dashes
@@ -63,5 +63,3 @@ export function sanitizeUnicode(text: string): string {
 
   return sanitized;
 }
-
-

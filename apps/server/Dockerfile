@@ -1,5 +1,5 @@
 FROM node:20-bookworm
-LABEL org.opencontainers.image.source=https://github.com/bfritscher/amcui-server
+LABEL org.opencontainers.image.source=https://github.com/bfritscher/amcui-grademanager
 RUN apt-get update && apt-get install -y \
     auto-multiple-choice \
     graphicsmagick \
@@ -11,16 +11,22 @@ RUN git config --global user.name "GradeManager (AMCUI)"
 RUN mkdir -p /amc
 WORKDIR /amc
 
-COPY package.json /amc/package.json
-RUN npm install
+COPY package.json ./
+COPY apps/web/package.json apps/web/package.json
+COPY apps/server/package.json apps/server/package.json
+COPY packages/exam-core/package.json packages/exam-core/package.json
+RUN npm install --workspace=amcui-server --workspace=@amcui/exam-core --include-workspace-root --legacy-peer-deps
 
 ARG COMMIT_SHA=""
 ENV COMMIT_SHA=${COMMIT_SHA}
-COPY . /amc/
-RUN node --version && npm run build
+COPY packages/exam-core packages/exam-core
+COPY apps/server apps/server
+ENV AMCUI_PROJECTS_DIR=/amc/projects
+ENV AMCUI_TEMPLATES_DIR=/amc/templates
+RUN npm run build:core && npm run build --workspace=amcui-server
 
 VOLUME ["/amc/projects"]
 VOLUME ["/amc/templates"]
 
 # Define default command.
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "start", "--workspace=amcui-server"]

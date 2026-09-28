@@ -6,6 +6,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/layouts/MainLayout.vue'),
     children: [
       {
+        name: 'McpAuthorize',
+        path: 'mcp/authorize',
+        component: () => import('@/pages/McpAuthorize.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
         name: 'Home',
         path: '',
         component: () => import('@/pages/Home.vue'),

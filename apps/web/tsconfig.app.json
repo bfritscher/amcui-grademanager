@@ -11,7 +11,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "plotly.js-cartesian-dist-min": [
-        "./node_modules/@types/plotly.js"
+        "../../node_modules/@types/plotly.js"
       ]
     }
   }

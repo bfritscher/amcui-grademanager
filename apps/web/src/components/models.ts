@@ -42,91 +42,9 @@ export interface GitLog {
   username: string;
   diff: string;
 }
-export interface Exam {
-  sections: Section[];
-  properties: {
-    [key: string]: string;
-  };
-  source: string;
-  codes: {
-    [key: string]: Code;
-  };
-  graphics: {
-    [key: string]: Graphics;
-  };
-}
-
-export interface Section {
-  id: string;
-  title: string;
-  content: string;
-  level: number;
-  isNumbered: boolean;
-  isSectionTitleVisibleOnAMC: boolean;
-  shuffle: boolean;
-  columns: number;
-  pageBreakBefore: boolean;
-  questions: Question[];
-  number?: string;
-  order?: number;
-}
-
-export interface Question {
-  id: string;
-  content: string;
-  type: string;
-  layout: string;
-  ordered: boolean;
-  scoring: string;
-  points: number;
-  dots: boolean;
-  lines: number;
-  columns: number;
-  boxedAnswers: boolean;
-  lineup: boolean;
-  answers: Answer[];
-  answer?: string;
-  number?: number;
-  isValid?: boolean;
-  section?: string;
-  order?: number;
-}
-
-export type PartialAnswer = Partial<Answer>;
-
-export type PartialQuestion = Partial<Omit<Question, 'answers'>> & {
-  answers?: PartialAnswer[];
-};
-
-export interface Answer {
-  id: string;
-  content: string;
-  correct: boolean;
-  question?: string;
-  order?: number;
-  scoring?: string;
-}
-
-export interface Graphics {
-  id: string;
-  border: boolean;
-  width: number;
-  name: string;
-  options?: string;
-  updatedAt?: string;
-}
-
-export interface UsedGraphics extends Graphics {
-  used: boolean;
-}
-
-export interface Code {
-  id: string;
-  border: boolean;
-  mode: string;
-  numbers: boolean;
-  content: string;
-}
+export type { Exam, Section, Question, Answer, Graphics, Code, PartialAnswer, PartialQuestion } from '@amcui/exam-core';
+import type { Graphics } from '@amcui/exam-core';
+export interface UsedGraphics extends Graphics { used: boolean; }
 
 export interface ExamData {
   questions_definition: string;

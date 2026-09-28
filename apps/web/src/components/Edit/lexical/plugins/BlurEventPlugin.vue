@@ -12,10 +12,10 @@ const emit = defineEmits(['change', 'focus', 'blur']);
 let html = '';
 let blurTimeout: number | null = null;
 onMounted(() => {
-  const unregisterListener = editor.registerUpdateListener(({ editorState }) => {
+  const unregisterListener = editor.registerUpdateListener(({ editorState, tags }) => {
     editorState.read(() => {
       const newHTML = $generateHtmlFromNodes(editor, null);
-      if (html !== newHTML) {
+      if (html !== newHTML && !tags.has('amcui-remote')) {
         emit('change', newHTML);
       }
       html = newHTML;

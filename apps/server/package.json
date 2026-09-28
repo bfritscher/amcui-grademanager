@@ -56,11 +56,18 @@
     "stream-splitter": "0.3.2",
     "tmp": "0.2.3",
     "u2f": "0.1.3",
-    "unzipper": "^0.12.3",
+    "unzipper": "0.12.3",
     "ws": "8.18.0",
     "xml2js": "0.6.2",
     "y-websocket": "2.1.0",
-    "yjs": "13.6.23"
+    "yjs": "13.6.23",
+    "@amcui/exam-core": "1.0.0",
+    "@modelcontextprotocol/sdk": "1.30.1",
+    "zod": "3.25.76",
+    "y-protocols": "1.0.6",
+    "lib0": "0.2.99",
+    "y-leveldb": "0.2.0",
+    "jsdom": "26.0.0"
   },
   "devDependencies": {
     "@types/adm-zip": "0.5.7",
@@ -97,6 +104,7 @@
     "supertest": "7.0.0",
     "ts-jest": "29.2.5",
     "ts-node": "10.9.2",
-    "typescript": "5.7.3"
+    "typescript": "5.7.3",
+    "@types/jsdom": "21.1.7"
   }
 }

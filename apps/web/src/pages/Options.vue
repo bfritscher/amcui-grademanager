@@ -209,7 +209,6 @@ import { useRouter } from 'vue-router';
 import AnnotationMarks from '../components/Options/AnnotationMarks.vue';
 import { useApiStore } from '@/stores/api';
 import { useStore } from '@/stores/store';
-import { useExamStore } from '@/stores/exam';
 
 export default defineComponent({
   name: 'Options',
@@ -220,7 +219,6 @@ export default defineComponent({
     const API = useApiStore();
     const router = useRouter();
     const store = useStore();
-    const examStore = useExamStore();
     const $q = useQuasar();
     const showAllOptions = ref(false);
     const fields = ref<string[]>([]);
@@ -322,9 +320,7 @@ export default defineComponent({
           fieldName: 'file'
         };
       },
-      handleImportSuccess(response: any) {
-        console.log(response);
-        examStore.importJSON(response.xhr.response);
+      handleImportSuccess() {
         router.push({ name: 'Edit', params: { project: API.project } });
         $q.notify({
           type: 'positive',

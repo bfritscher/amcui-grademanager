@@ -1,6 +1,7 @@
 <template>
   <q-page class="container">
     <q-btn flat color="primary" class="q-mt-md" @click="router.back()">Back</q-btn>
+    <McpConnections />
     <q-form class="row q-py-lg" @submit="changePassword()">
       <q-card flat bordered class="col-12 col-md-8 offset-md-2">
         <q-card-section>
@@ -116,9 +117,11 @@ import { useRouter } from 'vue-router';
 import * as base64buffer from 'base64-arraybuffer';
 import { useApiStore } from '@/stores/api';
 import { useStore } from '@/stores/store';
+import McpConnections from '@/components/McpConnections.vue';
 
 export default defineComponent({
   name: 'Profile',
+  components: { McpConnections },
   setup() {
     const API = useApiStore();
     const store = useStore();

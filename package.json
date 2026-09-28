@@ -1,0 +1,47 @@
+{
+  "name": "amcui",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/web",
+    "apps/server",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=amcui-grademanager",
+    "dev:server": "npm run dev --workspace=amcui-server",
+    "build:core": "npm run build --workspace=@amcui/exam-core",
+    "build": "npm run build:core && npm run build --workspace=amcui-grademanager && npm run build --workspace=amcui-server",
+    "test": "vitest run --config vitest.config.ts",
+    "test:web": "npm run test:unit:ci --workspace=amcui-grademanager",
+    "type-check": "npm run build:core && npm run type-check --workspace=amcui-grademanager && npm run build --workspace=amcui-server"
+  },
+  "devDependencies": {
+    "typescript": "~5.7.3",
+    "vitest": "3.0.6",
+    "jsdom": "26.0.0"
+  },
+  "overrides": {
+    "lexical-vue": {
+      "lexical": "0.24.0",
+      "@lexical/clipboard": "0.24.0",
+      "@lexical/code": "0.24.0",
+      "@lexical/dragon": "0.24.0",
+      "@lexical/hashtag": "0.24.0",
+      "@lexical/history": "0.24.0",
+      "@lexical/html": "0.24.0",
+      "@lexical/link": "0.24.0",
+      "@lexical/list": "0.24.0",
+      "@lexical/mark": "0.24.0",
+      "@lexical/markdown": "0.24.0",
+      "@lexical/overflow": "0.24.0",
+      "@lexical/plain-text": "0.24.0",
+      "@lexical/rich-text": "0.24.0",
+      "@lexical/selection": "0.24.0",
+      "@lexical/table": "0.24.0",
+      "@lexical/text": "0.24.0",
+      "@lexical/utils": "0.24.0",
+      "@lexical/yjs": "0.24.0"
+    }
+  }
+}

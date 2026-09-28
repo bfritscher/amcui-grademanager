@@ -11,10 +11,11 @@ export default defineConfig({
   plugins: [vue({
     template: { transformAssetUrls }
   }), quasar(), vueDevTools(), sentryVitePlugin({
-    disable: true,
-    org: "fritscher",
+    disable: process.env.AMCUI_DISABLE_SENTRY === 'true' || false,
+    org: "heg-arc",
     project: "amcui-frontend",
-    url: "https://sentry.j42.org/"
+    url: "https://e.bf0.ch/",
+    authToken: "07d1d40a0f3e0542ff7ff4c0d9507baab1d4815fff6172360c5cb8f042e5c40a"
   })],
 
   define: {

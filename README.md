@@ -1,68 +1,46 @@
-# amcui-grademanager4
+# AMCUI
 
-This template should help get you started developing with Vue 3 in Vite.
+AMCUI's Vue editor, backend and exam model are maintained in one npm workspace.
+The backend's Git history is preserved through the monorepo merge; it remains a
+separately deployed service.
 
-## Recommended IDE Setup
+| Directory | Responsibility |
+| --- | --- |
+| `apps/web` | Vue/Quasar editor, authentication and MCP consent UI |
+| `apps/server` | Express, existing AMC workflows, live documents, OAuth and MCP |
+| `packages/exam-core` | Domain types, factories, validation, typed operations, migrations and LaTeX renderer |
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
+Use Node 20 or later and run commands from this directory:
 
 ```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
+npm ci --legacy-peer-deps
+npm run build:core
 npm run dev
+npm run dev:server
 ```
 
-### Type-Check, Compile and Minify for Production
+The server needs Redis, AMC, GraphicsMagick and the SVG converter. Its development
+compose file is in `apps/server/docker-compose.yml`. Build the core after changing
+it (`npm run build:core`, or `npm run build --workspace=@amcui/exam-core -- --watch`).
+Configure the frontend's `window.AMCUI_API` for your local server before development.
+Both Dockerfiles use the repository root as their build context:
 
 ```sh
-npm run build
+docker build -f apps/web/Dockerfile -t amcui-web .
+docker build -f apps/server/Dockerfile -t amcui-server .
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+Validation:
 
 ```sh
-npm run test:unit
+npm run type-check
+npm test
+npm run test:web
 ```
 
-### Run End-to-End Tests with [Cypress](https://www.cypress.io/)
+The root workflow builds the existing `amcui-grademanager`, `amcui-server` and
+`amcui-svg2pdf` images. Earlier frontend documentation is in
+[`apps/web/README.md`](apps/web/README.md).
 
-```sh
-npm run test:e2e:dev
-```
-
-This runs the end-to-end tests against the Vite development server.
-It is much faster than the production build.
-
-But it's still recommended to test the production build with `test:e2e` before deploying (e.g. in CI environments):
-
-```sh
-npm run build
-npm run test:e2e
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
-
-### config variable via environment
-```bash
-SENTRY_DSN=
-AMCUI_API=
-GA_CODE=
-```
+See [MCP setup, tools and collaboration semantics](docs/mcp.md) for connecting an
+LLM client and deploying this version with existing project data.

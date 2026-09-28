@@ -13,7 +13,6 @@ import { ref } from 'vue';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { type Awareness } from 'y-protocols/awareness';
-import { useExamStore } from './exam';
 
 export const useApiStore = defineStore('api', () => {
   const router = useRouter();
@@ -536,7 +535,7 @@ export const useApiStore = defineStore('api', () => {
               source: unicodeSuppressionCommands + (data.source || '')
             };
       }
-      return $http.value.post(API_URL.value + '/project/' + project.value + '/preview', data).then(()=> {
+      return $http.value.post(API_URL.value + '/project/' + project.value + '/preview', setReplaceUnicodeErrorWithText ? data : {}).then(()=> {
                 if (logs.value.preview && logs.value.preview.log) {
           if(/ERR(?::|>).*Unicode character/i.test(logs.value.preview.log)) {
             console.log('Unicode character error detected in preview log');
@@ -637,9 +636,7 @@ export const useApiStore = defineStore('api', () => {
         .post(API_URL.value + '/project/' + project.value + '/revert', {
           sha: sha
         })
-        .then((resp) => {
-          const examStore = useExamStore();
-          examStore.importJSON(resp.data);
+        .then(() => {
           router.push({ name: 'Edit', params: { project: project.value } });
         });
     },

@@ -31,3 +31,13 @@ coverage
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Server runtime data and local configuration
+apps/server/projects/
+apps/server/data/
+apps/server/.env
+apps/server/.production.env
+apps/server/.tmp/
+apps/server/docker-compose.override.yml
+**/cypress/videos/
+**/cypress/screenshots/

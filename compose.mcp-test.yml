@@ -1,0 +1,38 @@
+# Disposable integration infrastructure. No host data mounts or published ports.
+services:
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  server:
+    image: amcui-mcp-server-test
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    environment:
+      JWT_SECRET: disposable-mcp-smoke-test-only
+      SERVER_PORT: 9001
+      MCP_ENABLED: 'true'
+      MCP_PUBLIC_API_URL: http://127.0.0.1:9001
+      MCP_WEB_URL: http://127.0.0.1:5173/
+      YPERSISTENCE: /tmp/amcui-smoke-db
+      AMCUI_PROJECTS_DIR: /tmp/amcui-smoke-projects
+      AMCUI_TEMPLATES_DIR: /amc/apps/server/templates
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:9001/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  smoke:
+    image: amcui-mcp-server-test
+    network_mode: service:server
+    command: [node, apps/server/test-mcp/container-smoke.mjs]
+    depends_on:
+      server:
+        condition: service_healthy

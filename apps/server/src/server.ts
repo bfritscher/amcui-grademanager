@@ -23,7 +23,7 @@ import childProcess from 'child_process';
 import {simpleGit} from 'simple-git';
 import archiver from 'archiver';
 import slug from 'slug';
-import sizeOf from 'image-size';
+import { imageSize as sizeOf } from 'image-size';
 import {fileURLToPath} from 'url';
 import {dirname} from 'path';
 import {authenticator} from 'otplib';
@@ -32,10 +32,16 @@ import {Factor, Fido2Lib} from 'fido2-lib';
 import * as base64buffer from 'base64-arraybuffer';
 import {WebSocketServer} from 'ws';
 import fetch from 'node-fetch';
-import unzipper from 'unzipper';
+import { readExam, replaceExam } from '@amcui/exam-core';
+import { importArchive } from './exam/archives.js';
 
 import {URL} from 'url';
-import ywsUtils from 'y-websocket/bin/utils';
+import { LeveldbPersistence } from 'y-leveldb';
+import { ExamDocuments } from './exam/documents.js';
+import { ExamAssets } from './exam/assets.js';
+import { ExamPreviews, renderSnapshot } from './exam/previews.js';
+import { ExamOAuth } from './mcp/oauth.js';
+import { installMcp } from './mcp/routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -69,8 +75,8 @@ const app = express();
 Sentry.setupExpressErrorHandler(app);
 
 const APP_FOLDER = path.resolve(__dirname, '../src/');
-const PROJECTS_FOLDER = path.resolve(__dirname, '../projects/');
-const TEMPLATES_FOLDER = path.resolve(__dirname, '../templates/');
+const PROJECTS_FOLDER = process.env.AMCUI_PROJECTS_DIR || path.resolve(__dirname, '../projects/');
+const TEMPLATES_FOLDER = process.env.AMCUI_TEMPLATES_DIR || path.resolve(__dirname, '../templates/');
 
 const redisClient = (await createClient({socket: {port: 6379, host: 'redis'}})
   .on('error', (err) => {
@@ -114,9 +120,15 @@ ws.use(
   })
 );
 
-const wss = new WebSocketServer({noServer: true});
-
-wss.on('connection', ywsUtils.setupWSConnection);
+const wss = new WebSocketServer({noServer: true, maxPayload: 5 * 1024 * 1024});
+if (process.env.MCP_ENABLED === 'true' && !process.env.YPERSISTENCE) throw new Error('YPERSISTENCE is required for MCP');
+const documentPersistence = process.env.YPERSISTENCE ? new LeveldbPersistence(process.env.YPERSISTENCE) : null;
+const documents = new ExamDocuments(documentPersistence, async project => {
+  const folder = path.join(PROJECTS_FOLDER, project);
+  if (!(await fs.pathExists(folder))) throw new Error('Project not found');
+  const file = path.join(folder, 'data.json');
+  return await fs.pathExists(file) ? fs.readJson(file) : null;
+});
 
 httpServer.on('upgrade', async (request, socket, head) => {
   // You may check auth of request here..
@@ -142,7 +154,10 @@ httpServer.on('upgrade', async (request, socket, head) => {
           (await acl.hasRole(decodedToken.username, projectName))
         ) {
           wss.handleUpgrade(request, socket, head, (ws) => {
-            wss.emit('connection', ws, request);
+            void documents.connect(projectName, ws, async () => {
+              const token = jwt.verify(accessToken, process.env.JWT_SECRET || '') as {username: string};
+              return acl.hasRole(token.username, projectName);
+            }).catch(() => ws.close(1011, 'Document unavailable'));
           });
           return;
         }
@@ -234,6 +249,59 @@ const secure = (
     next();
   });
 };
+
+// Shared browser/MCP asset and preview services.
+const assets = new ExamAssets(PROJECTS_FOLDER, (folder, filename, id) => new Promise((resolve, reject) => {
+  const child = childProcess.spawn('gm', ['convert', '-trim', '+repage', '-background', 'white', '+matte', '-density', '120', filename + '[0]', id + '_thumb.jpg'], {cwd: folder});
+  const timeout = setTimeout(() => {child.kill('SIGKILL'); reject(new Error('Thumbnail generation timed out'));}, 60_000);
+  child.on('error', error => {clearTimeout(timeout); reject(error);}); child.on('close', code => {clearTimeout(timeout); code === 0 ? resolve() : reject(new Error('Thumbnail generation failed'));});
+}), async data => {
+  const response = await fetch(process.env.SVG2PDF_URL || 'http://svg2pdf:3000/convert', {method: 'POST', body: data, signal: AbortSignal.timeout(60_000)});
+  if (!response.ok) throw new Error('SVG conversion failed');
+  return Buffer.from(await response.arrayBuffer());
+});
+const previews = new ExamPreviews(PROJECTS_FOLDER, documents, async (project, username, body, pdf) => {
+  // A captured preview can finish during printing; retain its isolated result without
+  // changing the working files used by that print run.
+  if (await redisClient.HGET('project:' + project + ':status', 'locked') === '1') return;
+  saveSourceFilesSync(project, body);
+  await fs.copy(pdf, path.join(PROJECTS_FOLDER, project, 'out', 'out.pdf'));
+  await commitGit(project, username, 'preview');
+}, (project, event) => {ws.to(project + '-notifications').emit('log', event);});
+if (process.env.MCP_ENABLED === 'true') {
+  const publicApiUrl = process.env.MCP_PUBLIC_API_URL;
+  const webUrl = process.env.MCP_WEB_URL;
+  if (!publicApiUrl || !webUrl) throw new Error('MCP_PUBLIC_API_URL and MCP_WEB_URL are required');
+  const projects = async (username: string): Promise<string[]> => {
+    const [roles, recent] = await Promise.all([
+      acl.userRoles(username),
+      redisClient.ZRANGE('user:' + username + ':recent', 0, -1, {REV: true}),
+    ]);
+    const recentOrder = new Map(recent.map((project, index) => [project, index]));
+    return roles
+      .filter((role: string) => role !== 'admin')
+      .sort((a: string, b: string) => {
+        const rankA = recentOrder.get(a) ?? recent.length;
+        const rankB = recentOrder.get(b) ?? recent.length;
+        return rankA - rankB || a.localeCompare(b);
+      });
+  };
+  const oauth = new ExamOAuth({
+    get: key => redisClient.GET(key),
+    set: async (key, value, seconds) => {await redisClient.SET(key, value, {EX: seconds});},
+    take: key => redisClient.GETDEL(key),
+    delete: async key => {await redisClient.DEL(key);},
+    addMember: async (key, value) => {await redisClient.SADD(key, value);},
+    members: key => redisClient.SMEMBERS(key)
+  }, publicApiUrl.replace(/\/$/, '') + '/mcp', webUrl, projects, JSON.parse(process.env.MCP_CLIENTS_JSON || '[]'));
+  installMcp(app, {oauth, documents, assets, previews, publicApiUrl, webUrl, secure, projects,
+    allowed: async (username, project) => acl.hasRole(username, project),
+    audit: async event => {
+      await redisClient.LPUSH('mcp:audit', JSON.stringify(event));
+      await redisClient.LTRIM('mcp:audit', 0, 9999);
+    }
+  });
+}
 
 //secure /project with auth api
 app.use('/project', secure);
@@ -1267,35 +1335,20 @@ app.post('/project/:project/copy/template', aclProject, (req, res) => {
   );
 });
 
-app.post('/project/:project/copy/project', aclProject, (req, res) => {
+app.post('/project/:project/copy/project', aclProject, (req, res, next) => {
   if (!req.user) return res.sendStatus(403);
   const src = req.params.project;
   const dest = req.body.project.toLowerCase();
   createProject(
     dest,
     req.user.username,
-    () => {
-      fs.copy(
-        PROJECTS_FOLDER + '/' + src + '/src',
-        PROJECTS_FOLDER + '/' + dest + '/src',
-        async (err) => {
-          if (err) {
-            res.status(500).send('Failed to copy src files.');
-          } else {
-            fs.copy(
-              PROJECTS_FOLDER + '/' + src + '/data.json',
-              PROJECTS_FOLDER + '/' + dest + '/data.json',
-              async (err) => {
-                if (err) {
-                  res.status(500).send('Failed to copy src files.');
-                } else {
-                  res.sendStatus(200);
-                }
-              }
-            );
-          }
-        }
-      );
+    (destination) => {
+      void documents.withDocument(src, async doc => {
+        const snapshot = readExam(doc);
+        await fs.copy(path.join(PROJECTS_FOLDER, src, 'src'), path.join(PROJECTS_FOLDER, destination, 'src'));
+        await fs.writeJson(path.join(PROJECTS_FOLDER, destination, 'data.json'), snapshot);
+        await documents.withDocument(destination, target => replaceExam(target, snapshot));
+      }).then(() => res.sendStatus(200)).catch(next);
     },
     () => {
       res.status(403).send('Project already exists!');
@@ -1363,7 +1416,7 @@ app.post('/project/:project/remove', aclProject, async (req, res) => {
   }
 });
 
-app.post('/project/:project/rename', aclProject, (req, res) => {
+app.post('/project/:project/rename', aclProject, (req, res, next) => {
   const project = req.params.project;
   const newProject = slug(req.body.name);
   if (newProject.length === 0 || newProject.indexOf('.') === 0) {
@@ -1376,39 +1429,30 @@ app.post('/project/:project/rename', aclProject, (req, res) => {
     return res.sendStatus(403);
   }
 
-  fs.rename(PROJECTS_FOLDER + '/' + project, newPath, async (err) => {
-    if (err) {
-      console.log(err);
-      return res.status(500).send(err);
-    }
+  documents.rename(project, newProject, () => fs.rename(PROJECTS_FOLDER + '/' + project, newPath)).then(async () => {
     if ((await redisClient.EXISTS('exam:' + project)) > 0) {
       await redisClient.RENAMENX('exam:' + project, 'exam:' + newProject);
     }
     await acl.allow(newProject, '/project/' + newProject, 'admin');
     const users = await acl.roleUsers(project);
-    users.forEach(async (username: string) => {
+    await Promise.all(users.map(async (username: string) => {
       await acl.removeUserRoles(username, project);
       await acl.addUserRoles(username, newProject);
       await redisClient.ZREM('user:' + username + ':recent', project);
-    });
+    }));
     const keys = await redisClient.KEYS('project:' + project + ':*');
-    keys.forEach(async (key) => {
+    await Promise.all(keys.map(async (key) => {
       const entries = key.split(':');
       await redisClient.RENAMENX(
         key,
         'project:' + newProject + ':' + entries[2]
       );
-    });
+    }));
     await acl.removeAllow(project, '/project/' + project, 'admin');
     await acl.removeRole(project);
     await acl.removeResource(project);
-    try {
-      await ywsUtils.getPersistence()?.provider?.clearDocument(`ws/${project}`);
-    } catch (err) {
-      console.log(err);
-    }    
     res.send(newProject);
-  });
+  }).catch(next);
 });
 
 async function deleteProject(
@@ -1439,7 +1483,7 @@ async function deleteProject(
       callback(true);
     } else {
       try {
-        await ywsUtils.getPersistence()?.provider?.clearDocument(`ws/${project}`);
+        await documents.clear(project);
       } catch (err) {
         console.log(err);
       }
@@ -1526,6 +1570,7 @@ app.post('/project/:project/revert', aclProject, async (req, res) => {
         PROJECTS_FOLDER,
         req.params.project + '/data.json'
       );
+      await documents.withDocument(req.params.project, doc => replaceExam(doc, fs.readJsonSync(json), 'revert'));
       res.send(fs.readFileSync(json));
     } finally {
       gitLocks.delete(req.params.project);
@@ -1541,38 +1586,27 @@ async function performGitRevert(project: string, sha: string): Promise<void> {
   await g.raw(['reset', '--hard', sha]);
 }
 
-app.get('/project/:project/zip', aclProject, (req, res) => {
+app.get('/project/:project/zip', aclProject, async (req, res, next) => {
+  try {
+  const snapshot = await documents.withDocument(req.params.project, doc => readExam(doc));
+  const rendered = renderSnapshot(snapshot);
   const zip = archiver('zip');
   res.on('close', function () {
     return res.end();
   });
   res.attachment(req.params.project + '.zip');
   zip.pipe(res);
-  zip.directory(PROJECTS_FOLDER + '/' + req.params.project, false);
+  zip.on('error', next);
+  const generated = {'data.json': rendered.json, 'source.tex': rendered.source, 'questions_definition.tex': rendered.questions_definition, 'questions_layout.tex': rendered.questions_layout};
+  for (const [name, content] of Object.entries(generated)) zip.append(content, {name});
+  for (const [id, code] of Object.entries(rendered.codes)) {
+    if (!/^[\w-]{1,200}$/.test(id)) throw new Error('INVALID_CODE_ID');
+    zip.append(code.content, {name: `src/codes/${id}`});
+  }
+  zip.glob('**/*', {cwd: path.join(PROJECTS_FOLDER, req.params.project), dot: true, ignore: [...Object.keys(generated), 'src/codes/**']});
   zip.finalize();
+  } catch (error) {next(error);}
 });
-
-async function findDataJsonInZip(filePath: string): Promise<string | null> {
-  let rootFolder = '';
-  let dataJsonExists = false;
-
-  await unzipper.Open.file(filePath)
-    .then(directory => {
-      // Traverse through the entries to find where `data.json` exists
-      directory.files.forEach(file => {
-        if (file.path.endsWith('data.json')) {
-          dataJsonExists = true;
-          const parts = file.path.split('/');
-          // If it's inside a subfolder, get that subfolder name
-          if (parts.length > 1) {
-            rootFolder = parts.slice(0, parts.length - 1).join('/');
-          }
-        }
-      });
-    });
-
-  return dataJsonExists ? rootFolder : null;
-}
 
 app.post('/project/:project/zip', aclProject, uploadMiddleware.single('file'), async (req, res) => {
   const projectFolder = path.join(PROJECTS_FOLDER, req.params.project);
@@ -1580,45 +1614,12 @@ app.post('/project/:project/zip', aclProject, uploadMiddleware.single('file'), a
     return res.status(400).send('No file uploaded');
   }
   try {
-    const rootFolder = await findDataJsonInZip(req.file.path);
-
-    if (rootFolder === null) {
-      return res.status(400).send('No data.json found in the zip file');
-    }    
-
-    console.log('Extracting the zip file:', req.file.path);
-    await unzipper.Open.file(req.file.path)
-      .then(directory => {
-        // Extract all files by removing the `rootFolder`
-        return Promise.all(directory.files.map(file => {
-          const fullFilePath = path.join(projectFolder, rootFolder ? file.path.replace(rootFolder + '/', '') : file.path);
-
-          // Only extract relevant files and not directories
-          if (file.type === 'File' && !fullFilePath.includes('.git/')) {
-            // Create nested folders if needed
-            const dirName = path.dirname(fullFilePath);
-            if (!fs.existsSync(dirName)) {
-              fs.mkdirSync(dirName, { recursive: true });
-            }
-            console.log('Extracting file:', fullFilePath);
-
-            return new Promise<void>((resolve, reject) => {
-              file.stream().pipe(fs.createWriteStream(fullFilePath))
-                .on('finish', resolve)
-                .on('error', reject);
-            });
-          }
-        }));
-      });
-
-    const json = path.resolve(
-      PROJECTS_FOLDER,
-      req.params.project + '/data.json'
-    );
-    res.send(fs.readFileSync(json));
+    const uploaded = req.file.path;
+    const snapshot = await documents.withDocument(req.params.project, doc => importArchive(uploaded, projectFolder, exam => replaceExam(doc, exam, 'import')));
+    res.json(snapshot);
   } catch (error) {
     console.error('Error extracting the zip file:', error);
-    res.status(500).send('Failed to extract and save the project');
+    res.status(400).send('Invalid or unsupported project archive');
   } finally {
     await fs.unlink(req.file.path);
   }
@@ -1813,69 +1814,11 @@ function saveSourceFilesSync(project: string, body: any): void {
   }
 }
 
-app.post('/project/:project/preview', aclProject, async (req, res) => {
-  const keyStatus = 'project:' + req.params.project + ':status';
-  const keyQueue = 'project:' + req.params.project + ':previewqueue';
-  const project = req.params.project;
-
-  async function compilePreviewEnd() {
-    await redisClient.HSET(keyStatus, 'preview', '0');
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    console.log('compiling ended', project);
-    compilePreview();
-  }
-
-  function compilePreviewSuccess(): void {
-    commitGit(project, req.user?.username || '', 'preview');
-    console.log(project, 'compiling success');
-    compilePreviewEnd();
-  }
-
-  async function compilePreview() {
-    const status = await redisClient.HGETALL(keyStatus);
-    if (status && (status.locked > '0' || status.preview > '0')) {
-      // wait
-      console.log(project, 'waiting');
-      setTimeout(compilePreview, 1000);
-      return;
-    }
-    const data = await redisClient.GET(keyQueue);
-    if (data) {
-      await redisClient.DEL(keyQueue);
-      const body = JSON.parse(data);
-      await redisClient.HSET(keyStatus, 'preview', '1');
-      console.log(project, 'compiling started');
-      //compile
-      saveSourceFilesSync(project, body);
-      amcCommande(
-        null,
-        PROJECTS_FOLDER + '/' + project,
-        project,
-        'preview',
-        [
-          'prepare',
-          '--with',
-          'pdflatex',
-          '--filter',
-          'latex',
-          '--out-corrige',
-          'out/out.pdf',
-          '--mode',
-          'k',
-          '--n-copies',
-          '1',
-          'source.tex',
-          '--latex-stdout',
-        ],
-        compilePreviewSuccess,
-        compilePreviewEnd
-      );
-    }
-  }
-  //replace next compile data
-  await redisClient.SET(keyQueue, JSON.stringify(req.body));
-  compilePreview();
-  res.sendStatus(200);
+app.post('/project/:project/preview', aclProject, async (req, res, next) => {
+  // Preserve the rendered-body contract for older clients. Current clients and
+  // MCP omit it and capture the live document through the same preview queue.
+  try {res.status(200).json(await previews.enqueue(req.params.project, req.user?.username || '', req.body?.json ? req.body : undefined));}
+  catch (error) {next(error);}
 });
 
 app.get('/project/:project/reset/lock', aclProject, async (req, res) => {

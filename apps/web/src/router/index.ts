@@ -14,7 +14,8 @@ router.beforeEach((to, from, next) => {
   const store = useStore();
   if (to.name === 'Login') {
     if (store.isLoggedIn) {
-      next({ name: 'Home' });
+      const redirect = String(to.query.redirect || '');
+      next(redirect.startsWith('/mcp/authorize?') ? redirect : { name: 'Home' });
     } else {
       next();
     }
@@ -25,7 +26,8 @@ router.beforeEach((to, from, next) => {
     if (store.isLoggedIn) {
       next();
     } else {
-      next('/login');
+      next({ name: 'Login', query: { redirect: to.fullPath } });
+      return;
     }
   } else {
     next();

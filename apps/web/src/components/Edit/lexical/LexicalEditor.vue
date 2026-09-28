@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, computed, useAttrs } from 'vue';
-import { debounce } from 'lodash-es';
 import {
   LexicalComposer,
   LexicalContentEditable,
@@ -26,7 +25,14 @@ import TableActionMenuPlugin from './plugins/Table/TableActionMenuPlugin.vue';
 import BoxPlugin from './plugins/BoxPlugin.vue';
 import ImagePlugin from './plugins/ImagePlugin.vue';
 
-import { $getRoot, $setSelection, $insertNodes } from 'lexical';
+import {
+  $getRoot,
+  $getSelection,
+  $setSelection,
+  $insertNodes,
+  CLEAR_HISTORY_COMMAND
+} from 'lexical';
+import RemoteContentPlugin from './plugins/RemoteContentPlugin.vue';
 
 import type { LexicalEditor, CreateEditorArgs } from 'lexical';
 import { $generateNodesFromDOM } from '@lexical/html';
@@ -38,6 +44,7 @@ import {
 import { NUMBERS_DATA_ATTRIBUTE, LANGUAGE_DATA_ATTRIBUTE } from './nodes/CustomCodeNode';
 import BlurEventPlugin from './plugins/BlurEventPlugin.vue';
 import { useExamStore } from '@/stores/exam';
+import { htmlReferences } from '@amcui/exam-core';
 
 import { EditorView, lineNumbers } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
@@ -114,9 +121,9 @@ function setFromHTML(editor: LexicalEditor) {
     const code = el as HTMLElement;
     if (!code.id) return;
     const codeData = examService.getCode(code.id, false);
-    if (codeData && code.children.length === 0) {
+    if (codeData && !code.hasAttribute(BORDER_DATA_ATTRIBUTE)) {
       const pre = document.createElement('pre');
-      pre.innerHTML = `${codeData.content}`;
+      pre.textContent = codeData.content;
       pre.id = codeData.id;
       pre.setAttribute(BORDER_DATA_ATTRIBUTE, codeData.border ? 'true' : 'false');
       pre.setAttribute(NUMBERS_DATA_ATTRIBUTE, codeData.numbers ? 'true' : 'false');
@@ -127,14 +134,18 @@ function setFromHTML(editor: LexicalEditor) {
       code.replaceWith(pre);
     }
   });
-  setTimeout(() => {
-    editor.update(() => {
+  editor.update(
+    () => {
+      const hadSelection = !!$getSelection();
       const nodes = $generateNodesFromDOM(editor, dom);
       $getRoot().clear().select();
       $insertNodes(nodes);
-      $setSelection(null);
-    });
-  });
+      if (hadSelection) $getRoot().selectEnd();
+      else $setSelection(null);
+    },
+    { tag: 'amcui-remote', discrete: true }
+  );
+  editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined);
 }
 
 const preview = ref<HTMLElement | null>(null);
@@ -163,6 +174,17 @@ function onError(error: Error) {
 
 // decorate preview and update changes
 const examService = useExamStore();
+const assetRevision = computed(() =>
+  JSON.stringify(
+    htmlReferences(props.modelValue).map((ref) =>
+      ['code', 'pre'].includes(ref.tag) && !ref.inline
+        ? examService.getCode(ref.id, false)
+        : ref.tag === 'img'
+          ? examService.getGraphics(ref.id)
+          : null
+    )
+  )
+);
 
 function decoratePreview() {
   if (!preview.value) {
@@ -204,7 +226,7 @@ function decoratePreview() {
     const codeElement = codes[c];
     if (!codeElement.id || codeElement.hasAttribute(BORDER_DATA_ATTRIBUTE)) continue;
     codeElement.classList.add('wysihtml5-uneditable-container');
-    const code = examService.getCode(codeElement.getAttribute('id'), true);
+    const code = examService.getCode(codeElement.getAttribute('id'), false);
     if (code) {
       codeElement.classList.toggle('border', code.border);
       if (codeElement.children.length === 0) {
@@ -245,6 +267,12 @@ watch(
   },
   { immediate: true }
 );
+watch(assetRevision, () => {
+  if (showPreview.value && preview.value) {
+    preview.value.innerHTML = props.modelValue;
+    decoratePreview();
+  }
+});
 
 const editorContainer = ref<HTMLElement | null>(null);
 const editorRef = ref<HTMLElement | null>(null);
@@ -258,9 +286,9 @@ watch(showDebug, () => {
   }
 });
 
-const contentChanged = debounce((html: string) => {
+const contentChanged = (html: string) => {
   emit('update:modelValue', html);
-}, 1000);
+};
 
 function onFocus() {
   hideToolbar.value = false;
@@ -316,6 +344,11 @@ const oulinedClass = computed(() => {
       ></div>
       <!-- eslint-enable -->
       <LexicalComposer v-else :initial-config="config" @error="onError">
+        <RemoteContentPlugin
+          :html="props.modelValue"
+          :revision="assetRevision"
+          :load="setFromHTML"
+        />
         <div class="editor-shell">
           <ToolbarPlugin
             v-if="!hideToolbar && store.activeEditor === attrs.id"

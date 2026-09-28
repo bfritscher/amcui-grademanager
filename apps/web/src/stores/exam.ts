@@ -1,4 +1,14 @@
-import { computed, ref, watchEffect, type Ref } from 'vue';
+import {
+  createSection as newSection,
+  createQuestion as newQuestion,
+  createAnswer as newAnswer,
+  patchEntity,
+  putEntity,
+  replaceExam,
+  readExam,
+  applyChanges
+} from '@amcui/exam-core';
+import { computed, ref, watch, type Ref } from 'vue';
 import { type RouteLocationRaw, useRouter } from 'vue-router';
 import { v4 as uuidv4 } from 'uuid';
 import latexToExam from '../services/latexToExam';
@@ -23,7 +33,6 @@ import { useApiStore } from '@/stores/api';
 import * as Y from 'yjs';
 import { defineStore } from 'pinia';
 import { debounce } from 'lodash-es';
-import sourceUpgrade from '@/utils/sourceUpgrade';
 
 const AMCUI_COPY_KEY = 'AMCUI_COPY_KEY';
 
@@ -43,32 +52,25 @@ export const useExamStore = defineStore('exam', () => {
   const graphics = ref<{ [key: string]: Graphics }>({});
   const codes = ref<{ [key: string]: Code }>({});
   const source = ref('');
+  const revision = ref(0);
   let undoManager: Y.UndoManager;
+  let stopObserving: (() => void)[] = [];
 
   function observeDeepMap<T>(map: Y.Map<T>, index: Ref<{ [key: string]: T }>) {
-    map.observeDeep((events: Y.YEvent<any>[]) => {
-      events.forEach((event) => {
-        event.changes.keys.forEach((change, key) => {
-          if (change.action === 'add' || change.action === 'update') {
-            // handle nested maps attribute update
-            if (event.target._item) {
-              (index.value[event.target._item.parentSub] as T)[key as keyof T] =
-                event.target.get(key);
-            } else {
-              const data = event.target.get(key);
-              if (data instanceof Y.Map) {
-                // nested map was updated in full
-                index.value[key] = Object.fromEntries(data.entries()) as T;
-              } else {
-                index.value[key] = data;
-              }
-            }
-          } else if (change.action === 'delete') {
-            delete index.value[key];
-          }
-        });
-      });
-    });
+    const observe = (events: Y.YEvent<any>[]) => {
+      const keys = new Set(
+        events.flatMap((event) =>
+          event.path.length ? [String(event.path[0])] : [...event.changes.keys.keys()]
+        )
+      );
+      for (const key of keys) {
+        const value = map.get(key);
+        if (value === undefined) delete index.value[key];
+        else index.value[key] = (value instanceof Y.Map ? value.toJSON() : value) as T;
+      }
+    };
+    map.observeDeep(observe);
+    stopObserving.push(() => map.unobserveDeep(observe));
   }
   const store = useStore();
   const API = useApiStore();
@@ -112,32 +114,16 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   function createSection(): Section {
-    return {
-      id: 's' + uuidv4(),
-      title: 'Section Name',
-      content: '<p></p>',
-      level: 0,
-      isNumbered: true,
-      isSectionTitleVisibleOnAMC: true,
-      shuffle: false,
-      columns: 1,
-      pageBreakBefore: false,
-      questions: [],
-      order: exam.value.sections.length
-    };
+    return newSection(exam.value.sections.length);
   }
 
   function addSection(section: Section): number {
-    ydoc.getMap('sections').set(section.id, new Y.Map(Object.entries(section)));
+    putEntity(ydoc, 'sections', section);
     return exam.value.sections.length;
   }
 
   function updateSection(section: Section, data: any) {
-    ydoc.transact(() => {
-      for (const key in data) {
-        (ydoc.getMap('sections').get(section.id) as Y.Map<any>).set(key, data[key]);
-      }
-    });
+    patchEntity(ydoc, 'sections', section.id, data);
   }
 
   function updateSectionsOrder(sections: Section[]) {
@@ -152,10 +138,7 @@ export const useExamStore = defineStore('exam', () => {
 
   function removeSection(section: Section): number {
     let index = exam.value.sections.indexOf(section);
-    ydoc.transact(() => {
-      ydoc.getMap('sections').delete(section.id);
-      section.questions.forEach(removeQuestion);
-    });
+    applyChanges(ydoc, [{ op: 'section.delete', id: section.id }]);
     index--;
     if (index < 0) {
       index = 0;
@@ -168,25 +151,11 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   function createQuestion(): Question {
-    return {
-      id: 'q' + uuidv4(),
-      content: '<p></p>',
-      type: 'SINGLE',
-      layout: 'VERTICAL',
-      ordered: false,
-      scoring: '',
-      points: 1,
-      dots: false,
-      lines: 3,
-      columns: 1,
-      lineup: false,
-      boxedAnswers: false,
-      answers: []
-    };
+    return newQuestion();
   }
 
   function saveQuestion(question: Question) {
-    ydoc.getMap('questions').set(question.id, new Y.Map(Object.entries(question)));
+    putEntity(ydoc, 'questions', question);
   }
 
   function addQuestion(section: Section) {
@@ -196,33 +165,20 @@ export const useExamStore = defineStore('exam', () => {
       previous = section.questions[section.questions.length - 1];
     }
 
-    const question = createQuestion();
-    question.section = section.id;
-    if (previous) {
-      question.type = previous.type;
-      question.columns = previous.columns;
-    }
-    if (question.type === 'OPEN') {
-      question.answer = '';
-    }
-    question.order = section.questions.length;
-
-    ydoc.transact(() => {
-      saveQuestion(question);
-      if (question.type !== 'OPEN') {
-        addAnswer(question, 0);
-        addAnswer(question, 1);
+    const result = applyChanges(ydoc, [
+      {
+        op: 'question.create',
+        sectionId: section.id,
+        fields: previous ? { type: previous.type, columns: previous.columns } : {}
       }
-    });
-    return question;
+    ]);
+    return result.exam.sections
+      .flatMap((s) => s.questions)
+      .find((q) => q.id === result.affectedIds[0])!;
   }
 
   function updateQuestion(question: Question, data: any) {
-    ydoc.transact(() => {
-      for (const key in data) {
-        (ydoc.getMap('questions').get(question.id) as Y.Map<any>).set(key, data[key]);
-      }
-    });
+    patchEntity(ydoc, 'questions', question.id, data);
   }
 
   function updateQuestionsOrder(section: Section, questions: Question[]) {
@@ -239,65 +195,45 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   function copyQuestion(section: Section, question: Question) {
-    const localcopy = createQuestion();
-    localcopy.content = question.content;
-    localcopy.type = question.type;
-    localcopy.layout = question.layout;
-    localcopy.ordered = question.ordered;
-    localcopy.scoring = question.scoring;
-    localcopy.points = question.points;
-    localcopy.dots = question.dots;
-    localcopy.lines = question.lines;
-    localcopy.columns = question.columns;
-    localcopy.boxedAnswers = question.boxedAnswers;
-    localcopy.answer = question.answer;
-    localcopy.section = section.id;
-    localcopy.order = 1 + (question.order || 0);
-
-    ydoc.transact(() => {
-      section.questions.slice(localcopy.order).forEach((q) => {
-        (ydoc.getMap('questions').get(q.id) as Y.Map<any>).set('order', 1 + (q.order || 0));
-      });
-      ydoc.getMap('questions').set(localcopy.id, new Y.Map(Object.entries(localcopy)));
-      question.answers.forEach((answer) => {
-        saveAnswer(copyAnswer(localcopy, answer));
-      });
-    });
+    applyChanges(ydoc, [{ op: 'question.duplicate', id: question.id, sectionId: section.id }]);
   }
 
   function importPartialQuestions(section: Section, questions: PartialQuestion[]) {
-    questions.forEach((q) => {
-      const question = createQuestion();
-      question.content = q.content || '';
-      question.type = q.type || 'SINGLE';
-      question.order = section.questions.length;
-
-      question.answers =
-        q.answers?.map((a) => {
-          const answer = createAnswer(question);
-          answer.content = a.content || '';
-          answer.correct = a.correct || false;
-          return answer;
-        }) || [];
-      copyQuestion(section, question);
-    });
+    const fields = [
+      'content',
+      'type',
+      'layout',
+      'ordered',
+      'scoring',
+      'points',
+      'dots',
+      'lines',
+      'columns',
+      'lineup',
+      'boxedAnswers',
+      'answer'
+    ];
+    applyChanges(
+      ydoc,
+      questions.map((q) => ({
+        op: 'question.create',
+        sectionId: section.id,
+        fields: Object.fromEntries(Object.entries(q).filter(([key]) => fields.includes(key))),
+        answers: q.answers?.map((a) => ({
+          content: a.content || '',
+          correct: a.correct || false,
+          ...(a.scoring === undefined ? {} : { scoring: String(a.scoring) })
+        }))
+      }))
+    );
   }
 
   function removeQuestion(question: Question) {
-    ydoc.transact(() => {
-      ydoc.getMap('questions').delete(question.id);
-      question.answers.forEach(removeAnswer);
-    });
+    applyChanges(ydoc, [{ op: 'question.delete', id: question.id }]);
   }
 
   function createAnswer(question: Question): Answer {
-    return {
-      id: 'a' + uuidv4(),
-      content: '<p></p>',
-      correct: false,
-      question: question.id,
-      order: Math.max(...question.answers.map((a) => a.order || 0)) + 1
-    };
+    return newAnswer(question);
   }
 
   function addAnswer(question: Question, order?: number) {
@@ -309,15 +245,11 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   function saveAnswer(answer: Answer) {
-    ydoc.getMap('answers').set(answer.id, new Y.Map(Object.entries(answer)));
+    putEntity(ydoc, 'answers', answer);
   }
 
   function updateAnswer(answer: Answer, data: any) {
-    ydoc.transact(() => {
-      for (const key in data) {
-        (ydoc.getMap('answers').get(answer.id) as Y.Map<any>).set(key, data[key]);
-      }
-    });
+    patchEntity(ydoc, 'answers', answer.id, data);
   }
 
   function copyAnswer(question: Question, answer: Answer) {
@@ -330,7 +262,7 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   function removeAnswer(answer: Answer) {
-    ydoc.getMap('answers').delete(answer.id);
+    applyChanges(ydoc, [{ op: 'answer.delete', id: answer.id }]);
   }
 
   function createGraphics(): Graphics {
@@ -613,7 +545,7 @@ export const useExamStore = defineStore('exam', () => {
   function preview() {
     const data = toLatex();
     data.source = exam.value.source;
-    data.codes = exam.value.codes;
+    // codes includes inline code materialized by the shared renderer.
     API.preview(data);
   }
 
@@ -621,7 +553,7 @@ export const useExamStore = defineStore('exam', () => {
     const print = () => {
       const data = toLatex();
       data.source = exam.value.source;
-      data.codes = exam.value.codes;
+      // codes includes inline code materialized by the shared renderer.
       API.print(data);
     };
 
@@ -645,80 +577,7 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   function importJSON(json: string | Exam) {
-    console.time('importJSON');
-    let newexam: Exam;
-    if (typeof json === 'string') {
-      newexam = JSON.parse(json) as Exam;
-    } else {
-      newexam = json;
-    }
-    ydoc.transact(() => {
-      const yproperties = ydoc.getMap('properties');
-      const ysections = ydoc.getMap('sections');
-      const yquestions = ydoc.getMap('questions');
-      const yanswers = ydoc.getMap('answers');
-      const ygraphics = ydoc.getMap('graphics');
-      const ycodes = ydoc.getMap('codes');
-
-      for (const key of yproperties.keys()) {
-        yproperties.delete(key);
-      }
-      for (const key in newexam.properties) {
-        yproperties.set(key, newexam.properties[key]);
-      }
-      updateSource(newexam.source);
-
-      for (const key of ysections.keys()) {
-        ysections.delete(key);
-      }
-      for (const key of yquestions.keys()) {
-        yquestions.delete(key);
-      }
-      for (const key of yanswers.keys()) {
-        yanswers.delete(key);
-      }
-      for (const key of ygraphics.keys()) {
-        ygraphics.delete(key);
-      }
-      for (const key of ycodes.keys()) {
-        ycodes.delete(key);
-      }
-      Object.values(newexam.codes).forEach((code) => {
-        ycodes.set(code.id, new Y.Map(Object.entries(code)));
-      });
-      Object.values(newexam.graphics).forEach((graphic) => {
-        ygraphics.set(graphic.id, new Y.Map(Object.entries(graphic)));
-      });
-      // WARNING: we import as is without checking missing attributes or ids
-      newexam.sections.forEach((section, sindex) => {
-        const questions = section.questions;
-        section.order = sindex;
-        section.questions = [];
-        delete section.number;
-        const validSection = createSection();
-        Object.assign(validSection, section);
-        ysections.set(validSection.id, new Y.Map(Object.entries(validSection)));
-
-        questions.forEach((question, qindex) => {
-          const answers = question.answers;
-          delete question.number;
-          delete question.isValid;
-          question.answers = [];
-          question.section = section.id;
-          question.order = qindex;
-          const validQuestion = createQuestion();
-          Object.assign(validQuestion, question);
-          yquestions.set(question.id, new Y.Map(Object.entries(validQuestion)));
-
-          answers.forEach((answer, aindex) => {
-            answer.question = question.id;
-            answer.order = aindex;
-            yanswers.set(answer.id, new Y.Map(Object.entries(answer)));
-          });
-        });
-      });
-    });
-    console.timeEnd('importJSON');
+    replaceExam(ydoc, json);
   }
 
   function loadTemplate(name: string) {
@@ -750,10 +609,17 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   async function bindYdocToExam(newydoc: Y.Doc) {
-    if (ydoc && ydoc === newydoc) return;
     console.time('bindYdocToExam');
     const log = API.newLog('loading exam');
+    stopObserving.forEach((stop) => stop());
+    stopObserving = [];
+    undoManager?.destroy();
     ydoc = newydoc;
+    const changed = () => {
+      revision.value++;
+    };
+    newydoc.on('afterTransaction', changed);
+    stopObserving.push(() => newydoc.off('afterTransaction', changed));
     const ysections = ydoc.getMap('sections');
     const yquestions = ydoc.getMap('questions');
     const yanswers = ydoc.getMap('answers');
@@ -779,48 +645,21 @@ export const useExamStore = defineStore('exam', () => {
     observeDeepMap(ygraphics, graphics);
     observeDeepMap(ycodes, codes);
 
-    ysource.observe(() => {
+    const sourceChanged = () => {
       source.value = ysource.toString();
-    });
+    };
+    ysource.observe(sourceChanged);
+    stopObserving.push(() => ysource.unobserve(sourceChanged));
 
     source.value = ysource.toString();
-    if (source.value !== '') {
-      const updatedSource = sourceUpgrade(source.value);
-      if (source.value !== updatedSource) {
-        updateSource(updatedSource);
-      }
-    }
 
     ysections.forEach((data) => {
       const section = Object.fromEntries((data as Y.Map<any>).entries()) as Section;
       sectionIndex.value[section.id] = section;
-      // check structure
-      if (typeof section.level === 'string') {
-        updateSection(section, { level: parseInt(section.level, 10) });
-      }
-      if (typeof section.columns === 'string') {
-        updateSection(section, { columns: parseInt(section.columns, 10) });
-      }
     });
     yquestions.forEach((data) => {
       const question = Object.fromEntries((data as Y.Map<any>).entries()) as Question;
       questionIndex.value[question.id] = question;
-      // check structure / upgrade old version
-      if (typeof question.columns === 'string') {
-        updateQuestion(question, { columns: parseInt(question.columns, 10) });
-      }
-      if (typeof question.lines === 'string') {
-        updateQuestion(question, { lines: parseInt(question.lines, 10) });
-      }
-      if (!question.hasOwnProperty('lineup')) {
-        updateQuestion(question, { lineup: false });
-      }
-      if (!question.hasOwnProperty('boxedAnswers')) {
-        updateQuestion(question, { boxedAnswers: false });
-      }
-      if (question.type === 'OPEN' && !question.hasOwnProperty('answer')) {
-        updateQuestion(question, { answer: '' });
-      }
     });
     yanswers.forEach((data) => {
       const answer = Object.fromEntries((data as Y.Map<any>).entries()) as Answer;
@@ -836,119 +675,41 @@ export const useExamStore = defineStore('exam', () => {
     ycodes.forEach((data) => {
       const code = Object.fromEntries((data as Y.Map<any>).entries()) as Code;
       codes.value[code.id] = code;
-      if (!isIdInExamContent(code.id)) {
-        removeCode(code);
-      }
     });
 
     properties.value = Object.fromEntries(yproperties.entries()) as { [key: string]: string };
 
-    // check structure
-    if (Object.keys(sectionIndex.value).length === 0) {
-      // check if there is an data.json to import for duplicate or migration
-      const json = await API.getDataJson();
-      if (json) {
-        importJSON(json);
-      } else {
-        addSection(createSection());
-      }
-    }
     log.end = new Date();
     log.progress = 1;
     console.timeEnd('bindYdocToExam');
   }
 
-  function computeHierarchyNumbers(exam: Exam) {
-    let questionCount = 1;
-    const sections = [0, 0, 0];
-    for (let s = 0; s < exam.sections.length; s++) {
-      const section = exam.sections[s];
-      if (section.isNumbered) {
-        let label = '';
-        for (let i = 0; i < 3; i++) {
-          const level =
-            typeof section.level === 'number' ? section.level : parseInt(section.level, 10);
-          if (level === i) {
-            sections[i]++;
-          }
-          if (i > 0) {
-            label += '.';
-          }
-          label += sections[i];
-          if (level === i) {
-            //reset numbering below
-            for (let j = i + 1; j < 3; j++) {
-              sections[j] = 0;
-            }
-            section.number = label;
-            break;
-          }
-        }
-      } else {
-        section.number = '';
-      }
-      for (let q = 0; q < section.questions.length; q++) {
-        const question = section.questions[q];
-        question.number = questionCount;
-        questionCount++;
-        //validate question
-        question.isValid =
-          (question.type === 'OPEN' ? true : question.answers.length > 0) &&
-          (question.type === 'SINGLE'
-            ? question.answers.reduce((a, b) => {
-                return a + +b.correct;
-              }, 0) === 1
-            : true);
-      }
-    }
-  }
-
   const exam = computed<Exam>(() => {
-    console.time('exam');
-    const localexam: Exam = {
-      source: source.value,
-      sections: Object.values(sectionIndex.value)
-        .sort((a: Section, b: Section) => (a.order || 0) - (b.order || 0))
-        .map((section: Section) => {
-          return {
-            ...section,
-            questions: Object.values(questionIndex.value)
-              .filter((question: Question) => question.section === section.id)
-              .sort((a: Question, b: Question) => (a.order || 0) - (b.order || 0))
-              .map((question: Question) => {
-                return {
-                  ...question,
-                  answers: Object.values(answerIndex.value)
-                    .filter((answer: Answer) => answer.question === question.id)
-                    .sort((a: Answer, b: Answer) => (a.order || 0) - (b.order || 0))
-                };
-              })
-          };
-        }),
-      properties: properties.value,
-      codes: codes.value,
-      graphics: graphics.value
-    };
-    computeHierarchyNumbers(localexam);
-    console.timeEnd('exam');
-    return localexam;
+    void revision.value;
+    return ydoc && API.yjsSynced
+      ? readExam(ydoc)
+      : { sections: [], properties: {}, graphics: {}, codes: {}, source: '' };
   });
 
-  watchEffect(() => {
-    if (!API.yjsSynced) {
-      sectionIndex.value = {};
-      questionIndex.value = {};
-      answerIndex.value = {};
-      properties.value = {};
-      graphics.value = {};
-      codes.value = {};
-      source.value = '';
-    }
-    if (API.yjsSynced) {
-      bindYdocToExam(API.getYdoc());
-      handleCopy();
-    }
-  });
+  watch(
+    () => API.yjsSynced,
+    () => {
+      if (!API.yjsSynced) {
+        sectionIndex.value = {};
+        questionIndex.value = {};
+        answerIndex.value = {};
+        properties.value = {};
+        graphics.value = {};
+        codes.value = {};
+        source.value = '';
+      }
+      if (API.yjsSynced) {
+        bindYdocToExam(API.getYdoc());
+        handleCopy();
+      }
+    },
+    { immediate: true }
+  );
 
   return {
     undo() {

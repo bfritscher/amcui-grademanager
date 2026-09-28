@@ -74,7 +74,8 @@ export default defineComponent({
 
     watchEffect(() => {
       if (store.isLoggedIn) {
-        router.push({ name: 'Home' });
+        const redirect = String(router.currentRoute.value.query.redirect || '');
+        router.push(redirect.startsWith('/mcp/authorize?') ? redirect : { name: 'Home' });
       }
     });
 

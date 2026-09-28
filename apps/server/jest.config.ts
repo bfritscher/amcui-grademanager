@@ -95,6 +95,7 @@ const config: Config.InitialOptions = {
 
   // A preset that is used as a base for Jest's configuration
   preset: "ts-jest",
+  testMatch: ['<rootDir>/tests/**/*.spec.ts'],
 
   // Run tests from one or more projects
   // projects: undefined,
