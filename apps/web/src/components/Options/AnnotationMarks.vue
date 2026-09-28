@@ -42,7 +42,6 @@ const props = defineProps({
   },
   value: {
     type: Object,
-    required: true,
     default() {
       return {};
     }

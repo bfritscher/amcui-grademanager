@@ -55,7 +55,8 @@ describe('AMCUI Exam Section', { testIsolation: false }, () => {
 
   it('can rename section', () => {
     cy.visit(`${API_END_POINT}/${PROJECT_NAME}/edit`);
-    cy.get('input[placeholder="Section Name"]').clear().type('Test Section 1');
+    cy.get('input[placeholder="Section Name"]').clear();
+    cy.get('input[placeholder="Section Name"]').type('Test Section 1');
     cy.contains('Test Section 1').should('exist');
   });
 
@@ -63,13 +64,13 @@ describe('AMCUI Exam Section', { testIsolation: false }, () => {
     cy.visit(`${API_END_POINT}/${PROJECT_NAME}/edit`);
     cy.contains('Add Section').click();
 
-    cy.wait(300);
-    cy.get('input[placeholder="Section Name"]').clear().type('Test Section 2');
+    cy.get('input[placeholder="Section Name"]').clear();
+    cy.get('input[placeholder="Section Name"]').type('Test Section 2');
     cy.contains('Test Section 2').should('exist');
     cy.contains('Add Section').click();
 
-    cy.wait(300);
-    cy.get('input[placeholder="Section Name"]').clear().type('Test Section 3');
+    cy.get('input[placeholder="Section Name"]').clear();
+    cy.get('input[placeholder="Section Name"]').type('Test Section 3');
     cy.contains('Test Section 3').should('exist');
   });
   it('can switch section', () => {
@@ -84,11 +85,9 @@ describe('AMCUI Exam Section', { testIsolation: false }, () => {
     // cy.get('button[aria-label="toggle menu"]').click();
     cy.contains('.edit-drawer-tree a', 'Test Section 2').click();
 
-    cy.wait(300);
     cy.get('input[placeholder="Section Name"]').should('have.value', 'Test Section 2');
     cy.contains('.edit-drawer-tree a', 'Test Section 3').click();
 
-    cy.wait(300);
     cy.get('input[placeholder="Section Name"]').should('have.value', 'Test Section 3');
   });
 
@@ -107,10 +106,8 @@ describe('AMCUI Exam Section', { testIsolation: false }, () => {
     cy.get('button[aria-label="delete section"]').click();
     cy.get('input[placeholder="Section Name"]').should('have.value', 'Test Section 1');
 
-    cy.wait(300);
     cy.get('button[aria-label="delete section"]').click();
 
-    cy.wait(300);
     cy.get('button[aria-label="delete section"]').click();
     cy.get('input[placeholder="Section Name"]').should('have.value', 'Section Name');
   });
@@ -136,9 +133,11 @@ describe('AMCUI Exam Question', { testIsolation: false }, () => {
     // single mode only allows 1 choice
     cy.contains('Add Question').click();
     cy.get('.question .q-icon.text-warning').should('be.visible');
-    cy.get('.answer-toggle[aria-label="incorrect"]').first().click().should('have.attr', 'aria-label', 'correct');
+    cy.get('.answer-toggle[aria-label="incorrect"]').first().click();
+    cy.get('.answer-toggle').first().should('have.attr', 'aria-label', 'correct');
     cy.get('.question .q-icon.text-warning').should('not.exist');
-    cy.get('.answer-toggle[aria-label="incorrect"]').last().click().should('have.attr', 'aria-label', 'correct');
+    cy.get('.answer-toggle[aria-label="incorrect"]').last().click();
+    cy.get('.answer-toggle').last().should('have.attr', 'aria-label', 'correct');
     cy.get('.question .q-icon.text-warning').should('be.visible');
     cy.get('button[aria-label="delete question"]').last().click();
   });
@@ -148,7 +147,8 @@ describe('AMCUI Exam Question', { testIsolation: false }, () => {
     cy.contains('SINGLE').click();
     cy.contains('MULTIPLE').click();
     cy.get('.answer-toggle').last().should('have.attr', 'aria-label', 'correct');
-    cy.get('.answer-toggle[aria-label="incorrect"]').first().click().should('have.attr', 'aria-label', 'correct');
+    cy.get('.answer-toggle[aria-label="incorrect"]').first().click();
+    cy.get('.answer-toggle').first().should('have.attr', 'aria-label', 'correct');
     cy.get('.answer-toggle').last().should('have.attr', 'aria-label', 'incorrect');
     cy.get('.question .q-icon.text-warning').should('not.exist');
     cy.contains('.question', '♣').should('exist');
@@ -160,7 +160,8 @@ describe('AMCUI Exam Question', { testIsolation: false }, () => {
     cy.contains('SINGLE').click();
     cy.contains('OPEN').click();
     cy.get('[aria-label="Dots"]').click();
-    cy.contains('label', 'lines').find('input').clear().type('6');
+    cy.contains('label', 'lines').find('input').clear();
+    cy.contains('label', 'lines').find('input').type('6');
     cy.get('.dots').should('have.length', 6);
     cy.get('button[aria-label="delete question"]').last().click();
   });
@@ -186,7 +187,6 @@ describe('AMCUI Exam Question', { testIsolation: false }, () => {
     cy.get('.answer').last().find('.le__paragraph').type('Test Answer 1');
     cy.get('.answer').last().click();
     cy.contains('Test Answer 1').should('exist');
-    cy.wait(1300);
   });
 
   it('can duplicate a question', () => {
@@ -312,13 +312,10 @@ after(() => {
   // cleanup because backend keeps data if new project recreated with same name (cache bug)
   cy.get('button[aria-label="delete section"]').click({ force: true });
 
-  cy.wait(300);
   cy.get('button[aria-label="delete section"]').click({ force: true });
 
-  cy.wait(300);
   cy.get('button[aria-label="delete section"]').click({ force: true });
 
-  cy.wait(300);
   cy.get('button[aria-label="delete section"]').click({ force: true });
   destroyProject();
   cy.clearLocalStorage()

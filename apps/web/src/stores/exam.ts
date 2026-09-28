@@ -252,15 +252,6 @@ export const useExamStore = defineStore('exam', () => {
     patchEntity(ydoc, 'answers', answer.id, data);
   }
 
-  function copyAnswer(question: Question, answer: Answer) {
-    const copy = createAnswer(question);
-    copy.content = answer.content;
-    copy.correct = answer.correct;
-    copy.order = answer.order;
-    copy.scoring = answer.scoring;
-    return copy;
-  }
-
   function removeAnswer(answer: Answer) {
     applyChanges(ydoc, [{ op: 'answer.delete', id: answer.id }]);
   }
@@ -351,10 +342,6 @@ export const useExamStore = defineStore('exam', () => {
       }
     }
     return undefined;
-  }
-
-  function removeCode(code: Code) {
-    ydoc.getMap('codes').delete(code.id);
   }
 
   function graphicsPreviewURL(id: string) {

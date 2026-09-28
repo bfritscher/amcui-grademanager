@@ -23,6 +23,7 @@ describe('mounted rich-text synchronization', () => {
         },
         { tag: 'amcui-remote', discrete: true }
       );
+    // eslint-disable-next-line vue/one-component-per-file -- test-only helper components
     const Bridge = defineComponent({
       setup() {
         editor = useLexicalComposer();
@@ -39,6 +40,7 @@ describe('mounted rich-text synchronization', () => {
           ]);
       }
     });
+    // eslint-disable-next-line vue/one-component-per-file -- test-only helper components
     const Wrapper = defineComponent({
       setup: () => () =>
         h(
