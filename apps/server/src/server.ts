@@ -39,6 +39,7 @@ import {URL} from 'url';
 import { LeveldbPersistence } from 'y-leveldb';
 import { ExamDocuments } from './exam/documents.js';
 import { ExamAssets } from './exam/assets.js';
+import { isThumbnail, makeThumbnail, missingThumbnails, resolveThumbnail } from './exam/thumbnails.js';
 import { ExamPreviews, renderSnapshot } from './exam/previews.js';
 import { ExamOAuth } from './mcp/oauth.js';
 import { installMcp } from './mcp/routes.js';
@@ -251,11 +252,7 @@ const secure = (
 };
 
 // Shared browser/MCP asset and preview services.
-const assets = new ExamAssets(PROJECTS_FOLDER, (folder, filename, id) => new Promise((resolve, reject) => {
-  const child = childProcess.spawn('gm', ['convert', '-trim', '+repage', '-background', 'white', '+matte', '-density', '120', filename + '[0]', id + '_thumb.jpg'], {cwd: folder});
-  const timeout = setTimeout(() => {child.kill('SIGKILL'); reject(new Error('Thumbnail generation timed out'));}, 60_000);
-  child.on('error', error => {clearTimeout(timeout); reject(error);}); child.on('close', code => {clearTimeout(timeout); code === 0 ? resolve() : reject(new Error('Thumbnail generation failed'));});
-}), async data => {
+const assets = new ExamAssets(PROJECTS_FOLDER, makeThumbnail, async data => {
   const response = await fetch(process.env.SVG2PDF_URL || 'http://svg2pdf:3000/convert', {method: 'POST', body: data, signal: AbortSignal.timeout(60_000)});
   if (!response.ok) throw new Error('SVG conversion failed');
   return Buffer.from(await response.arrayBuffer());
@@ -1641,9 +1638,9 @@ app.get('/project/:project/static/:file*', aclProject, (req, res) => {
     file += req.params[0];
   }
   res.sendFile(
-    PROJECTS_FOLDER + '/' + req.params.project + '/' + file,
+    resolveThumbnail(PROJECTS_FOLDER + '/' + req.params.project + '/' + file),
     (err) => {
-      if (err && file.split('.').splice(-1)[0] === 'jpg') {
+      if (err && (isThumbnail(file) || file.split('.').splice(-1)[0] === 'jpg')) {
         res.sendFile(APP_FOLDER + '/assets/image_not_found.jpg');
       } else if (err) {
         res.sendStatus(404);
@@ -1651,38 +1648,6 @@ app.get('/project/:project/static/:file*', aclProject, (req, res) => {
     }
   );
 });
-
-function makeThumb(
-  project: string,
-  filename: string,
-  id: string,
-  callback?: null | ((code: number | null) => void)
-): void {
-  const GRAPHICS_FOLDER = PROJECTS_FOLDER + '/' + project + '/src/graphics/';
-  const convert = childProcess.spawn(
-    'gm',
-    [
-      'convert',
-      '-trim',
-      '+repage',
-      '-background',
-      'white',
-      '+matte',
-      '-density',
-      '120',
-      filename + '[0]',
-      id + '_thumb.jpg',
-    ],
-    {
-      cwd: GRAPHICS_FOLDER,
-    }
-  );
-  convert.on('exit', (code) => {
-    if (callback) {
-      callback(code);
-    }
-  });
-}
 
 /* EDIT */
 app.post(
@@ -1735,13 +1700,13 @@ app.post(
       console.error(e);
       return res.sendStatus(500);
     }
-    makeThumb(req.params.project, filename, req.body.id, (code: any) => {
-      if (code === 0) {
-        res.sendStatus(200);
-      } else {
-        res.sendStatus(500);
-      }
-    });
+    try {
+      await makeThumbnail(GRAPHICS_FOLDER, filename, req.body.id);
+      res.sendStatus(200);
+    } catch (error) {
+      console.error(error);
+      res.sendStatus(500);
+    }
   }
 );
 
@@ -1751,24 +1716,16 @@ app.get('/project/:project/graphics/sync', aclProject, (req, res) => {
   const allFiles = fs.readdirSync(GRAPHICS_FOLDER);
   //remove thumbs from list
   const files = allFiles.filter((filename) => {
-    return !filename.match(/(.*)_thumb.jpg/);
+    return !isThumbnail(filename) && !filename.startsWith('.');
   });
   //get files without thumb
-  files
-    .filter((filename) => {
-      return (
-        allFiles.indexOf(filename.replace(/(.*)\..*?$/, '$1_thumb.jpg')) === -1
-      );
-    })
-    .forEach((filename) => {
-      makeThumb(
-        req.params.project,
-        filename,
-        filename.replace(/(.*)\..*?$/, '$1'),
-        null
-      );
-    });
-  res.json(files);
+  void Promise.all(missingThumbnails(allFiles).map(async (filename) => {
+    try {
+      await makeThumbnail(GRAPHICS_FOLDER, filename, path.parse(filename).name);
+    } catch (error) {
+      console.error(error);
+    }
+  })).then(() => res.json(files));
 });
 
 app.post('/project/:project/graphics/delete', aclProject, (req, res) => {
@@ -1781,7 +1738,10 @@ app.post('/project/:project/graphics/delete', aclProject, (req, res) => {
         '.' +
         req.body.filename.split('.').splice(-1)[0]
     );
-    fs.unlinkSync(GRAPHICS_FOLDER + req.body.id + '_thumb.jpg');
+    for (const extension of ['png', 'jpg']) {
+      const thumbnail = GRAPHICS_FOLDER + req.body.id + '_thumb.' + extension;
+      if (fs.existsSync(thumbnail)) fs.unlinkSync(thumbnail);
+    }
     const excalidrawPath = `${GRAPHICS_FOLDER}${req.body.id}.excalidraw`;
     if (fs.existsSync(excalidrawPath)) {
       fs.unlinkSync(excalidrawPath);

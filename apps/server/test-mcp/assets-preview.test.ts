@@ -62,7 +62,7 @@ it('uploads graphics with conversion and cleanup; referenced assets cannot be de
   const assets = new ExamAssets(
     root,
     async (folder, _filename, id) => {
-      await fs.writeFile(path.join(folder, `${id}_thumb.jpg`), 'thumb');
+      await fs.writeFile(path.join(folder, `${id}_thumb.png`), 'thumb');
     },
     async () => Buffer.from('pdf'),
   );
@@ -88,6 +88,24 @@ it('uploads graphics with conversion and cleanup; referenced assets cannot be de
     expect(
       (await assets.getGraphic('exam', doc, result.graphic.id)).mimeType,
     ).toBe('image/svg+xml');
+    const folder = path.join(root, 'exam', 'src', 'graphics');
+    const png = path.join(folder, `${result.graphic.id}_thumb.png`);
+    const jpg = path.join(folder, `${result.graphic.id}_thumb.jpg`);
+    await fs.writeFile(jpg, 'legacy');
+    expect(
+      await assets.getGraphic('exam', doc, result.graphic.id, true),
+    ).toMatchObject({
+      mimeType: 'image/png',
+      data: Buffer.from('thumb').toString('base64'),
+    });
+    await fs.remove(png);
+    expect(
+      await assets.getGraphic('exam', doc, result.graphic.id, true),
+    ).toMatchObject({
+      mimeType: 'image/jpeg',
+      data: Buffer.from('legacy').toString('base64'),
+    });
+    await fs.writeFile(png, 'thumb');
     patchEntity(doc, 'sections', section.id, {content: result.html});
     await expect(
       assets.deleteGraphic('exam', doc, result.graphic.id),

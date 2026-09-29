@@ -13,6 +13,7 @@ import {
   type Code,
 } from '@amcui/exam-core';
 import {ExamDocuments} from './documents.js';
+import {resolveThumbnail} from './thumbnails.js';
 
 export type Owner = {entityId: string; field: 'content' | 'answer'};
 function validateGraphic(bytes: Buffer, mime: string): void {
@@ -303,12 +304,13 @@ export class ExamAssets {
     const graphic = readExam(doc).graphics[id];
     if (!graphic) throw new Error('NOT_FOUND: graphic');
     const extension = thumbnail
-      ? 'jpg'
+      ? 'png'
       : path.extname(graphic.name).slice(1).toLowerCase();
-    const filename = path.join(
+    let filename = path.join(
       this.folder(project),
-      thumbnail ? `${id}_thumb.jpg` : `${id}.${extension}`,
+      thumbnail ? `${id}_thumb.png` : `${id}.${extension}`,
     );
+    if (thumbnail) filename = resolveThumbnail(filename);
     // Legacy SVG uploads kept only the converted PDF. Return the actual format.
     const actual =
       !thumbnail && extension === 'svg' && !(await fs.pathExists(filename))
@@ -340,7 +342,10 @@ export class ExamAssets {
     const folder = this.folder(project),
       staging = await fs.mkdtemp(path.join(folder, '.delete-'));
     const files = (await fs.readdir(folder)).filter(
-      (name) => name.startsWith(`${id}.`) || name === `${id}_thumb.jpg`,
+      (name) =>
+        name.startsWith(`${id}.`) ||
+        name === `${id}_thumb.jpg` ||
+        name === `${id}_thumb.png`,
     );
     try {
       for (const name of files)

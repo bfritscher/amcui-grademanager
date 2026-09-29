@@ -84,7 +84,7 @@ function htmlQuizText(html: (string | Promise<string>)[], text: string) {
     Promise.all(promises).then((results) => {
       text = text.replace(/<img id="(.*?)">/g, (subString, id: string) => {
         const b64 = results.shift();
-        return `<img src="data:image/jpg;charset=utf-8;base64, ${b64}" alt="${id}"/>`;
+        return `<img src="${b64}" alt="${id}"/>`;
       });
       return text;
     })
@@ -96,7 +96,7 @@ function convertBlobToBase64(blob: Blob) {
     const reader = new FileReader();
     reader.onerror = reject;
     reader.onload = () => {
-      resolve((reader.result as string).split(',')[1]);
+      resolve(reader.result as string);
     };
     reader.readAsDataURL(blob);
   });

@@ -288,6 +288,8 @@ export const useExamStore = defineStore('exam', () => {
     ydoc.getMap('graphics').delete(graphics.id);
   }
 
+  const graphicsPreviewVersion = ref(0);
+
   function syncGraphics() {
     API.$http.get(API.URL + '/project/' + API.project + '/graphics/sync').then((r: any) => {
       const ids: string[] = [];
@@ -306,6 +308,8 @@ export const useExamStore = defineStore('exam', () => {
           deleteGraphics(exam.value.graphics[id]);
         }
       }
+      // Sync may have regenerated a legacy thumbnail from its PNG original.
+      graphicsPreviewVersion.value++;
     });
   }
 
@@ -345,7 +349,15 @@ export const useExamStore = defineStore('exam', () => {
   }
 
   function graphicsPreviewURL(id: string) {
-    return API.PROJECT_URL + '/static/src/graphics/' + id + '_thumb.jpg?token=' + store.token;
+    return (
+      API.PROJECT_URL +
+      '/static/src/graphics/' +
+      id +
+      '_thumb.png?token=' +
+      store.token +
+      '&v=' +
+      graphicsPreviewVersion.value
+    );
   }
 
   function getJSON() {

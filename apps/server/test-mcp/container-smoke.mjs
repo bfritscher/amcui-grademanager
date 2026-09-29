@@ -250,7 +250,7 @@ try {
   });
   assert.equal(
     (await client.readResource({uri: thumb.uri})).contents[0].mimeType,
-    'image/jpeg',
+    'image/png',
   );
   await call('exam_apply_changes', {
     projectId: project,

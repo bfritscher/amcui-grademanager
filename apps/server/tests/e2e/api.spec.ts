@@ -349,10 +349,13 @@ describe('Graphics', () => {
       .attach('file', './tests/e2e/fixtures/test.jpg')
       .field({id: 'img'})
       .expect(200);
-    await api
-      .get(`/project/${PROJECT_NAME}/static/graphics/img_thumb.jpg`)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200);
+    for (const extension of ['png', 'jpg']) {
+      await api
+        .get(`/project/${PROJECT_NAME}/static/src/graphics/img_thumb.${extension}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect('Content-Type', /image\/png/)
+        .expect(200);
+    }
   });
 
   it('should upload a pdf and make a thumb', async () => {
@@ -363,8 +366,9 @@ describe('Graphics', () => {
       .field({id: 'pdf'})
       .expect(200);
     await api
-      .get(`/project/${PROJECT_NAME}/static/graphics/pdf_thumb.jpg`)
+      .get(`/project/${PROJECT_NAME}/static/src/graphics/pdf_thumb.png`)
       .set('Authorization', `Bearer ${token}`)
+      .expect('Content-Type', /image\/png/)
       .expect(200);
   });
 
