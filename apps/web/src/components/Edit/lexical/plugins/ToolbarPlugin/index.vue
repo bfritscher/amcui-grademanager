@@ -176,9 +176,7 @@ const CODE_LANGUAGE_OPTIONS = getCodeLanguageOptions();
 onMounted(() => {
   const unregisterMergeListener = mergeRegister(
     editor.registerUpdateListener(({ editorState }) => {
-      editorState.read(() => {
-        $updateToolbar();
-      });
+      editorState.read($updateToolbar, { editor });
     }),
     editor.registerCommand(
       SELECTION_CHANGE_COMMAND,
@@ -313,13 +311,18 @@ function showGraphicsManager() {
 }
 
 function insertExcalidraw() {
+  isGraphicsDialogOpen.value = true;
   $q.dialog({
     component: ExcalidrawDialog
-  }).onOk((item: Graphics) => {
-    if (item) {
-      editor.dispatchCommand(INSERT_IMAGE_COMMAND, item);
-    }
-  });
+  })
+    .onOk((item: Graphics) => {
+      if (item) {
+        editor.dispatchCommand(INSERT_IMAGE_COMMAND, item);
+      }
+    })
+    .onDismiss(() => {
+      isGraphicsDialogOpen.value = false;
+    });
 }
 
 const isBlockDropdownOpen = ref(false);

@@ -10,27 +10,18 @@ const router = createRouter({
   routes
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to) => {
   const store = useStore();
   if (to.name === 'Login') {
     if (store.isLoggedIn) {
       const redirect = String(to.query.redirect || '');
-      next(redirect.startsWith('/mcp/authorize?') ? redirect : { name: 'Home' });
-    } else {
-      next();
+      return redirect.startsWith('/mcp/authorize?') ? redirect : { name: 'Home' };
     }
     return;
   }
   // check auth
-  if (to.matched.some((record) => record.meta.requiresAuth)) {
-    if (store.isLoggedIn) {
-      next();
-    } else {
-      next({ name: 'Login', query: { redirect: to.fullPath } });
-      return;
-    }
-  } else {
-    next();
+  if (to.matched.some((record) => record.meta.requiresAuth) && !store.isLoggedIn) {
+    return { name: 'Login', query: { redirect: to.fullPath } };
   }
   // if is a project url, check/load project
   const API = useApiStore();

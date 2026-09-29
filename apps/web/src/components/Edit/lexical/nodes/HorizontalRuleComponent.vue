@@ -21,16 +21,14 @@ const props = defineProps({
   }
 });
 
-const { nodeKey } = props;
-
 const editor = useLexicalComposer();
 
-const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(props.nodeKey);
+const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(() => props.nodeKey);
 
 const $onDelete = (event: KeyboardEvent) => {
   if (isSelected.value && $isNodeSelection($getSelection())) {
     event.preventDefault();
-    const node = $getNodeByKey(nodeKey);
+    const node = $getNodeByKey(props.nodeKey);
     if ($isHorizontalRuleNode(node)) {
       node.remove();
       return true;
@@ -43,7 +41,7 @@ const registerCommands = () => {
   const clickCommand = editor.registerCommand(
     CLICK_COMMAND,
     (event) => {
-      const hrElem = editor.getElementByKey(nodeKey);
+      const hrElem = editor.getElementByKey(props.nodeKey);
 
       if (event.target === hrElem) {
         if (!event.shiftKey) {
@@ -75,7 +73,7 @@ onMounted(() => {
   watch(
     isSelected,
     (newValue) => {
-      const hrElem = editor.getElementByKey(nodeKey);
+      const hrElem = editor.getElementByKey(props.nodeKey);
       const isSelectedClassName = 'selected';
 
       if (hrElem) {

@@ -25,8 +25,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose -p amcui-mcp-test -f compose.mcp-test.yml up --build --abort-on-container-exit --exit-code-from smoke
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npm run build:core && npm run build-only --workspace=amcui-grademanager
+        env:
+          AMCUI_DISABLE_SENTRY: 'true'
+      - run: docker compose -p amcui-mcp-test -f compose.mcp-test.yml -f compose.e2e.yml up -d --wait server
+      - run: npm run test:e2e:editor --workspace=amcui-grademanager
+        env:
+          AMCUI_E2E_API_URL: http://127.0.0.1:9001
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: editor-browser-failures
+          path: |
+            apps/web/test/cypress/screenshots
+            apps/web/test/cypress/videos
+          if-no-files-found: ignore
       - if: always()
-        run: docker compose -p amcui-mcp-test -f compose.mcp-test.yml down -v
+        run: docker compose -p amcui-mcp-test -f compose.mcp-test.yml -f compose.e2e.yml down -v
   images:
     if: github.event_name == 'push'
     needs: [test, integration]

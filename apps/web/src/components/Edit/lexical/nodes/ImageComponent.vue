@@ -41,19 +41,17 @@ const props = defineProps({
   }
 });
 
-const { nodeKey } = props;
-
 const editor = useLexicalComposer();
 const imgRef = ref(null);
 const examService = useExamStore();
 const $q = useQuasar();
 
-const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(props.nodeKey);
+const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(() => props.nodeKey);
 
 const $onDelete = (event: KeyboardEvent) => {
   if (isSelected.value && $isNodeSelection($getSelection())) {
     event.preventDefault();
-    const node = $getNodeByKey(nodeKey);
+    const node = $getNodeByKey(props.nodeKey);
     if ($isImageNode(node)) {
       node.remove();
       return true;
@@ -92,7 +90,7 @@ const registerCommands = () => {
 };
 
 watchEffect(() => {
-  const span = editor.getElementByKey(nodeKey);
+  const span = editor.getElementByKey(props.nodeKey);
   if (span) {
     span.style.width = `${props.width}%`;
   }

@@ -37,5 +37,7 @@ services:
       - svg2pdf
   svg2pdf:
     build: ./svg2pdf
+    cap_add:
+      - SYS_ADMIN
     ports:
       - "3000:3000"

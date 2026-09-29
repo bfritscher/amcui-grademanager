@@ -1,0 +1,6 @@
+# Browser tests access the disposable server from the host runner.
+# Use together with compose.mcp-test.yml; never mount developer project data.
+services:
+  server:
+    ports:
+      - '127.0.0.1:9001:9001'

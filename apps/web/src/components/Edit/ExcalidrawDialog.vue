@@ -14,9 +14,15 @@
           :icon="maximized ? 'sym_o_fullscreen_exit' : 'sym_o_fullscreen'"
           @click="maximized = !maximized"
         />
-        <q-btn flat label="discard" @click="onDialogHide()" />
-        <q-btn flat label="save as" @click="saveAs" />
-        <q-btn v-if="graphic" flat label="save" @click="save(graphic)" />
+        <q-btn flat label="discard" :disable="isSaving" @click="onDialogHide()" />
+        <q-btn flat label="save as" :disable="!isReady || isSaving" @click="saveAs" />
+        <q-btn
+          v-if="graphic"
+          flat
+          label="save"
+          :disable="!isReady || isSaving"
+          @click="save(graphic)"
+        />
       </q-toolbar>
       <div class="col">
         <q-inner-loading :showing="isSaving" label="Saving..." />
@@ -65,6 +71,7 @@ export default defineComponent({
     const examService = useExamStore();
     const maximized = ref(false);
     const isSaving = ref(false);
+    const isReady = ref(false);
 
     const excalidrawRoot = ref();
 
@@ -93,6 +100,7 @@ export default defineComponent({
           React.createElement(Excalidraw, {
             excalidrawAPI: (api: ExcalidrawImperativeAPI) => {
               excalidrawApi = api;
+              isReady.value = true;
             },
             initialData
           })
@@ -106,34 +114,32 @@ export default defineComponent({
     });
 
     function saveAs() {
+      if (!isReady.value || isSaving.value) return;
       $q.dialog({
         title: 'Save As',
         prompt: {
           model: props.graphic ? props.graphic.name.replace('.excalidraw', '') : '',
           type: 'text',
-          placeholder: 'Enter new name'
+          placeholder: 'Enter new name',
+          isValid: (value: string) => value.trim().length > 0
         },
         cancel: true
       }).onOk(async (newName: string) => {
-        if (!newName) {
+        if (!newName.trim()) {
           return;
         }
         const copy = examService.createGraphics();
-        copy.name = newName + '.excalidraw';
+        copy.name = newName.trim() + '.excalidraw';
         if (props.graphic) {
           copy.width = props.graphic.width;
           copy.border = props.graphic.border;
         }
-        examService.addGraphics(copy);
-        // fix save locking after addgraphics
-        // TODO check server concurrency
-        setTimeout(() => {
-          save(copy);
-        }, 1000);
+        await save(copy, true);
       });
     }
 
-    async function save(graphic: Graphics) {
+    async function save(graphic: Graphics, isNew = false) {
+      if (!isReady.value || isSaving.value) return;
       isSaving.value = true;
       try {
         const module = await import('@excalidraw/excalidraw');
@@ -152,20 +158,26 @@ export default defineComponent({
           graphic.name.replace('.excalidraw', '.svg')
         );
         await API.uploadGraphics(graphic, newFile, json);
+        if (isNew) examService.addGraphics(graphic);
         examService.updateGraphics(graphic, {
           updatedAt: new Date().getTime().toString()
         });
-        isSaving.value = false;
         onDialogOK(graphic);
       } catch (e) {
-        isSaving.value = false;
         console.error(e);
+        $q.notify({
+          type: 'negative',
+          message: 'Unable to save the drawing. Please try again. Your drawing is still open.'
+        });
+      } finally {
+        isSaving.value = false;
       }
     }
 
     return {
       maximized,
       isSaving,
+      isReady,
       dialogRef,
       excalidrawRoot,
       onDialogHide,

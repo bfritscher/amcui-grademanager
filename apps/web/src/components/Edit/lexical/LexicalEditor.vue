@@ -8,8 +8,7 @@ import {
   HistoryPlugin,
   ListPlugin,
   RichTextPlugin,
-  TabIndentationPlugin,
-  TablePlugin
+  TabIndentationPlugin
 } from 'lexical-vue';
 
 import PlaygroundEditorTheme from './themes/EditorTheme';
@@ -23,6 +22,7 @@ import DraggableBlockPlugin from './plugins/DraggableBlockPlugin.vue';
 import LexicalHorizontalRulePlugin from './plugins/LexicalHorizontalRulePlugin.vue';
 import PageBreakPlugin from './plugins/PageBreakPlugin.vue';
 import TableActionMenuPlugin from './plugins/Table/TableActionMenuPlugin.vue';
+import TablePlugin from './plugins/Table/TablePlugin.vue';
 import BoxPlugin from './plugins/BoxPlugin.vue';
 import ImagePlugin from './plugins/ImagePlugin.vue';
 
@@ -428,7 +428,8 @@ const oulinedClass = computed(() => {
   justify-content: center;
   z-index: 1;
 }
-.ContentEditable__root {
+/* ContentEditable renders a fragment, so its editable DOM needs a deep selector. */
+.lexical-editor :deep(.ContentEditable__root) {
   border: 0;
   display: block;
   position: relative;
