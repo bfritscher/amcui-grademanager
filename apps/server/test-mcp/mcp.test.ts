@@ -3,6 +3,7 @@ import {Client} from '@modelcontextprotocol/sdk/client/index.js';
 import {InMemoryTransport} from '@modelcontextprotocol/sdk/inMemory.js';
 import {createExamMcp, installMcp} from '../src/mcp/routes.js';
 import {ExamDocuments} from '../src/exam/documents.js';
+import {ExamCopy} from '../src/exam/copy.js';
 import {ExamOAuth} from '../src/mcp/oauth.js';
 import {MemoryOAuth, MemoryPersistence} from './helpers.js';
 import express from 'express';
@@ -11,7 +12,7 @@ import type {McpDependencies} from '../src/mcp/routes.js';
 import {StreamableHTTPClientTransport} from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import {ExamAssets} from '../src/exam/assets.js';
 import {renderSnapshot} from '../src/exam/previews.js';
-import {readExam} from '@amcui/exam-core';
+import {applyChanges, readExam} from '@amcui/exam-core';
 import {codeExample, examGuideUri, questionExample} from '../src/mcp/guide.js';
 
 function fixture() {
@@ -21,6 +22,7 @@ function fixture() {
   );
   const deps = {
     documents,
+    copy: new ExamCopy('', documents),
     oauth: new ExamOAuth(
       new MemoryOAuth(),
       'http://localhost/api/mcp',
@@ -45,6 +47,64 @@ function fixture() {
   };
   return {deps, auth};
 }
+it('copies through MCP with source and destination authorization and durable retry receipts', async () => {
+  const {deps, auth} = fixture();
+  const sectionId = await deps.documents.withDocument('exam', (doc) => {
+    const section = readExam(doc).sections[0];
+    applyChanges(doc, [
+      {
+        op: 'question.create',
+        sectionId: section.id,
+        fields: {content: 'Copy this'},
+      },
+    ]);
+    return section.id;
+  });
+  const server = createExamMcp(deps, auth);
+  const [a, b] = InMemoryTransport.createLinkedPair();
+  const client = new Client({name: 'copy-test', version: '1'});
+  await server.connect(a);
+  await client.connect(b);
+  try {
+    const args = {
+      projectId: 'exam',
+      destinationProjectId: 'destination',
+      requestId: 'copy-1',
+      selection: [{sectionId}],
+    };
+    expect(
+      (await client.callTool({name: 'exam_copy_content', arguments: args}))
+        .isError,
+    ).toBe(true);
+    auth.extra.projects.push('destination');
+    const first = await client.callTool({
+      name: 'exam_copy_content',
+      arguments: args,
+    });
+    expect(first.isError).not.toBe(true);
+    expect(first.structuredContent).toMatchObject({sections: 1, questions: 1});
+    expect(
+      (await client.callTool({name: 'exam_copy_content', arguments: args}))
+        .structuredContent,
+    ).toEqual(first.structuredContent);
+    expect(
+      (await deps.documents.withDocument('destination', readExam)).sections,
+    ).toHaveLength(2);
+    auth.extra.projects.splice(auth.extra.projects.indexOf('exam'), 1);
+    expect(
+      (
+        await client.callTool({
+          name: 'exam_copy_content',
+          arguments: {...args, requestId: 'copy-2'},
+        })
+      ).isError,
+    ).toBe(true);
+  } finally {
+    await client.close();
+    await server.close();
+    await deps.documents.close();
+  }
+});
 it('exposes interoperable schemas and executes retry-safe edits through an MCP SDK client', async () => {
   const {deps, auth} = fixture();
   const server = createExamMcp(deps, auth);
@@ -215,7 +275,7 @@ it('provides proxy-correct OAuth metadata and authenticated stateless HTTP trans
         {requestInit: {headers: {Authorization: 'Bearer test'}}},
       ),
     );
-    expect((await client.listTools()).tools).toHaveLength(19);
+    expect((await client.listTools()).tools).toHaveLength(20);
     const raw = await request(app)
       .post('/mcp')
       .set('Authorization', 'Bearer test')

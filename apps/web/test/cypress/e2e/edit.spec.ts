@@ -322,7 +322,7 @@ after(() => {
   cy.clearCookies()
 });
 // todo unit test html2latex component
-// copy mode
+// Copy mode is covered by test/vitest/__tests__/copy.test.ts.
 // search
 // latex option
 // preview dialog

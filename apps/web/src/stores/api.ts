@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { CopyRequest } from '@amcui/exam-core';
 import Papa from 'papaparse';
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
@@ -576,6 +577,9 @@ export const useApiStore = defineStore('api', () => {
             position: 'top-right'
           });
         });
+    },
+    copyContent(src: string, request: CopyRequest) {
+      return $http.value.post(API_URL.value + '/project/' + src + '/copy/content', request);
     },
     copyGraphics(src: string, dest: string) {
       return $http.value

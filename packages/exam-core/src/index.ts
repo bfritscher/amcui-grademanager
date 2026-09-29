@@ -6,6 +6,7 @@ import { parseFragment } from 'parse5';
 export * from './types.js';
 export * from './schema.js';
 export * from './migrations.js';
+export * from './copy.js';
 
 export const entityMaps = ['sections', 'questions', 'answers', 'graphics', 'codes'] as const;
 export type EntityMap = (typeof entityMaps)[number];

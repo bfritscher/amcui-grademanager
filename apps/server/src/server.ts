@@ -38,6 +38,7 @@ import {importArchive, streamArchive} from './exam/archives.js';
 import {URL} from 'url';
 import {LeveldbPersistence} from 'y-leveldb';
 import {ExamDocuments} from './exam/documents.js';
+import {ExamCopy, copyContentHandler} from './exam/copy.js';
 import {ExamAssets} from './exam/assets.js';
 import {
   isThumbnail,
@@ -336,6 +337,7 @@ if (process.env.MCP_ENABLED === 'true') {
     JSON.parse(process.env.MCP_CLIENTS_JSON || '[]'),
   );
   installMcp(app, {
+    copy: new ExamCopy(PROJECTS_FOLDER, documents),
     oauth,
     documents,
     assets,
@@ -1383,6 +1385,15 @@ app.get('/project/:project/dbversions', aclProject, (req, res) => {
     );
   });
 });
+
+app.post(
+  '/project/:project/copy/content',
+  aclProject,
+  copyContentHandler(
+    new ExamCopy(PROJECTS_FOLDER, documents),
+    (username, project) => acl.hasRole(username, project),
+  ),
+);
 
 app.post('/project/:project/copy/template', aclProject, (req, res) => {
   const TEMPLATE_FOLDER = TEMPLATES_FOLDER + '/' + req.body.template;

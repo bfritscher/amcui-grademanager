@@ -12,6 +12,13 @@ not suppressed or patched.
 drawing, and disabling duplicate submissions. React rendering, SVG export, and
 upload are mocked in these unit tests.
 
+`copy.test.ts` mounts the real copy drawer, Quasar controls, and exam store with
+Yjs documents. It covers whole-section and partial selection, same-project order,
+cross-project navigation after success, duplicate-submit prevention, failure/retry,
+and project reloads without clipboard replay. The API transport is mocked using
+the shared copy functions; HTTP authorization, file handling, persistence, and
+retry receipts are covered separately in `apps/server/test-mcp/copy.test.ts`.
+
 Run all web unit tests from the repository root:
 
 ```sh

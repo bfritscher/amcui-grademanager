@@ -31,6 +31,7 @@
       <q-toggle
         v-model="examService.copy.enabled"
         label="Activate copy"
+        :disable="examService.copy.busy"
         dense
         @update:model-value="API.getProjectList()"
       />
@@ -42,6 +43,7 @@
           input-debounce="0"
           options-dense
           label="CopyTo"
+          :disable="examService.copy.busy"
           :options="ui.copyOptions"
           @filter="copyFilterFn"
         >
@@ -50,7 +52,8 @@
               label="Copy"
               color="primary"
               unelevated
-              :disable="copySummary.sections == 0 || !ui.copyToName"
+              :disable="copySummary.sections == 0 || !ui.copyToName || !API.yjsSynced"
+              :loading="examService.copy.busy"
               @click="examService.copyTo(ui.copyToName)"
             />
           </template>

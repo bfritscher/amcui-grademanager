@@ -20,8 +20,10 @@ import {
   operationsSchema,
   patchEntity,
   referencesTo,
+  copyRequestSchema,
 } from '@amcui/exam-core';
 import {ExamDocuments} from '../exam/documents.js';
+import {ExamCopy} from '../exam/copy.js';
 import {ExamAssets} from '../exam/assets.js';
 import {ExamPreviews} from '../exam/previews.js';
 import {ExamOAuth} from './oauth.js';
@@ -53,6 +55,7 @@ const dataResult = (data: any) => ({
 export interface McpDependencies {
   oauth: ExamOAuth;
   documents: ExamDocuments;
+  copy: ExamCopy;
   assets: ExamAssets;
   previews: ExamPreviews;
   publicApiUrl: string;
@@ -276,6 +279,21 @@ export function createExamMcp(deps: McpDependencies, auth: AuthInfo) {
           (d) => !args.questionIds || args.questionIds.includes(d.entityId),
         ),
       })),
+  );
+  tool(
+    'exam_copy_content',
+    'Copy selected sections or questions into another project (or the same project), with independent graphics and code. Preserves source order and destination layout. Omit questionIds for a whole section. Supply the same requestId only for an exact retry.',
+    z.object({projectId, ...copyRequestSchema.shape}),
+    true,
+    async ({projectId: source, ...input}) => {
+      await access(source);
+      await access(input.destinationProjectId, true);
+      return deps.copy.copy(
+        source,
+        input as import('@amcui/exam-core').CopyRequest,
+        JSON.stringify([username, auth.clientId]),
+      );
+    },
   );
   tool(
     'exam_apply_changes',

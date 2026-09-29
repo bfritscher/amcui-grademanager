@@ -6,7 +6,8 @@ import {
   putEntity,
   replaceExam,
   readExam,
-  applyChanges
+  applyChanges,
+  type CopyRequest
 } from '@amcui/exam-core';
 import { computed, ref, watch, type Ref } from 'vue';
 import { type RouteLocationRaw, useRouter } from 'vue-router';
@@ -34,14 +35,13 @@ import * as Y from 'yjs';
 import { defineStore } from 'pinia';
 import { debounce } from 'lodash-es';
 
-const AMCUI_COPY_KEY = 'AMCUI_COPY_KEY';
-
 export const useExamStore = defineStore('exam', () => {
   const currentQuestion = ref<Question>();
 
   const copy = ref({
     enabled: false,
-    data: {} as { [key: string]: Section },
+    busy: false,
+    data: {} as Record<string, string[]>,
     selected: new Set<string>()
   });
 
@@ -423,124 +423,94 @@ export const useExamStore = defineStore('exam', () => {
     return router.resolve(route);
   }
 
-  function copyTo(name: string) {
-    const localcopy = {
-      src: API.project,
-      dest: name,
-      sections: copy.value.data,
-      graphics: {},
-      codes: {}
-    };
-    // TODO-nice: filter code and graphics to be copied #54
-    localcopy.graphics = exam.value.graphics;
-    localcopy.codes = exam.value.codes;
-    localStorage.setItem(AMCUI_COPY_KEY, JSON.stringify(localcopy));
-    if (name === API.project) {
-      handleCopy();
-    } else {
-      router.push({ name: 'Edit', params: { project: name } });
+  let pendingCopy: { fingerprint: string; request: CopyRequest } | undefined;
+  function clearCopySelection() {
+    copy.value.enabled = false;
+    copy.value.selected.clear();
+    copy.value.data = {};
+    pendingCopy = undefined;
+  }
+  watch(() => API.project, clearCopySelection);
+
+  async function copyTo(name: string) {
+    if (copy.value.busy || !API.yjsSynced || !name || !Object.keys(copy.value.data).length) return;
+    const source = API.project;
+    const selection = Object.entries(copy.value.data).map(([sectionId, questionIds]) => ({
+      sectionId,
+      questionIds: [...questionIds]
+    }));
+    const fingerprint = JSON.stringify([source, name, selection]);
+    if (pendingCopy?.fingerprint !== fingerprint) {
+      pendingCopy = {
+        fingerprint,
+        request: {
+          destinationProjectId: name,
+          selection,
+          requestId: uuidv4(),
+          sourceSnapshot: Array.from(Y.encodeSnapshot(Y.snapshot(ydoc)))
+        }
+      };
+    }
+    copy.value.busy = true;
+    try {
+      await API.copyContent(source, pendingCopy.request);
+      if (API.project === source) {
+        clearCopySelection();
+      }
+      Notify.create({
+        type: 'positive',
+        message: 'Content has been copied!',
+        position: 'top-right'
+      });
+      if (API.project === source && name !== source) {
+        // Copy is already durable; a navigation failure must not invite another copy.
+        await router
+          .push({ name: 'Edit', params: { project: name, sectionIndex: '0' } })
+          .catch(() => {
+            Notify.create({
+              type: 'warning',
+              message: 'Content was copied, but the destination could not be opened.',
+              position: 'top-right'
+            });
+          });
+      }
+    } catch (error) {
+      // A rejected request made no changes. Refresh the source snapshot on retry;
+      // keep the original receipt ID after ambiguous network/server failures.
+      if ((error as { response?: { status?: number } }).response?.status === 409)
+        pendingCopy = undefined;
+      Notify.create({
+        type: 'negative',
+        message: 'Copy failed. Your selection is kept; please retry once the project is connected.',
+        position: 'top-right'
+      });
+    } finally {
+      copy.value.busy = false;
     }
   }
 
   function toggleCopy(section: Section, question?: Question) {
-    let sectionCopy, questionCopy;
-    if (copy.value.data.hasOwnProperty(section.id)) {
-      sectionCopy = copy.value.data[section.id];
-      if (question) {
-        //question handle
-        questionCopy = sectionCopy.questions.find((q) => q.id === question.id);
-        if (questionCopy) {
-          //remove
-          sectionCopy.questions.splice(sectionCopy.questions.indexOf(questionCopy), 1);
-          copy.value.selected.delete(question.id);
-        } else {
-          //add
-          sectionCopy.questions.splice(
-            section.questions.indexOf(question),
-            0,
-            JSON.parse(JSON.stringify(question)) as Question
-          );
-          copy.value.selected.add(question.id);
-        }
+    if (copy.value.busy) return;
+    const selected = copy.value.data[section.id];
+    if (selected && !question) {
+      selected.forEach((id) => copy.value.selected.delete(id));
+      copy.value.selected.delete(section.id);
+      delete copy.value.data[section.id];
+    } else if (selected && question) {
+      if (selected.includes(question.id)) {
+        selected.splice(selected.indexOf(question.id), 1);
+        copy.value.selected.delete(question.id);
       } else {
-        //remove section
-        sectionCopy.questions.forEach((q) => {
-          copy.value.selected.delete(q.id);
-        });
-        copy.value.selected.delete(section.id);
-        delete copy.value.data[section.id];
+        selected.push(question.id);
+        copy.value.selected.add(question.id);
       }
     } else {
-      //add section copy
-      sectionCopy = JSON.parse(JSON.stringify(section)) as Section;
-      copy.value.data[section.id] = sectionCopy;
-      copy.value.selected.add(sectionCopy.id);
-      //add question
-      if (question) {
-        sectionCopy.questions = [];
-        sectionCopy.questions.splice(
-          section.questions.indexOf(question),
-          0,
-          JSON.parse(JSON.stringify(question)) as Question
-        );
-        copy.value.selected.add(question.id);
-      } else {
-        //add all
-        sectionCopy.questions.forEach((q: Question) => {
-          copy.value.selected.add(q.id);
-        });
-      }
+      const ids = question ? [question.id] : section.questions.map((q) => q.id);
+      copy.value.data[section.id] = ids;
+      copy.value.selected.add(section.id);
+      ids.forEach((id) => copy.value.selected.add(id));
     }
   }
-
-  function handleCopy() {
-    const copySrc = localStorage.getItem(AMCUI_COPY_KEY) as string;
-    if (!copySrc) return;
-    const localcopy = JSON.parse(copySrc) as {
-      src: string;
-      dest: string;
-      sections: { [key: string]: Section };
-      graphics: { [key: string]: Graphics };
-      codes: { [key: string]: Code };
-    };
-    if (localcopy.dest !== API.project) return;
-    Object.values(localcopy.sections).forEach((section: Section, index: number) => {
-      const sectionCopy = createSection();
-      sectionCopy.title = section.title;
-      sectionCopy.content = section.content;
-      sectionCopy.level = section.level;
-      sectionCopy.isNumbered = section.isNumbered;
-      sectionCopy.isSectionTitleVisibleOnAMC = section.isSectionTitleVisibleOnAMC;
-      sectionCopy.shuffle = section.shuffle;
-      sectionCopy.columns = section.columns;
-      sectionCopy.pageBreakBefore = section.pageBreakBefore;
-      sectionCopy.order = exam.value.sections.length + index;
-      addSection(sectionCopy);
-      section.questions.map((question: Question, qindex: number) => {
-        question.order = qindex - 1;
-        copyQuestion(sectionCopy, question);
-      });
-    });
-    Object.values(localcopy.graphics).forEach((graphic: Graphics) => {
-      addGraphics(graphic);
-    });
-    Object.values(localcopy.codes).forEach((code: Code) => {
-      saveCode(code);
-    });
-    API.copyGraphics(localcopy.src as string, localcopy.dest as string);
-    API.copyCodes(localcopy.src as string, localcopy.dest as string);
-
-    localStorage.removeItem(AMCUI_COPY_KEY);
-    copy.value.enabled = false;
-    copy.value.selected.clear();
-    copy.value.data = {};
-    Notify.create({
-      type: 'positive',
-      message: 'Content has been copied!',
-      position: 'top-right'
-    });
-  }
-
   function preview() {
     const data = toLatex();
     data.source = exam.value.source;
@@ -704,7 +674,6 @@ export const useExamStore = defineStore('exam', () => {
       }
       if (API.yjsSynced) {
         bindYdocToExam(API.getYdoc());
-        handleCopy();
       }
     },
     { immediate: true }

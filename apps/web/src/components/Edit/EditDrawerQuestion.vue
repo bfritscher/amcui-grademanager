@@ -12,6 +12,7 @@
           <q-checkbox
             v-if="examService.copy.enabled"
             :model-value="examService.copy.selected.has(question.id)"
+            :disable="examService.copy.busy"
             dense
             @update:model-value="examService.toggleCopy(section, question)"
           >
