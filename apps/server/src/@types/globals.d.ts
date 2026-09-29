@@ -40,24 +40,23 @@ declare module 'u2f' {
   export function request(appId: string, keyHandle?: string): Request;
   export function checkRegistration(
     request: Request,
-    registerData: any
+    registerData: any,
   ): RegistrationResult;
   export function checkSignature(
     request: Request,
     signResult: any,
-    publicKey: string
+    publicKey: string,
   ): SignatureResult;
 }
 
-
-declare module "y-websocket/bin/utils" {
-  import { LeveldbPersistence } from 'y-leveldb'
+declare module 'y-websocket/bin/utils' {
+  import {LeveldbPersistence} from 'y-leveldb';
   export function setPersistence(
     persistence_: {
       bindState: (arg0: string, arg1: WSSharedDoc) => void;
       writeState: (arg0: string, arg1: WSSharedDoc) => Promise<any>;
       provider: any;
-    } | null
+    } | null,
   ): void;
   export function getPersistence(): null | {
     provider: LeveldbPersistence;
@@ -65,12 +64,12 @@ declare module "y-websocket/bin/utils" {
     writeState: (arg0: string, arg1: WSSharedDoc) => Promise<any>;
   } | null;
   export function setContentInitializor(
-    f: (ydoc: Y.Doc) => Promise<void>
+    f: (ydoc: Y.Doc) => Promise<void>,
   ): void;
   export function setupWSConnection(
-    conn: import("ws").WebSocket,
-    req: import("http").IncomingMessage,
-    { docName, gc }?: any
+    conn: import('ws').WebSocket,
+    req: import('http').IncomingMessage,
+    {docName, gc}?: any,
   ): void;
   export class WSSharedDoc extends Y.Doc {
     /**
@@ -93,7 +92,7 @@ declare module "y-websocket/bin/utils" {
    * @type {Map<string,WSSharedDoc>}
    */
   export const docs: Map<string, WSSharedDoc>;
-  import Y = require("yjs");
+  import Y = require('yjs');
   /**
    * Gets a Y.Doc by name, whether in memory or on disk
    *
@@ -102,5 +101,5 @@ declare module "y-websocket/bin/utils" {
    * @return {WSSharedDoc}
    */
   export function getYDoc(docname: string, gc?: boolean): WSSharedDoc;
-  import awarenessProtocol = require("y-protocols/awareness");
+  import awarenessProtocol = require('y-protocols/awareness');
 }

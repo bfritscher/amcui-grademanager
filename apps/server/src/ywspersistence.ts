@@ -9,7 +9,7 @@ function stripPrefix(prefix: string, key: string) {
 export function ywsRedisPersistence(
   redisClient: RedisClientType,
   namespace: string,
-  prefix?: string
+  prefix?: string,
 ) {
   const provider = {
     async retrieveDoc(docName: string) {
@@ -18,9 +18,9 @@ export function ywsRedisPersistence(
         console.log(`Retrieving document ${docName}:`);
         return await redisClient.GET(
           commandOptions({returnBuffers: true}),
-          `${namespace}:${docName}`
+          `${namespace}:${docName}`,
         );
-      } catch (error) {
+      } catch {
         return null;
       }
     },

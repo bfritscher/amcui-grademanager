@@ -48,7 +48,9 @@ export const htmlSchema = z
       ctx.addIssue({ code: 'custom', message: (error as Error).message });
     }
   })
-  .describe('HTML, not Markdown. Use <p> for paragraphs and <code>identifier</code> for inline monospace. Escape literal < and &. Use code_block_upsert for multiline code. Preserve existing image and code references when replacing content.');
+  .describe(
+    'HTML, not Markdown. Use <p> for paragraphs and <code>identifier</code> for inline monospace. Escape literal < and &. Use code_block_upsert for multiline code. Preserve existing image and code references when replacing content.'
+  );
 const id = z
   .string()
   .min(1)
@@ -57,13 +59,28 @@ const id = z
 const integer = z.number().int().finite();
 export const sectionPatchSchema = z
   .object({
-    title: z.string().max(2000).describe('Section heading; use plain text. Empty hides the heading.'),
+    title: z
+      .string()
+      .max(2000)
+      .describe('Section heading; use plain text. Empty hides the heading.'),
     content: htmlSchema,
-    level: integer.min(0).max(2).describe('Heading level: 0 section, 1 subsection, 2 subsubsection. Sections remain an ordered flat list.'),
+    level: integer
+      .min(0)
+      .max(2)
+      .describe(
+        'Heading level: 0 section, 1 subsection, 2 subsubsection. Sections remain an ordered flat list.'
+      ),
     isNumbered: z.boolean().describe('Show automatic section numbering.'),
-    isSectionTitleVisibleOnAMC: z.boolean().describe('Include the section heading on the AMC answer sheet.'),
-    shuffle: z.boolean().describe('Shuffle questions within this section when generating exam copies.'),
-    columns: integer.min(1).max(10).describe('Number of columns for questions within the section; default 1.'),
+    isSectionTitleVisibleOnAMC: z
+      .boolean()
+      .describe('Include the section heading on the AMC answer sheet.'),
+    shuffle: z
+      .boolean()
+      .describe('Shuffle questions within this section when generating exam copies.'),
+    columns: integer
+      .min(1)
+      .max(10)
+      .describe('Number of columns for questions within the section; default 1.'),
     pageBreakBefore: z.boolean().describe('Start this section on a new page.')
   })
   .partial()
@@ -71,25 +88,63 @@ export const sectionPatchSchema = z
 export const questionPatchSchema = z
   .object({
     content: htmlSchema,
-    type: z.enum(['SINGLE', 'MULTIPLE', 'OPEN']).describe('SINGLE: exactly one correct choice. MULTIPLE: zero or more correct explicit choices. Both require choices. OPEN: written response, with solution in answer.'),
-    layout: z.enum(['VERTICAL', 'HORIZONTAL']).describe('Choice arrangement; default VERTICAL. Applies to SINGLE and MULTIPLE.'),
-    ordered: z.boolean().describe('Preserve choice order instead of allowing AMC to shuffle choices; default false.'),
-    scoring: z.string().max(2000).describe('Advanced AMC scoring expression for a choice question, not a points number. Preserve unless explicitly requested; empty uses template defaults.'),
-    points: integer.min(1).max(1000).describe('Maximum manual score for OPEN questions; default 1. Does not set choice-question scoring.'),
+    type: z
+      .enum(['SINGLE', 'MULTIPLE', 'OPEN'])
+      .describe(
+        'SINGLE: exactly one correct choice. MULTIPLE: zero or more correct explicit choices. Both require choices. OPEN: written response, with solution in answer.'
+      ),
+    layout: z
+      .enum(['VERTICAL', 'HORIZONTAL'])
+      .describe('Choice arrangement; default VERTICAL. Applies to SINGLE and MULTIPLE.'),
+    ordered: z
+      .boolean()
+      .describe('Preserve choice order instead of allowing AMC to shuffle choices; default false.'),
+    scoring: z
+      .string()
+      .max(2000)
+      .describe(
+        'Advanced AMC scoring expression for a choice question, not a points number. Preserve unless explicitly requested; empty uses template defaults.'
+      ),
+    points: integer
+      .min(1)
+      .max(1000)
+      .describe(
+        'Maximum manual score for OPEN questions; default 1. Does not set choice-question scoring.'
+      ),
     dots: z.boolean().describe('Use dotted writing lines for OPEN questions; default false.'),
-    lines: integer.min(0).max(1000).describe('OPEN answer-space size; default 3. Normally number of lines; with lineup enabled, height of the drawn box in centimetres.'),
+    lines: integer
+      .min(0)
+      .max(1000)
+      .describe(
+        'OPEN answer-space size; default 3. Normally number of lines; with lineup enabled, height of the drawn box in centimetres.'
+      ),
     columns: integer.min(1).max(10).describe('Number of columns for answer choices; default 1.'),
-    boxedAnswers: z.boolean().describe('Use AMC boxed answer layout for choices; multiple columns also enable this layout.'),
-    lineup: z.boolean().describe('OPEN: use the alternative AMC lineup layout with a response box sized by lines; default false.'),
-    answer: htmlSchema.describe('OPEN question model solution in HTML, not the list of selectable answers. Inline monospace uses <code>; multiline code uses code_block_upsert with field="answer".')
+    boxedAnswers: z
+      .boolean()
+      .describe(
+        'Use AMC boxed answer layout for choices; multiple columns also enable this layout.'
+      ),
+    lineup: z
+      .boolean()
+      .describe(
+        'OPEN: use the alternative AMC lineup layout with a response box sized by lines; default false.'
+      ),
+    answer: htmlSchema.describe(
+      'OPEN question model solution in HTML, not the list of selectable answers. Inline monospace uses <code>; multiline code uses code_block_upsert with field="answer".'
+    )
   })
   .partial()
   .strict();
 export const answerPatchSchema = z
   .object({
     content: htmlSchema,
-    correct: z.boolean().describe('Whether this choice is correct. SINGLE needs exactly one correct choice.'),
-    scoring: z.string().max(2000).describe('Advanced AMC scoring override for this choice; empty uses defaults.')
+    correct: z
+      .boolean()
+      .describe('Whether this choice is correct. SINGLE needs exactly one correct choice.'),
+    scoring: z
+      .string()
+      .max(2000)
+      .describe('Advanced AMC scoring override for this choice; empty uses defaults.')
   })
   .partial()
   .strict();

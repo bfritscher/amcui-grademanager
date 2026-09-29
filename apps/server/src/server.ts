@@ -23,7 +23,7 @@ import childProcess from 'child_process';
 import {simpleGit} from 'simple-git';
 import {ZipArchive} from 'archiver';
 import slug from 'slug';
-import { imageSizeFromFile } from 'image-size/fromFile';
+import {imageSizeFromFile} from 'image-size/fromFile';
 import {fileURLToPath} from 'url';
 import {dirname} from 'path';
 import {authenticator} from 'otplib';
@@ -32,17 +32,22 @@ import {Factor, Fido2Lib} from 'fido2-lib';
 import * as base64buffer from 'base64-arraybuffer';
 import {WebSocketServer} from 'ws';
 import fetch from 'node-fetch';
-import { readExam, replaceExam } from '@amcui/exam-core';
-import { importArchive, streamArchive } from './exam/archives.js';
+import {readExam, replaceExam} from '@amcui/exam-core';
+import {importArchive, streamArchive} from './exam/archives.js';
 
 import {URL} from 'url';
-import { LeveldbPersistence } from 'y-leveldb';
-import { ExamDocuments } from './exam/documents.js';
-import { ExamAssets } from './exam/assets.js';
-import { isThumbnail, makeThumbnail, missingThumbnails, resolveThumbnail } from './exam/thumbnails.js';
-import { ExamPreviews, renderSnapshot } from './exam/previews.js';
-import { ExamOAuth } from './mcp/oauth.js';
-import { installMcp } from './mcp/routes.js';
+import {LeveldbPersistence} from 'y-leveldb';
+import {ExamDocuments} from './exam/documents.js';
+import {ExamAssets} from './exam/assets.js';
+import {
+  isThumbnail,
+  makeThumbnail,
+  missingThumbnails,
+  resolveThumbnail,
+} from './exam/thumbnails.js';
+import {ExamPreviews, renderSnapshot} from './exam/previews.js';
+import {ExamOAuth} from './mcp/oauth.js';
+import {installMcp} from './mcp/routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -76,8 +81,10 @@ const app = express();
 Sentry.setupExpressErrorHandler(app);
 
 const APP_FOLDER = path.resolve(__dirname, '../src/');
-const PROJECTS_FOLDER = process.env.AMCUI_PROJECTS_DIR || path.resolve(__dirname, '../projects/');
-const TEMPLATES_FOLDER = process.env.AMCUI_TEMPLATES_DIR || path.resolve(__dirname, '../templates/');
+const PROJECTS_FOLDER =
+  process.env.AMCUI_PROJECTS_DIR || path.resolve(__dirname, '../projects/');
+const TEMPLATES_FOLDER =
+  process.env.AMCUI_TEMPLATES_DIR || path.resolve(__dirname, '../templates/');
 
 const redisClient = (await createClient({socket: {port: 6379, host: 'redis'}})
   .on('error', (err) => {
@@ -118,17 +125,20 @@ const ws = new Server(httpServer, {cors: corsOptions});
 ws.use(
   authorize({
     secret: process.env.JWT_SECRET,
-  })
+  }),
 );
 
 const wss = new WebSocketServer({noServer: true, maxPayload: 5 * 1024 * 1024});
-if (process.env.MCP_ENABLED === 'true' && !process.env.YPERSISTENCE) throw new Error('YPERSISTENCE is required for MCP');
-const documentPersistence = process.env.YPERSISTENCE ? new LeveldbPersistence(process.env.YPERSISTENCE) : null;
-const documents = new ExamDocuments(documentPersistence, async project => {
+if (process.env.MCP_ENABLED === 'true' && !process.env.YPERSISTENCE)
+  throw new Error('YPERSISTENCE is required for MCP');
+const documentPersistence = process.env.YPERSISTENCE
+  ? new LeveldbPersistence(process.env.YPERSISTENCE)
+  : null;
+const documents = new ExamDocuments(documentPersistence, async (project) => {
   const folder = path.join(PROJECTS_FOLDER, project);
   if (!(await fs.pathExists(folder))) throw new Error('Project not found');
   const file = path.join(folder, 'data.json');
-  return await fs.pathExists(file) ? fs.readJson(file) : null;
+  return (await fs.pathExists(file)) ? fs.readJson(file) : null;
 });
 
 httpServer.on('upgrade', async (request, socket, head) => {
@@ -139,7 +149,7 @@ httpServer.on('upgrade', async (request, socket, head) => {
   // Parse the request URL
   const requestUrl = new URL(
     request.url || '',
-    `wss://${request.headers.host}`
+    `wss://${request.headers.host}`,
   );
   if (requestUrl.pathname.startsWith('/ws')) {
     const projectName = requestUrl.pathname.split('/')[2];
@@ -148,17 +158,22 @@ httpServer.on('upgrade', async (request, socket, head) => {
       try {
         const decodedToken = jwt.verify(
           accessToken,
-          process.env.JWT_SECRET || ''
+          process.env.JWT_SECRET || '',
         ) as {username: string};
         if (
           decodedToken &&
           (await acl.hasRole(decodedToken.username, projectName))
         ) {
           wss.handleUpgrade(request, socket, head, (ws) => {
-            void documents.connect(projectName, ws, async () => {
-              const token = jwt.verify(accessToken, process.env.JWT_SECRET || '') as {username: string};
-              return acl.hasRole(token.username, projectName);
-            }).catch(() => ws.close(1011, 'Document unavailable'));
+            void documents
+              .connect(projectName, ws, async () => {
+                const token = jwt.verify(
+                  accessToken,
+                  process.env.JWT_SECRET || '',
+                ) as {username: string};
+                return acl.hasRole(token.username, projectName);
+              })
+              .catch(() => ws.close(1011, 'Document unavailable'));
           });
           return;
         }
@@ -238,7 +253,7 @@ const secureJwt = expressjwt({
 const secure = (
   req: JWTRequest,
   res: express.Response,
-  next: express.NextFunction
+  next: express.NextFunction,
 ) => {
   secureJwt(req, res, (err) => {
     if (err) {
@@ -252,29 +267,46 @@ const secure = (
 };
 
 // Shared browser/MCP asset and preview services.
-const assets = new ExamAssets(PROJECTS_FOLDER, makeThumbnail, async data => {
-  const response = await fetch(process.env.SVG2PDF_URL || 'http://svg2pdf:3000/convert', {method: 'POST', body: data, signal: AbortSignal.timeout(60_000)});
+const assets = new ExamAssets(PROJECTS_FOLDER, makeThumbnail, async (data) => {
+  const response = await fetch(
+    process.env.SVG2PDF_URL || 'http://svg2pdf:3000/convert',
+    {method: 'POST', body: data, signal: AbortSignal.timeout(60_000)},
+  );
   if (!response.ok) throw new Error('SVG conversion failed');
   return Buffer.from(await response.arrayBuffer());
 });
-const previews = new ExamPreviews(PROJECTS_FOLDER, documents, async (project, username, body, pdf) => {
-  // A captured preview can finish during printing; retain its isolated result without
-  // changing the working files used by that print run.
-  if (await redisClient.HGET('project:' + project + ':status', 'locked') === '1') return;
-  saveSourceFilesSync(project, body);
-  await fs.copy(pdf, path.join(PROJECTS_FOLDER, project, 'out', 'out.pdf'));
-  await commitGit(project, username, 'preview');
-}, (project, event) => {ws.to(project + '-notifications').emit('log', event);});
+const previews = new ExamPreviews(
+  PROJECTS_FOLDER,
+  documents,
+  async (project, username, body, pdf) => {
+    // A captured preview can finish during printing; retain its isolated result without
+    // changing the working files used by that print run.
+    if (
+      (await redisClient.HGET('project:' + project + ':status', 'locked')) ===
+      '1'
+    )
+      return;
+    saveSourceFilesSync(project, body);
+    await fs.copy(pdf, path.join(PROJECTS_FOLDER, project, 'out', 'out.pdf'));
+    await commitGit(project, username, 'preview');
+  },
+  (project, event) => {
+    ws.to(project + '-notifications').emit('log', event);
+  },
+);
 if (process.env.MCP_ENABLED === 'true') {
   const publicApiUrl = process.env.MCP_PUBLIC_API_URL;
   const webUrl = process.env.MCP_WEB_URL;
-  if (!publicApiUrl || !webUrl) throw new Error('MCP_PUBLIC_API_URL and MCP_WEB_URL are required');
+  if (!publicApiUrl || !webUrl)
+    throw new Error('MCP_PUBLIC_API_URL and MCP_WEB_URL are required');
   const projects = async (username: string): Promise<string[]> => {
     const [roles, recent] = await Promise.all([
       acl.userRoles(username),
       redisClient.ZRANGE('user:' + username + ':recent', 0, -1, {REV: true}),
     ]);
-    const recentOrder = new Map(recent.map((project, index) => [project, index]));
+    const recentOrder = new Map(
+      recent.map((project, index) => [project, index]),
+    );
     return roles
       .filter((role: string) => role !== 'admin')
       .sort((a: string, b: string) => {
@@ -283,20 +315,40 @@ if (process.env.MCP_ENABLED === 'true') {
         return rankA - rankB || a.localeCompare(b);
       });
   };
-  const oauth = new ExamOAuth({
-    get: key => redisClient.GET(key),
-    set: async (key, value, seconds) => {await redisClient.SET(key, value, {EX: seconds});},
-    take: key => redisClient.GETDEL(key),
-    delete: async key => {await redisClient.DEL(key);},
-    addMember: async (key, value) => {await redisClient.SADD(key, value);},
-    members: key => redisClient.SMEMBERS(key)
-  }, publicApiUrl.replace(/\/$/, '') + '/mcp', webUrl, projects, JSON.parse(process.env.MCP_CLIENTS_JSON || '[]'));
-  installMcp(app, {oauth, documents, assets, previews, publicApiUrl, webUrl, secure, projects,
+  const oauth = new ExamOAuth(
+    {
+      get: (key) => redisClient.GET(key),
+      set: async (key, value, seconds) => {
+        await redisClient.SET(key, value, {EX: seconds});
+      },
+      take: (key) => redisClient.GETDEL(key),
+      delete: async (key) => {
+        await redisClient.DEL(key);
+      },
+      addMember: async (key, value) => {
+        await redisClient.SADD(key, value);
+      },
+      members: (key) => redisClient.SMEMBERS(key),
+    },
+    publicApiUrl.replace(/\/$/, '') + '/mcp',
+    webUrl,
+    projects,
+    JSON.parse(process.env.MCP_CLIENTS_JSON || '[]'),
+  );
+  installMcp(app, {
+    oauth,
+    documents,
+    assets,
+    previews,
+    publicApiUrl,
+    webUrl,
+    secure,
+    projects,
     allowed: async (username, project) => acl.hasRole(username, project),
-    audit: async event => {
+    audit: async (event) => {
       await redisClient.LPUSH('mcp:audit', JSON.stringify(event));
       await redisClient.LTRIM('mcp:audit', 0, 9999);
-    }
+    },
   });
 }
 
@@ -310,7 +362,7 @@ const aclProject: express.RequestHandler = acl.middleware(
   (req) => {
     return (req as express.Request)?.user?.username as any;
   },
-  'admin'
+  'admin',
 );
 
 const aclAdmin: express.RequestHandler = acl.middleware(
@@ -318,7 +370,7 @@ const aclAdmin: express.RequestHandler = acl.middleware(
   (req) => {
     return (req as express.Request)?.user?.username as any;
   },
-  'admin'
+  'admin',
 );
 
 //TODO check types with db
@@ -341,9 +393,9 @@ function database(
       method: keyof sqlite3.Database,
       query: string,
       params: DbParams | ((rows: any[]) => void),
-      success?: (rows: any[] | any) => void
-    ) => void
-  ) => void
+      success?: (rows: any[] | any) => void,
+    ) => void,
+  ) => void,
 ): void {
   const project = req.params.project;
   const db = new sqlite3.Database(
@@ -356,9 +408,10 @@ function database(
       }
       // Release attached databases when the response ends, including disconnects.
       // Open SQLite handles prevent project renames on Windows bind mounts.
-      const closeDatabase = () => db.close((error) => {
-        if (error) console.log(error);
-      });
+      const closeDatabase = () =>
+        db.close((error) => {
+          if (error) console.log(error);
+        });
       if (res.destroyed) {
         closeDatabase();
         return;
@@ -389,11 +442,11 @@ function database(
                     method: keyof sqlite3.Database,
                     query: string,
                     params: DbParams | ((rows: any[]) => void),
-                    success?: (rows: any[] | any) => void
+                    success?: (rows: any[] | any) => void,
                   ): void => {
                     const internalCallback = (
                       err: Error | null,
-                      rows: any[]
+                      rows: any[],
                     ): void => {
                       if (err) {
                         console.log(err);
@@ -410,27 +463,27 @@ function database(
                     };
 
                     if (success) {
-                      // @ts-ignore
+                      // @ts-expect-error -- Dynamic SQLite method signatures have incompatible overloads.
                       db[method](query, params, internalCallback);
                     } else {
-                      // @ts-ignore
+                      // @ts-expect-error -- Dynamic SQLite method signatures have incompatible overloads.
                       db[method](query, internalCallback);
                     }
                   };
                   callback(dbHandled);
-                }
+                },
               );
-            }
+            },
           );
-        }
+        },
       );
-    }
+    },
   );
 }
 
 function projectOptions(
   project: string,
-  callback: (err: Error | null, result: any) => void
+  callback: (err: Error | null, result: any) => void,
 ): void {
   const filename = path.resolve(PROJECTS_FOLDER, project + '/options.xml');
   fs.readFile(filename, 'utf-8', function (err, data) {
@@ -451,7 +504,7 @@ function projectOptions(
 
 function projectThreshold(
   project: string,
-  callback: (err: Error | null, threshold: number) => void
+  callback: (err: Error | null, threshold: number) => void,
 ): void {
   projectOptions(project, (_err, result) => {
     let threshold = 0.5;
@@ -469,7 +522,7 @@ function amcCommande(
   msg: string,
   params: string[],
   callback?: ((log: string) => void) | null,
-  error?: (() => void) | null
+  error?: (() => void) | null,
 ): void {
   ws.to(project + '-notifications').emit('log', {
     command: params[0],
@@ -545,7 +598,7 @@ app.get('/', (_req, res) => {
 app.get('/templates', async (_req, res) => {
   const files = await fs.readdir(TEMPLATES_FOLDER, {withFileTypes: true});
   res.json(
-    files.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name)
+    files.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name),
   );
 });
 
@@ -574,7 +627,7 @@ function countStudentsCSV(project: string): Promise<number> {
 // TODO migrate master to main?
 async function countGitCommits(
   project: string,
-  branch = 'master'
+  branch = 'master',
 ): Promise<number> {
   if (!fs.existsSync(PROJECTS_FOLDER + '/' + project + '/.git')) {
     return -1;
@@ -583,7 +636,7 @@ async function countGitCommits(
     const g = simpleGit(PROJECTS_FOLDER + '/' + project);
     const data = await g.raw(['rev-list', '--count', branch]);
     return Number(data.trim());
-  } catch (err) {
+  } catch {
     if (branch === 'master') {
       return countGitCommits(project, 'main');
     }
@@ -621,7 +674,7 @@ app.get('/admin/stats', aclAdmin, async (_req, res) => {
   await Promise.all(
     [...users].map(async (user: string) => {
       stats.users[user] = await acl.userRoles(user);
-    })
+    }),
   );
 
   await Promise.all(
@@ -634,7 +687,7 @@ app.get('/admin/stats', aclAdmin, async (_req, res) => {
       stats.projects[project] = p;
       p.commits = await countGitCommits(project);
       p.students = await countStudentsCSV(project);
-    })
+    }),
   );
 
   res.json(stats);
@@ -654,7 +707,7 @@ app.get('/admin/du', aclAdmin, (_req, res) => {
     if (entry === null) {
       return;
     }
-    if (!projects.hasOwnProperty(entry[2])) {
+    if (!Object.hasOwn(projects, entry[2])) {
       projects[entry[2]] = {total: 0, folders: []};
     }
     if (entry[3] === '') {
@@ -809,7 +862,7 @@ app.post('/login', async (req, res) => {
                 label,
                 type,
               };
-            }
+            },
           )
         : [];
       const token = jwt.sign(user, process.env.JWT_SECRET || '', {
@@ -861,7 +914,7 @@ app.post('/login', async (req, res) => {
           // validate fido2
           const logResponse = req.body.authenticator.response;
           const credListFiltered = user.authenticators.filter(
-            (x: {credentialId: string}) => x.credentialId == logResponse.rawId
+            (x: {credentialId: string}) => x.credentialId == logResponse.rawId,
           );
 
           if (!credListFiltered.length)
@@ -870,7 +923,7 @@ app.post('/login', async (req, res) => {
 
           logResponse.rawId = base64buffer.decode(logResponse.rawId);
           logResponse.response.authenticatorData = base64buffer.decode(
-            logResponse.response.authenticatorData
+            logResponse.response.authenticatorData,
           );
 
           const assertionExpectations = {
@@ -891,7 +944,7 @@ app.post('/login', async (req, res) => {
               delete Fido2inMemoryChallenges[user.username];
               await redisClient.SET(
                 'user:' + user.username,
-                JSON.stringify(user)
+                JSON.stringify(user),
               );
               sendToken(user);
             })
@@ -903,7 +956,7 @@ app.post('/login', async (req, res) => {
           const authenticators = {
             authenticator: user.authenticators
               .filter(
-                (config: {type: string}) => config.type === 'authenticator'
+                (config: {type: string}) => config.type === 'authenticator',
               )
               .map(({label, type}: {label: string; type: string}) => {
                 return {
@@ -914,17 +967,17 @@ app.post('/login', async (req, res) => {
             fido2: {}, // TODO add fido request challenge
           };
           const filteredFido2 = user.authenticators.filter(
-            (config: {type: string}) => config.type === 'fido2'
+            (config: {type: string}) => config.type === 'fido2',
           );
           if (filteredFido2.length > 0) {
             const authnOptions: any = await f2l.assertionOptions();
             authnOptions.challenge = base64buffer.encode(
-              authnOptions.challenge
+              authnOptions.challenge,
             );
             authnOptions.allowCredentials = filteredFido2.map(
               (config: {credentialId: string}) => {
                 return {id: config.credentialId, type: 'public-key'};
-              }
+              },
             );
             Fido2inMemoryChallenges[user.username] = authnOptions.challenge;
             authenticators.fido2 = authnOptions;
@@ -973,7 +1026,7 @@ app.post('/profile/addAuthenticator', async (req, res) => {
   const otpauthUrl = authenticator.keyuri(
     user.username,
     service,
-    authenticatorConfig.secret
+    authenticatorConfig.secret,
   );
   QRCode.toDataURL(otpauthUrl)
     .then((qrCodeDataUrl) => {
@@ -1004,7 +1057,7 @@ app.post('/profile/removeMFA', async (req, res) => {
           !(
             authConfig.type === req.body.type &&
             authConfig.label === req.body.label
-          )
+          ),
       )
     : [];
   await redisClient.SET('user:' + user.username, JSON.stringify(user));
@@ -1132,10 +1185,10 @@ app.get('/project/recent', async (req, res) => {
       'user:' + req.user?.username + ':recent',
       0,
       -1,
-      {REV: true}
+      {REV: true},
     );
     res.json(response);
-  } catch (e) {
+  } catch {
     res.json([]);
   }
 });
@@ -1144,7 +1197,7 @@ function createProject(
   projectName: string,
   username: string,
   success: (project: string) => void,
-  error: () => void
+  error: () => void,
 ): void {
   // create project
   const project = slug(projectName);
@@ -1167,15 +1220,15 @@ function createProject(
     //copy default option file
     fs.copySync(
       path.resolve(APP_FOLDER, 'assets/options.xml'),
-      root + '/options.xml'
+      root + '/options.xml',
     );
     fs.copySync(
       path.resolve(APP_FOLDER, 'assets/students.csv'),
-      root + '/students.csv'
+      root + '/students.csv',
     );
     fs.copySync(
       path.resolve(APP_FOLDER, 'assets/gitignore.template'),
-      root + '/.gitignore'
+      root + '/.gitignore',
     );
 
     addProjectAcl(project, username);
@@ -1196,7 +1249,7 @@ function createProject(
         '--liste-key',
         'id',
       ],
-      null
+      null,
     );
 
     if (success) {
@@ -1217,7 +1270,7 @@ const gitLocks = new Map<string, Promise<any>>();
 async function commitGit(
   project: string,
   username: string,
-  message: string
+  message: string,
 ): Promise<void> {
   // Check if there's already a Git operation running for this project
   const existingLock = gitLocks.get(project);
@@ -1241,7 +1294,7 @@ async function commitGit(
 async function performGitCommit(
   project: string,
   username: string,
-  message: string
+  message: string,
 ): Promise<void> {
   const g = simpleGit(PROJECTS_FOLDER + '/' + project);
   await g.init().catch(ignoreGitError);
@@ -1276,7 +1329,7 @@ app.post('/project/create', (req, res) => {
     },
     () => {
       res.status(403).send('Project already exists!');
-    }
+    },
   );
 });
 
@@ -1284,7 +1337,7 @@ app.get('/project/:project/options', aclProject, (req, res) => {
   projectOptions(req.params.project, async (_err, result) => {
     const users = await acl.roleUsers(req.params.project);
     const status = await redisClient.HGETALL(
-      'project:' + req.params.project + ':status'
+      'project:' + req.params.project + ':status',
     );
     res.json({
       options: result ? result.project : {},
@@ -1298,7 +1351,7 @@ app.post('/project/:project/options', aclProject, (req, res) => {
   if (!req.user) return res.sendStatus(403);
   const filename = path.resolve(
     PROJECTS_FOLDER,
-    req.params.project + '/options.xml'
+    req.params.project + '/options.xml',
   );
   const builder = new xml2js.Builder();
   const xml = builder.buildObject({project: req.body.options});
@@ -1308,7 +1361,7 @@ app.post('/project/:project/options', aclProject, (req, res) => {
     } else {
       ws.to(req.params.project + '-notifications').emit(
         'update:options',
-        req.body.options
+        req.body.options,
       );
       commitGit(req.params.project, req.user?.username || '', 'options');
       res.sendStatus(200);
@@ -1326,7 +1379,7 @@ app.get('/project/:project/dbversions', aclProject, (req, res) => {
               (SELECT value FROM scoring_variables WHERE name = 'version') scoring`,
       (rows) => {
         res.json(rows);
-      }
+      },
     );
   });
 });
@@ -1338,7 +1391,7 @@ app.post('/project/:project/copy/template', aclProject, (req, res) => {
     PROJECTS_FOLDER + '/' + req.params.project + '/src',
     () => {
       res.sendFile(TEMPLATE_FOLDER + '/source.tex');
-    }
+    },
   );
 });
 
@@ -1350,16 +1403,27 @@ app.post('/project/:project/copy/project', aclProject, (req, res, next) => {
     dest,
     req.user.username,
     (destination) => {
-      void documents.withDocument(src, async doc => {
-        const snapshot = readExam(doc);
-        await fs.copy(path.join(PROJECTS_FOLDER, src, 'src'), path.join(PROJECTS_FOLDER, destination, 'src'));
-        await fs.writeJson(path.join(PROJECTS_FOLDER, destination, 'data.json'), snapshot);
-        await documents.withDocument(destination, target => replaceExam(target, snapshot));
-      }).then(() => res.sendStatus(200)).catch(next);
+      void documents
+        .withDocument(src, async (doc) => {
+          const snapshot = readExam(doc);
+          await fs.copy(
+            path.join(PROJECTS_FOLDER, src, 'src'),
+            path.join(PROJECTS_FOLDER, destination, 'src'),
+          );
+          await fs.writeJson(
+            path.join(PROJECTS_FOLDER, destination, 'data.json'),
+            snapshot,
+          );
+          await documents.withDocument(destination, (target) =>
+            replaceExam(target, snapshot),
+          );
+        })
+        .then(() => res.sendStatus(200))
+        .catch(next);
     },
     () => {
       res.status(403).send('Project already exists!');
-    }
+    },
   );
 });
 
@@ -1379,7 +1443,7 @@ app.post('/project/:project/copy/graphics', aclProject, async (req, res) => {
         } else {
           res.sendStatus(200);
         }
-      }
+      },
     );
   } else {
     res.sendStatus(403);
@@ -1401,7 +1465,7 @@ app.post('/project/:project/copy/codes', aclProject, async (req, res) => {
         } else {
           res.sendStatus(200);
         }
-      }
+      },
     );
   } else {
     res.sendStatus(403);
@@ -1436,35 +1500,44 @@ app.post('/project/:project/rename', aclProject, (req, res, next) => {
     return res.sendStatus(403);
   }
 
-  documents.rename(project, newProject, () => fs.rename(PROJECTS_FOLDER + '/' + project, newPath)).then(async () => {
-    if ((await redisClient.EXISTS('exam:' + project)) > 0) {
-      await redisClient.RENAMENX('exam:' + project, 'exam:' + newProject);
-    }
-    await acl.allow(newProject, '/project/' + newProject, 'admin');
-    const users = await acl.roleUsers(project);
-    await Promise.all(users.map(async (username: string) => {
-      await acl.removeUserRoles(username, project);
-      await acl.addUserRoles(username, newProject);
-      await redisClient.ZREM('user:' + username + ':recent', project);
-    }));
-    const keys = await redisClient.KEYS('project:' + project + ':*');
-    await Promise.all(keys.map(async (key) => {
-      const entries = key.split(':');
-      await redisClient.RENAMENX(
-        key,
-        'project:' + newProject + ':' + entries[2]
+  documents
+    .rename(project, newProject, () =>
+      fs.rename(PROJECTS_FOLDER + '/' + project, newPath),
+    )
+    .then(async () => {
+      if ((await redisClient.EXISTS('exam:' + project)) > 0) {
+        await redisClient.RENAMENX('exam:' + project, 'exam:' + newProject);
+      }
+      await acl.allow(newProject, '/project/' + newProject, 'admin');
+      const users = await acl.roleUsers(project);
+      await Promise.all(
+        users.map(async (username: string) => {
+          await acl.removeUserRoles(username, project);
+          await acl.addUserRoles(username, newProject);
+          await redisClient.ZREM('user:' + username + ':recent', project);
+        }),
       );
-    }));
-    await acl.removeAllow(project, '/project/' + project, 'admin');
-    await acl.removeRole(project);
-    await acl.removeResource(project);
-    res.send(newProject);
-  }).catch(next);
+      const keys = await redisClient.KEYS('project:' + project + ':*');
+      await Promise.all(
+        keys.map(async (key) => {
+          const entries = key.split(':');
+          await redisClient.RENAMENX(
+            key,
+            'project:' + newProject + ':' + entries[2],
+          );
+        }),
+      );
+      await acl.removeAllow(project, '/project/' + project, 'admin');
+      await acl.removeRole(project);
+      await acl.removeResource(project);
+      res.send(newProject);
+    })
+    .catch(next);
 });
 
 async function deleteProject(
   project: string,
-  callback: (err: boolean) => void
+  callback: (err: boolean) => void,
 ) {
   if (project.length === 0 || project.indexOf('.') === 0) {
     callback(true);
@@ -1529,7 +1602,7 @@ app.get('/project/:project/gitlogs', aclProject, async (req, res) => {
       '--unified=0',
       '--',
       'data.json',
-      'options.xml'
+      'options.xml',
     ]);
     const logs = [];
     const json = data.split('\n');
@@ -1543,7 +1616,7 @@ app.get('/project/:project/gitlogs', aclProject, async (req, res) => {
         msg: msg.substring(idx + 2),
         username: json[i + 2],
         date: new Date(json[i + 3]),
-        diff: "",
+        diff: '',
       };
       logs.push(log);
       i += 4;
@@ -1577,9 +1650,11 @@ app.post('/project/:project/revert', aclProject, async (req, res) => {
       await gitOperation;
       const json = path.resolve(
         PROJECTS_FOLDER,
-        req.params.project + '/data.json'
+        req.params.project + '/data.json',
       );
-      await documents.withDocument(req.params.project, doc => replaceExam(doc, fs.readJsonSync(json), 'revert'));
+      await documents.withDocument(req.params.project, (doc) =>
+        replaceExam(doc, fs.readJsonSync(json), 'revert'),
+      );
       res.send(fs.readFileSync(json));
     } finally {
       gitLocks.delete(req.params.project);
@@ -1597,55 +1672,81 @@ async function performGitRevert(project: string, sha: string): Promise<void> {
 
 app.get('/project/:project/zip', aclProject, async (req, res, next) => {
   try {
-  // Annotation/printing announce completion before their Git commit finishes.
-  // Wait before traversing .git so temporary commit files have settled.
-  await gitLocks.get(req.params.project);
-  const snapshot = await documents.withDocument(req.params.project, doc => readExam(doc));
-  const rendered = renderSnapshot(snapshot);
-  const zip = new ZipArchive();
-  res.attachment(req.params.project + '.zip');
-  const generated = {'data.json': rendered.json, 'source.tex': rendered.source, 'questions_definition.tex': rendered.questions_definition, 'questions_layout.tex': rendered.questions_layout};
-  for (const [name, content] of Object.entries(generated)) zip.append(content, {name});
-  for (const [id, code] of Object.entries(rendered.codes)) {
-    if (!/^[\w-]{1,200}$/.test(id)) throw new Error('INVALID_CODE_ID');
-    zip.append(code.content, {name: `src/codes/${id}`});
+    // Annotation/printing announce completion before their Git commit finishes.
+    // Wait before traversing .git so temporary commit files have settled.
+    await gitLocks.get(req.params.project);
+    const snapshot = await documents.withDocument(req.params.project, (doc) =>
+      readExam(doc),
+    );
+    const rendered = renderSnapshot(snapshot);
+    const zip = new ZipArchive();
+    res.attachment(req.params.project + '.zip');
+    const generated = {
+      'data.json': rendered.json,
+      'source.tex': rendered.source,
+      'questions_definition.tex': rendered.questions_definition,
+      'questions_layout.tex': rendered.questions_layout,
+    };
+    for (const [name, content] of Object.entries(generated))
+      zip.append(content, {name});
+    for (const [id, code] of Object.entries(rendered.codes)) {
+      if (!/^[\w-]{1,200}$/.test(id)) throw new Error('INVALID_CODE_ID');
+      zip.append(code.content, {name: `src/codes/${id}`});
+    }
+    zip.glob('**/*', {
+      cwd: path.join(PROJECTS_FOLDER, req.params.project),
+      dot: true,
+      ignore: [...Object.keys(generated), 'src/codes/**'],
+    });
+    await streamArchive(zip, res);
+  } catch (error) {
+    next(error);
   }
-  zip.glob('**/*', {cwd: path.join(PROJECTS_FOLDER, req.params.project), dot: true, ignore: [...Object.keys(generated), 'src/codes/**']});
-  await streamArchive(zip, res);
-  } catch (error) {next(error);}
 });
 
-app.post('/project/:project/zip', aclProject, uploadMiddleware.single('file'), async (req, res) => {
-  const projectFolder = path.join(PROJECTS_FOLDER, req.params.project);
-  if (!req.file) {
-    return res.status(400).send('No file uploaded');
-  }
-  try {
-    const uploaded = req.file.path;
-    const snapshot = await documents.withDocument(req.params.project, doc => importArchive(uploaded, projectFolder, exam => replaceExam(doc, exam, 'import')));
-    res.json(snapshot);
-  } catch (error) {
-    console.error('Error extracting the zip file:', error);
-    res.status(400).send('Invalid or unsupported project archive');
-  } finally {
-    await fs.unlink(req.file.path);
-  }
-});
+app.post(
+  '/project/:project/zip',
+  aclProject,
+  uploadMiddleware.single('file'),
+  async (req, res) => {
+    const projectFolder = path.join(PROJECTS_FOLDER, req.params.project);
+    if (!req.file) {
+      return res.status(400).send('No file uploaded');
+    }
+    try {
+      const uploaded = req.file.path;
+      const snapshot = await documents.withDocument(req.params.project, (doc) =>
+        importArchive(uploaded, projectFolder, (exam) =>
+          replaceExam(doc, exam, 'import'),
+        ),
+      );
+      res.json(snapshot);
+    } catch (error) {
+      console.error('Error extracting the zip file:', error);
+      res.status(400).send('Invalid or unsupported project archive');
+    } finally {
+      await fs.unlink(req.file.path);
+    }
+  },
+);
 
 app.get('/project/:project/static/:file*', aclProject, (req, res) => {
   let file = req.params.file;
-  if (req.params.hasOwnProperty(0)) {
+  if (Object.hasOwn(req.params, 0)) {
     file += req.params[0];
   }
   res.sendFile(
     resolveThumbnail(PROJECTS_FOLDER + '/' + req.params.project + '/' + file),
     (err) => {
-      if (err && (isThumbnail(file) || file.split('.').splice(-1)[0] === 'jpg')) {
+      if (
+        err &&
+        (isThumbnail(file) || file.split('.').splice(-1)[0] === 'jpg')
+      ) {
         res.sendFile(APP_FOLDER + '/assets/image_not_found.jpg');
       } else if (err) {
         res.sendStatus(404);
       }
-    }
+    },
   );
 });
 
@@ -1677,7 +1778,7 @@ app.post(
         if (!response.ok) {
           const errorText = await response.text();
           console.error(
-            `Error from svg2pdf service: ${response.statusText}, details: ${errorText}`
+            `Error from svg2pdf service: ${response.statusText}, details: ${errorText}`,
           );
           return res
             .status(response.status)
@@ -1687,7 +1788,10 @@ app.post(
         filename = `${req.body.id}.pdf`;
         await fs.writeFile(GRAPHICS_FOLDER + filename, new DataView(pdfBuffer));
         if (req.body.excalidraw) {
-          await fs.writeFile(`${GRAPHICS_FOLDER}${req.body.id}.excalidraw`, req.body.excalidraw);
+          await fs.writeFile(
+            `${GRAPHICS_FOLDER}${req.body.id}.excalidraw`,
+            req.body.excalidraw,
+          );
         }
       } else {
         filename = `${req.body.id}.${extension}`;
@@ -1707,7 +1811,7 @@ app.post(
       console.error(error);
       res.sendStatus(500);
     }
-  }
+  },
 );
 
 app.get('/project/:project/graphics/sync', aclProject, (req, res) => {
@@ -1719,13 +1823,19 @@ app.get('/project/:project/graphics/sync', aclProject, (req, res) => {
     return !isThumbnail(filename) && !filename.startsWith('.');
   });
   //get files without thumb
-  void Promise.all(missingThumbnails(allFiles).map(async (filename) => {
-    try {
-      await makeThumbnail(GRAPHICS_FOLDER, filename, path.parse(filename).name);
-    } catch (error) {
-      console.error(error);
-    }
-  })).then(() => res.json(files));
+  void Promise.all(
+    missingThumbnails(allFiles).map(async (filename) => {
+      try {
+        await makeThumbnail(
+          GRAPHICS_FOLDER,
+          filename,
+          path.parse(filename).name,
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    }),
+  ).then(() => res.json(files));
 });
 
 app.post('/project/:project/graphics/delete', aclProject, (req, res) => {
@@ -1736,7 +1846,7 @@ app.post('/project/:project/graphics/delete', aclProject, (req, res) => {
       GRAPHICS_FOLDER +
         req.body.id +
         '.' +
-        req.body.filename.split('.').splice(-1)[0]
+        req.body.filename.split('.').splice(-1)[0],
     );
     for (const extension of ['png', 'jpg']) {
       const thumbnail = GRAPHICS_FOLDER + req.body.id + '_thumb.' + extension;
@@ -1747,7 +1857,7 @@ app.post('/project/:project/graphics/delete', aclProject, (req, res) => {
       fs.unlinkSync(excalidrawPath);
     }
     res.sendStatus(200);
-  } catch (e) {
+  } catch {
     res.sendStatus(500);
   }
 });
@@ -1766,18 +1876,18 @@ function saveSourceFilesSync(project: string, body: any): void {
 
   const questionsDefinition = path.resolve(
     PROJECTS_FOLDER,
-    project + '/questions_definition.tex'
+    project + '/questions_definition.tex',
   );
   fs.writeFileSync(questionsDefinition, body.questions_definition);
 
   const questionsLayout = path.resolve(
     PROJECTS_FOLDER,
-    project + '/questions_layout.tex'
+    project + '/questions_layout.tex',
   );
   fs.writeFileSync(questionsLayout, body.questions_layout);
 
   for (const id in body.codes) {
-    if (body.codes.hasOwnProperty(id)) {
+    if (Object.hasOwn(body.codes, id)) {
       const file = path.resolve(PROJECTS_FOLDER, project + '/src/codes/' + id);
       fs.writeFileSync(file, body.codes[id].content);
     }
@@ -1787,8 +1897,19 @@ function saveSourceFilesSync(project: string, body: any): void {
 app.post('/project/:project/preview', aclProject, async (req, res, next) => {
   // Preserve the rendered-body contract for older clients. Current clients and
   // MCP omit it and capture the live document through the same preview queue.
-  try {res.status(200).json(await previews.enqueue(req.params.project, req.user?.username || '', req.body?.json ? req.body : undefined));}
-  catch (error) {next(error);}
+  try {
+    res
+      .status(200)
+      .json(
+        await previews.enqueue(
+          req.params.project,
+          req.user?.username || '',
+          req.body?.json ? req.body : undefined,
+        ),
+      );
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.get('/project/:project/reset/lock', aclProject, async (req, res) => {
@@ -1803,7 +1924,7 @@ app.get('/project/:project/reset/lock', aclProject, async (req, res) => {
 app.post('/project/:project/print', aclProject, async (req, res) => {
   const locked = await redisClient.HGET(
     'project:' + req.params.project + ':status',
-    'locked'
+    'locked',
   );
   if (locked === '1') {
     return res.status(409).end('ALREADY PRINTING!');
@@ -1950,21 +2071,21 @@ app.post('/project/:project/print', aclProject, async (req, res) => {
                           {
                             locked: 0,
                             printed: new Date().getTime(),
-                          }
+                          },
                         );
                         ws.to(project + '-notifications').emit('print', {
                           action: 'end',
                           pdfs: pdfs,
                         });
-                      }
+                      },
                     );
-                  }
+                  },
                 );
-              }
+              },
             );
-          }
+          },
         );
-      }
+      },
     );
   });
 });
@@ -2061,11 +2182,11 @@ app.post(
     const project = req.params.project;
     fs.copySync(
       req.file.path,
-      path.resolve(PROJECTS_FOLDER, req.params.project, 'scans/', filename)
+      path.resolve(PROJECTS_FOLDER, req.params.project, 'scans/', filename),
     );
     // don't forget to delete all req.files when done
     fs.unlinkSync(req.file.path);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     tmp.file((_err, path, _fd, _cleanup) => {
       fs.writeFileSync(path, 'scans/' + filename);
       // need to call getimage with file to get path of extracted files...
@@ -2132,19 +2253,19 @@ app.post(
                 await redisClient.HSET(
                   'project:' + project + ':status',
                   'scanned',
-                  new Date().getTime().toString()
+                  new Date().getTime().toString(),
                 );
                 res.json({
                   logImages: logImages,
                   logAnalyse: logAnalyse,
                 });
-              }
+              },
             );
           });
-        }
+        },
       );
     });
-  }
+  },
 );
 
 app.get('/project/:project/missing', aclProject, (req, res) => {
@@ -2186,7 +2307,7 @@ app.get('/project/:project/missing', aclProject, (req, res) => {
           }
           return result;
         },
-        {complete: 0, incomplete: 0, missing: []}
+        {complete: 0, incomplete: 0, missing: []},
       );
 
       const query2 = 'SELECT * FROM capture_failed';
@@ -2237,8 +2358,10 @@ app.get(
                 '/' +
                 req.params.project +
                 '/cr/' +
-                row.layout_image
-            ).catch(() => undefined).then((dimensions) => {
+                row.layout_image,
+            )
+              .catch(() => undefined)
+              .then((dimensions) => {
                 row.ratiox = 1;
                 row.ratioy = 1;
                 if (dimensions && dimensions.width && dimensions.height) {
@@ -2252,10 +2375,10 @@ app.get(
           } else {
             res.sendStatus(404);
           }
-        }
+        },
       );
     });
-  }
+  },
 );
 
 app.post('/project/:project/capture/setauto', aclProject, (req, res) => {
@@ -2285,12 +2408,12 @@ app.post('/project/:project/capture/setauto', aclProject, (req, res) => {
             await redisClient.HSET(
               'project:' + req.params.project + ':status',
               'scanned',
-              new Date().getTime().toString()
+              new Date().getTime().toString(),
             );
             res.sendStatus(200);
-          }
+          },
         );
-      }
+      },
     );
   });
 });
@@ -2320,21 +2443,21 @@ app.post('/project/:project/capture/setmanual', aclProject, (req, res) => {
             $page: req.body.page,
             $copy: req.body.copy,
             $type: req.body.type,
-            // eslint-disable-next-line @typescript-eslint/camelcase
+
             $id_a: req.body.id_a,
-            // eslint-disable-next-line @typescript-eslint/camelcase
+
             $id_b: req.body.id_b,
           },
           async () => {
             await redisClient.HSET(
               'project:' + req.params.project + ':status',
               'scanned',
-              new Date().getTime().toString()
+              new Date().getTime().toString(),
             );
             res.sendStatus(200);
-          }
+          },
         );
-      }
+      },
     );
   });
 });
@@ -2371,7 +2494,7 @@ app.post('/project/:project/capture/delete', aclProject, (req, res) => {
             PROJECTS_FOLDER + '/' + req.params.project + '/' + row.path,
             (err) => {
               console.log('unlick', err);
-            }
+            },
           );
         });
         // 2) remove data from database
@@ -2439,24 +2562,24 @@ app.post('/project/:project/capture/delete', aclProject, (req, res) => {
                                         req.params.project +
                                         ':status',
                                       'scanned',
-                                      new Date().getTime().toString()
+                                      new Date().getTime().toString(),
                                     );
                                     res.sendStatus(200);
-                                  }
+                                  },
                                 );
-                              }
+                              },
                             );
-                          }
+                          },
                         );
-                      }
+                      },
                     );
-                  }
+                  },
                 );
-              }
+              },
             );
-          }
+          },
         );
-      }
+      },
     );
   });
 });
@@ -2493,10 +2616,10 @@ app.get(
         },
         (rows) => {
           res.json(rows);
-        }
+        },
       );
     });
-  }
+  },
 );
 
 /* GRADES */
@@ -2526,7 +2649,7 @@ app.get('/project/:project/scoring', aclProject, (req, res) => {
       ],
       (logScoring) => {
         res.json(logScoring);
-      }
+      },
     );
   });
 });
@@ -2534,7 +2657,7 @@ app.get('/project/:project/scoring', aclProject, (req, res) => {
 app.post('/project/:project/csv', aclProject, (req, res) => {
   const filename = path.resolve(
     PROJECTS_FOLDER,
-    req.params.project + '/students.csv'
+    req.params.project + '/students.csv',
   );
   fs.writeFile(filename, req.body, function (err: any) {
     if (err) {
@@ -2561,7 +2684,7 @@ app.post('/project/:project/csv', aclProject, (req, res) => {
         ],
         (log) => {
           res.json({log: log});
-        }
+        },
       );
     }
   });
@@ -2571,17 +2694,17 @@ app.get('/project/:project/csv', aclProject, (req, res) => {
   if (!req.user) return res.sendStatus(403);
   userSaveVisit(req.user.username, req.params.project);
   res.sendFile(
-    path.resolve(PROJECTS_FOLDER, req.params.project + '/students.csv')
+    path.resolve(PROJECTS_FOLDER, req.params.project + '/students.csv'),
   );
 });
 
 app.get('/project/:project/gradefiles', aclProject, async (req, res) => {
   try {
     const data = await redisClient.GET(
-      'project:' + req.params.project + ':gradefiles'
+      'project:' + req.params.project + ':gradefiles',
     );
     res.send(data);
-  } catch (e) {
+  } catch {
     res.send([]);
   }
 });
@@ -2589,7 +2712,7 @@ app.get('/project/:project/gradefiles', aclProject, async (req, res) => {
 app.post('/project/:project/gradefiles', aclProject, async (req, res) => {
   await redisClient.SET(
     'project:' + req.params.project + ':gradefiles',
-    JSON.stringify(req.body)
+    JSON.stringify(req.body),
   );
   res.sendStatus(200);
 });
@@ -2615,7 +2738,7 @@ app.post('/project/:project/association/manual', aclProject, (req, res) => {
     ],
     (log) => {
       res.json({log: log});
-    }
+    },
   );
 });
 
@@ -2636,7 +2759,7 @@ app.get('/project/:project/names', aclProject, (req, res) => {
 
 function calculateMarks(
   project: string,
-  callback?: (log: string) => void
+  callback?: (log: string) => void,
 ): void {
   const PROJECT_FOLDER = PROJECTS_FOLDER + '/' + project + '/';
   projectOptions(project, (_err, result) => {
@@ -2672,12 +2795,12 @@ function calculateMarks(
           await redisClient.HSET(
             'project:' + project + ':status',
             'marked',
-            new Date().getTime().toString()
+            new Date().getTime().toString(),
           );
           if (callback) {
             callback(log);
           }
-        }
+        },
       );
     });
   });
@@ -2711,7 +2834,7 @@ app.get('/project/:project/scores', aclProject, async (req, res) => {
   //check if we need to update markings
   const results = await redisClient.HMGET(
     'project:' + req.params.project + ':status',
-    ['scanned', 'marked']
+    ['scanned', 'marked'],
   );
   if (results[0] > results[1]) {
     calculateMarks(req.params.project, getScores);
@@ -2725,11 +2848,11 @@ app.get('/project/:project/scores', aclProject, async (req, res) => {
 app.get('/project/:project/ods', aclProject, (req, res) => {
   const filename = path.resolve(
     PROJECTS_FOLDER,
-    req.params.project + '/students.csv'
+    req.params.project + '/students.csv',
   );
   const exportFile = path.resolve(
     PROJECTS_FOLDER,
-    req.params.project + '/exports/export.ods'
+    req.params.project + '/exports/export.ods',
   );
   amcCommande(
     res,
@@ -2764,7 +2887,7 @@ app.get('/project/:project/ods', aclProject, (req, res) => {
     () => {
       res.attachment('export.ods');
       res.sendFile(exportFile);
-    }
+    },
   );
 });
 
@@ -2777,7 +2900,7 @@ app.post('/project/:project/annotate', aclProject, async (req, res) => {
   if (!req.user) return res.sendStatus(403);
   const locked = await redisClient.HGET(
     'project:' + req.params.project + ':status',
-    'locked'
+    'locked',
   );
   if (locked === '1') {
     return res.status(409).end('ALREADY WORKING!');
@@ -2794,7 +2917,7 @@ app.post('/project/:project/annotate', aclProject, async (req, res) => {
     tmp.file((_err, tmpFile, _fd, cleanup) => {
       const filename = path.resolve(
         PROJECTS_FOLDER,
-        req.params.project + '/students.csv'
+        req.params.project + '/students.csv',
       );
 
       const symbols =
@@ -2886,7 +3009,7 @@ app.post('/project/:project/annotate', aclProject, async (req, res) => {
       } else {
         // annotate all but clear folder first
         fs.emptyDirSync(
-          PROJECTS_FOLDER + '/' + req.params.project + '/cr/corrections/pdf'
+          PROJECTS_FOLDER + '/' + req.params.project + '/cr/corrections/pdf',
         );
       }
       amcCommande(
@@ -2915,7 +3038,7 @@ app.post('/project/:project/annotate', aclProject, async (req, res) => {
             project: string,
             student: number,
             copy: number,
-            callback: (filename?: string) => void
+            callback: (filename?: string) => void,
           ): void {
             const db = new sqlite3.Database(
               PROJECTS_FOLDER + '/' + project + '/data/report.sqlite',
@@ -2943,9 +3066,9 @@ REPORT_ANONYMIZED_PDF       => 4,
                       if (error) console.log(error);
                       callback(filename);
                     });
-                  }
+                  },
                 );
-              }
+              },
             );
           }
 
@@ -2960,13 +3083,13 @@ REPORT_ANONYMIZED_PDF       => 4,
                 req.params.project,
                 Number(student),
                 Number(copy),
-                respond
+                respond,
               );
             });
           } else {
             respond(undefined);
           }
-        }
+        },
       );
     });
   });
@@ -2981,7 +3104,7 @@ app.get('/project/:project/zip/annotate', aclProject, (req, res) => {
   zip.pipe(res);
   zip.directory(
     PROJECTS_FOLDER + '/' + req.params.project + '/cr/corrections/pdf',
-    'annotate'
+    'annotate',
   );
   zip.file(APP_FOLDER + '/assets/extractFirstPage.bat', {
     name: 'extractFirstPage.bat.txt',
@@ -2993,7 +3116,7 @@ app.get('/project/:project/zip/annotate', aclProject, (req, res) => {
 function mergePdfs(
   project: string,
   correctionsFolder: string,
-  destinationFile: string
+  destinationFile: string,
 ) {
   const params = [
     '-c',
@@ -3020,13 +3143,13 @@ app.get(
     try {
       await mergePdfs(req.params.project, 'pdf', 'combined_all.pdf');
       res.sendFile(
-        `${PROJECTS_FOLDER}/${req.params.project}/cr/corrections/combined_all.pdf`
+        `${PROJECTS_FOLDER}/${req.params.project}/cr/corrections/combined_all.pdf`,
       );
     } catch (err) {
       console.log(err);
       res.sendStatus(500);
     }
-  }
+  },
 );
 
 function extractFirstPage(project: string) {
@@ -3055,25 +3178,25 @@ app.get(
     try {
       fs.rmSync(
         `${PROJECTS_FOLDER}/${req.params.project}/cr/corrections/pdf_firstpage`,
-        {recursive: true, force: true}
+        {recursive: true, force: true},
       );
       fs.mkdirSync(
-        `${PROJECTS_FOLDER}/${req.params.project}/cr/corrections/pdf_firstpage`
+        `${PROJECTS_FOLDER}/${req.params.project}/cr/corrections/pdf_firstpage`,
       );
       await extractFirstPage(req.params.project);
       await mergePdfs(
         req.params.project,
         'pdf_firstpage',
-        'combined_firstpage.pdf'
+        'combined_firstpage.pdf',
       );
       res.sendFile(
-        `${PROJECTS_FOLDER}/${req.params.project}/cr/corrections/combined_firstpage.pdf`
+        `${PROJECTS_FOLDER}/${req.params.project}/cr/corrections/combined_firstpage.pdf`,
       );
     } catch (err) {
       console.log(err);
       res.sendStatus(500);
     }
-  }
+  },
 );
 
 /*
@@ -3167,7 +3290,7 @@ app.get('/project/:project/stats', aclProject, (req, res) => {
               res.json(
                 questionsList.map((q) => {
                   return questions[q.question];
-                })
+                }),
               );
             });
           });
@@ -3183,7 +3306,7 @@ app.use(
     err: any,
     _req: express.Request,
     res: express.Response,
-    next: express.NextFunction
+    next: express.NextFunction,
   ) => {
     // Move on if everything is alright
     if (!err) {
@@ -3200,7 +3323,7 @@ app.use(
       Sentry.captureException(err);
       next(err);
     }
-  }
+  },
 );
 
 if (env === 'development') {
@@ -3217,7 +3340,7 @@ httpServer.on('listening', function () {
   console.log(
     'server listening on port %d in %s mode',
     typeof address === 'string' ? address : address?.port,
-    app.settings.env
+    app.settings.env,
   );
 });
 

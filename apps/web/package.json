@@ -15,7 +15,9 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force",
     "lint": "eslint . --fix",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "lint:check": "eslint .",
+    "format:check": "prettier --check src/"
   },
   "dependencies": {
     "@amcui/exam-core": "1.0.0",

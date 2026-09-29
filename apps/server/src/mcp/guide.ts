@@ -2,18 +2,21 @@
 export const questionExample = {
   projectId: 'PROJECT_ID',
   requestId: 'UNIQUE_REQUEST_ID',
-  operations: [{
-    op: 'question.create',
-    sectionId: 'SECTION_ID',
-    fields: {
-      type: 'SINGLE',
-      content: '<p>For <code>x = 2</code>, what does <code>x &lt; 3</code> evaluate to?</p>',
+  operations: [
+    {
+      op: 'question.create',
+      sectionId: 'SECTION_ID',
+      fields: {
+        type: 'SINGLE',
+        content:
+          '<p>For <code>x = 2</code>, what does <code>x &lt; 3</code> evaluate to?</p>',
+      },
+      answers: [
+        {content: '<p><code>True</code></p>', correct: true},
+        {content: '<p><code>False</code></p>', correct: false},
+      ],
     },
-    answers: [
-      {content: '<p><code>True</code></p>', correct: true},
-      {content: '<p><code>False</code></p>', correct: false},
-    ],
-  }],
+  ],
 };
 export const codeExample = {
   projectId: 'PROJECT_ID',

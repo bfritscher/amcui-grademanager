@@ -33,10 +33,24 @@ docker build -f apps/server/Dockerfile -t amcui-server .
 Validation:
 
 ```sh
+npm run lint:check
+npm run format:check
 npm run type-check
 npm test
 npm run test:web
 ```
+
+Linting and formatting cover all workspaces, including backend tests and the SVG
+converter. Run `npm run lint` to apply ESLint fixes and `npm run format` to format
+files with Prettier. The `:check` commands report problems without editing files
+and run in CI. To target one workspace, use e.g.
+`npm run lint:check --workspace=amcui-server` or
+`npm run format --workspace=@amcui/exam-core`.
+
+Backend and shared-package lint rules live in `eslint.config.js`; the Vue app
+keeps its own config. Prettier uses `.prettierrc.json`, with the backend's existing
+style overrides in `apps/server/.prettierrc`. Generated output and runtime data
+are excluded from these checks.
 
 The root workflow builds the existing `amcui-grademanager`, `amcui-server` and
 `amcui-svg2pdf` images. Earlier frontend documentation is in

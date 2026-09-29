@@ -14,11 +14,21 @@
     "build": "npm run build:core && npm run build --workspace=amcui-grademanager && npm run build --workspace=amcui-server",
     "test": "vitest run --config vitest.config.ts",
     "test:web": "npm run test:unit:ci --workspace=amcui-grademanager",
-    "type-check": "npm run build:core && npm run type-check --workspace=amcui-grademanager && npm run build --workspace=amcui-server"
+    "type-check": "npm run build:core && npm run type-check --workspace=amcui-grademanager && npm run build --workspace=amcui-server",
+    "lint": "npm run lint --workspaces",
+    "lint:check": "npm run lint:check --workspaces",
+    "format": "npm run format --workspaces",
+    "format:check": "npm run format:check --workspaces"
   },
   "devDependencies": {
     "typescript": "~6.0.3",
     "vitest": "5.0.2",
-    "jsdom": "30.1.1"
+    "jsdom": "30.1.1",
+    "@eslint/js": "10.0.1",
+    "eslint": "10.11.0",
+    "eslint-config-prettier": "10.0.1",
+    "globals": "17.12.0",
+    "prettier": "3.9.9",
+    "typescript-eslint": "8.70.1"
   }
 }

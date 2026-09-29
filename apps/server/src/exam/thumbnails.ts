@@ -66,9 +66,11 @@ export async function makeThumbnail(
       });
       child.on('close', (code) => {
         clearTimeout(timeout);
-        code === 0
-          ? resolve()
-          : reject(new Error('Thumbnail generation failed'));
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error('Thumbnail generation failed'));
+        }
       });
     });
     // Publish only complete images, leaving a legacy thumbnail usable on failure.

@@ -21,7 +21,11 @@
     "dev": "concurrently --kill-others --names \"BUILD,RUN\" -c \"bgBlue.bold,bgMagenta.bold\" \"tsc -w\" \"nodemon --legacy-watch --watch dist/ --inspect=0.0.0.0:5858 --nolazy ./dist/server.js\"",
     "start": "node --import ./dist/sentry.js ./dist/server.js",
     "test": "jest",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"test-mcp/*.{ts,mjs}\" \"svg2pdf/*.js\" \"*.{json,ts}\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\" \"test-mcp/*.{ts,mjs}\" \"svg2pdf/*.js\" \"*.{json,ts}\""
   },
   "dependencies": {
     "@sentry/node": "11.1.0",
@@ -86,8 +90,6 @@
     "@types/tmp": "0.2.6",
     "@types/ws": "8.18.1",
     "@types/xml2js": "0.4.14",
-    "@typescript-eslint/eslint-plugin": "8.70.1",
-    "@typescript-eslint/parser": "8.70.1",
     "adm-zip": "0.6.1",
     "c8": "12.0.0",
     "concurrently": "10.0.5",

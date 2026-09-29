@@ -10,7 +10,11 @@
     "./render": "./dist/render.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "format": "prettier --write src/ test/ \"*.json\"",
+    "format:check": "prettier --check src/ test/ \"*.json\""
   },
   "dependencies": {
     "yjs": "13.6.33",

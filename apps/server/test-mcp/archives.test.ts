@@ -14,7 +14,11 @@ import {
   readExam,
   replaceExam,
 } from '@amcui/exam-core';
-import {archivePath, importArchive, streamArchive} from '../src/exam/archives.js';
+import {
+  archivePath,
+  importArchive,
+  streamArchive,
+} from '../src/exam/archives.js';
 
 it('finishes streaming a readable archive', async () => {
   const chunks: Buffer[] = [];
@@ -28,19 +32,30 @@ it('finishes streaming a readable archive', async () => {
   zip.append('exam contents', {name: 'data.json'});
   await streamArchive(zip, output);
   expect(output.writableFinished).toBe(true);
-  expect(new AdmZip(Buffer.concat(chunks)).readAsText('data.json')).toBe('exam contents');
+  expect(new AdmZip(Buffer.concat(chunks)).readAsText('data.json')).toBe(
+    'exam contents',
+  );
 });
 
 it('rejects a file disappearing during glob traversal instead of leaving a download open', async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'amcui-archive-missing-'));
-  const output = new Writable({write(_chunk, _encoding, callback) {callback();}});
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'amcui-archive-missing-'),
+  );
+  const output = new Writable({
+    write(_chunk, _encoding, callback) {
+      callback();
+    },
+  });
   const zip = new ZipArchive();
   const vanished = path.join(root, 'index.lock');
   await fs.writeFile(vanished, 'temporary Git state');
   const originalLstat = nativeFs.lstat;
   const lstat = vi.spyOn(nativeFs, 'lstat').mockImplementation((...args) => {
     // Delete after readdir but before stat, as a concurrent Git commit can do.
-    if (path.resolve(String(args[0])) === vanished && nativeFs.existsSync(vanished))
+    if (
+      path.resolve(String(args[0])) === vanished &&
+      nativeFs.existsSync(vanished)
+    )
       nativeFs.unlinkSync(vanished);
     return Reflect.apply(originalLstat, nativeFs, args);
   });
@@ -48,7 +63,9 @@ it('rejects a file disappearing during glob traversal instead of leaving a downl
   syncBuiltinESMExports();
   zip.glob('**/*', {cwd: root, dot: true});
   try {
-    await expect(streamArchive(zip, output)).rejects.toMatchObject({code: 'ENOENT'});
+    await expect(streamArchive(zip, output)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
     expect(output.destroyed).toBe(true);
     expect(zip.destroyed).toBe(true);
   } finally {
@@ -68,7 +85,9 @@ it('stops the archive when the download destination disconnects', async () => {
   });
   const zip = new ZipArchive();
   zip.append('exam contents', {name: 'data.json'});
-  await expect(streamArchive(zip, output)).rejects.toThrow('Client disconnected');
+  await expect(streamArchive(zip, output)).rejects.toThrow(
+    'Client disconnected',
+  );
   expect(zip.destroyed).toBe(true);
 });
 

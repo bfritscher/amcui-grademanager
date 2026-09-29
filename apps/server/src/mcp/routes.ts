@@ -30,8 +30,14 @@ import {examGuide, examGuideUri, examInstructions} from './guide.js';
 const projectId = z.string().min(1).max(200);
 const id = z.string().regex(/^[\w-]{1,200}$/);
 const owner = {
-  entityId: id.describe('Stable ID of the section, question, or answer choice that owns the code block.'),
-  field: z.enum(['content', 'answer']).describe('content for section/question/choice HTML; answer only for an OPEN question model solution.'),
+  entityId: id.describe(
+    'Stable ID of the section, question, or answer choice that owns the code block.',
+  ),
+  field: z
+    .enum(['content', 'answer'])
+    .describe(
+      'content for section/question/choice HTML; answer only for an OPEN question model solution.',
+    ),
 };
 const page = {
   offset: z.number().int().min(0).default(0),
@@ -152,7 +158,11 @@ export function createExamMcp(deps: McpDependencies, auth: AuthInfo) {
   server.registerResource(
     'exam-editing-guide',
     examGuideUri,
-    {mimeType: 'text/markdown', description: 'AMCUI exam model, formatting, settings, and tool examples. Also available through exam_help.'},
+    {
+      mimeType: 'text/markdown',
+      description:
+        'AMCUI exam model, formatting, settings, and tool examples. Also available through exam_help.',
+    },
     async (uri) => ({
       contents: [{uri: uri.href, mimeType: 'text/markdown', text: examGuide}],
     }),
@@ -365,10 +375,29 @@ export function createExamMcp(deps: McpDependencies, auth: AuthInfo) {
       projectId,
       ...owner,
       id: id.optional(),
-      content: z.string().max(500_000).describe('Plain source code. Preserve indentation and actual newlines; JSON encodes newlines as \\n. Do not HTML-escape or include Markdown fences.'),
-      mode: z.string().max(100).optional().describe('Syntax highlighting language, e.g. python or javascript. New blocks default to javascript.'),
-      border: z.boolean().optional().describe('Draw a frame around the code block; new blocks default to true.'),
-      numbers: z.boolean().optional().describe('Show line numbers; new blocks default to false.'),
+      content: z
+        .string()
+        .max(500_000)
+        .describe(
+          'Plain source code. Preserve indentation and actual newlines; JSON encodes newlines as \\n. Do not HTML-escape or include Markdown fences.',
+        ),
+      mode: z
+        .string()
+        .max(100)
+        .optional()
+        .describe(
+          'Syntax highlighting language, e.g. python or javascript. New blocks default to javascript.',
+        ),
+      border: z
+        .boolean()
+        .optional()
+        .describe(
+          'Draw a frame around the code block; new blocks default to true.',
+        ),
+      numbers: z
+        .boolean()
+        .optional()
+        .describe('Show line numbers; new blocks default to false.'),
     }),
     true,
     async (args) =>

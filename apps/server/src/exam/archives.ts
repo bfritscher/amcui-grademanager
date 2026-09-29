@@ -7,11 +7,16 @@ import type {Archiver} from 'archiver';
 import unzipper from 'unzipper';
 import {normalizeExam, type Exam} from '@amcui/exam-core';
 
-export async function streamArchive(zip: Archiver, output: Writable): Promise<void> {
+export async function streamArchive(
+  zip: Archiver,
+  output: Writable,
+): Promise<void> {
   // A vanished glob entry emits a warning but can leave traversal paused forever.
   // Fail the download explicitly instead of leaving a partial ZIP/socket open.
   const onWarning = (error: Error) => zip.destroy(error);
-  const abort = () => { zip.abort(); };
+  const abort = () => {
+    zip.abort();
+  };
   zip.on('warning', onWarning);
   output.once('close', abort);
   try {

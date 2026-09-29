@@ -29,16 +29,26 @@ async function runAmcJob(
   let cleanup = () => {};
   const completed = new Promise<any>((resolve, reject) => {
     let output = '';
-    const timer = setTimeout(() => reject(new Error(`Timed out waiting for ${event}\n${output}`)), 30000);
+    const timer = setTimeout(
+      () => reject(new Error(`Timed out waiting for ${event}\n${output}`)),
+      30000,
+    );
     const onLog = (message: any) => {
       if (message.data) output = (output + message.data + '\n').slice(-8000);
-      if (message.action === 'end' && message.code !== undefined && message.code !== 0)
-        reject(new Error(`${message.msg} exited with ${message.code}\n${output}`));
+      if (
+        message.action === 'end' &&
+        message.code !== undefined &&
+        message.code !== 0
+      )
+        reject(
+          new Error(`${message.msg} exited with ${message.code}\n${output}`),
+        );
     };
     const onEnd = (message: any) => {
       if (message.action === 'end' && matches(message)) resolve(message);
     };
-    const onDisconnect = (reason: string) => reject(new Error(`Socket disconnected: ${reason}`));
+    const onDisconnect = (reason: string) =>
+      reject(new Error(`Socket disconnected: ${reason}`));
     socket.on('log', onLog);
     socket.on(event, onEnd);
     socket.on('disconnect', onDisconnect);
@@ -50,7 +60,10 @@ async function runAmcJob(
     };
   });
   try {
-    const [, message] = await Promise.all([Promise.resolve().then(start), completed]);
+    const [, message] = await Promise.all([
+      Promise.resolve().then(start),
+      completed,
+    ]);
     return message;
   } finally {
     cleanup();
@@ -144,7 +157,7 @@ describe('Project', () => {
               project: PROJECT_NAME,
               users: [TEST_USER],
             }),
-          ])
+          ]),
         );
       });
     // Subscribe only after project creation and its permissions are confirmed.
@@ -223,7 +236,7 @@ describe('Project', () => {
               auto_capture_mode: '0',
             }),
             users: [TEST_USER],
-          })
+          }),
         );
       });
   });
@@ -243,7 +256,7 @@ describe('Project', () => {
               msg: 'options',
               username: TEST_USER,
             }),
-          ])
+          ]),
         );
       });
   });
@@ -268,7 +281,7 @@ describe('Permissions', () => {
         expect(res.body).toEqual(
           expect.objectContaining({
             users: expect.arrayContaining([newUser, TEST_USER]),
-          })
+          }),
         );
       });
   });
@@ -291,7 +304,7 @@ describe('Permissions', () => {
         expect(res.body).toEqual(
           expect.objectContaining({
             users: [TEST_USER],
-          })
+          }),
         );
       });
   });
@@ -319,7 +332,7 @@ describe('Admin', () => {
             users: expect.objectContaining({
               admin: expect.arrayContaining([PROJECT_NAME]),
             }),
-          })
+          }),
         );
       });
   });
@@ -334,8 +347,10 @@ describe('Admin', () => {
       .expect((res) => {
         expect(res.body).toEqual(
           expect.objectContaining({
-            [PROJECT_NAME]: expect.objectContaining({folders: expect.arrayContaining([])}),
-          })
+            [PROJECT_NAME]: expect.objectContaining({
+              folders: expect.arrayContaining([]),
+            }),
+          }),
         );
       });
   });
@@ -351,7 +366,9 @@ describe('Graphics', () => {
       .expect(200);
     for (const extension of ['png', 'jpg']) {
       await api
-        .get(`/project/${PROJECT_NAME}/static/src/graphics/img_thumb.${extension}`)
+        .get(
+          `/project/${PROJECT_NAME}/static/src/graphics/img_thumb.${extension}`,
+        )
         .set('Authorization', `Bearer ${token}`)
         .expect('Content-Type', /image\/png/)
         .expect(200);
@@ -381,7 +398,7 @@ describe('Graphics', () => {
       .expect('Content-Type', /application\/json/)
       .expect((res) => {
         expect(res.body).toEqual(
-          expect.arrayContaining(['img.jpg', 'pdf.pdf'])
+          expect.arrayContaining(['img.jpg', 'pdf.pdf']),
         );
       });
   });
@@ -441,11 +458,15 @@ describe('Project AMC Edit', () => {
       .attach('file', './tests/e2e/fixtures/test.pdf')
       .field({id: 'gaff4f316-f5bc-4981-bd27-f81c53072d69'})
       .expect(200);
-    await runAmcJob('log', (log) => log.msg === 'preview', () =>
-      api.post(`/project/${PROJECT_NAME}/preview`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(previewJSON)
-        .expect(200),
+    await runAmcJob(
+      'log',
+      (log) => log.msg === 'preview',
+      () =>
+        api
+          .post(`/project/${PROJECT_NAME}/preview`)
+          .set('Authorization', `Bearer ${token}`)
+          .send(previewJSON)
+          .expect(200),
     );
     const res = await api
       .get(`/project/${PROJECT_NAME}/static/out/out.pdf`)
@@ -456,11 +477,15 @@ describe('Project AMC Edit', () => {
   }, 35000);
 
   it('can generate a print', async () => {
-    const log = await runAmcJob('print', () => true, () =>
-      api.post(`/project/${PROJECT_NAME}/print`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(previewJSON)
-        .expect(200),
+    const log = await runAmcJob(
+      'print',
+      () => true,
+      () =>
+        api
+          .post(`/project/${PROJECT_NAME}/print`)
+          .set('Authorization', `Bearer ${token}`)
+          .send(previewJSON)
+          .expect(200),
     );
     expect(log.pdfs).toContain('sheet-0001.pdf');
     const res = await api
@@ -489,7 +514,7 @@ describe('Project AMC Edit', () => {
             'corrige.pdf',
             'print.bat.txt',
             'sujets/sheet-0001.pdf',
-          ])
+          ]),
         );
       });
   });
@@ -507,7 +532,7 @@ describe('Project AMC Scan', () => {
       .expect('Content-Type', /application\/json/)
       .expect((res) => {
         expect(res.body.logAnalyse).toMatch(
-          'Page : +1/5/56+\n===<analyse>=+1\n===<analyse>=+1\n'
+          'Page : +1/5/56+\n===<analyse>=+1\n===<analyse>=+1\n',
         );
       });
   });
@@ -529,7 +554,7 @@ describe('Project AMC Scan', () => {
               student: 1,
               timestamp_manual: 0,
             }),
-          ])
+          ]),
         );
       });
   });
@@ -545,8 +570,10 @@ describe('Project AMC Scan', () => {
         expect(res.body).toEqual(
           expect.objectContaining({
             layout_image: 'page-1-5.jpg',
-            src: expect.stringMatching(/^%PROJET\/scans\/(?:scan_0001|1_scan)\.tif$/),
-          })
+            src: expect.stringMatching(
+              /^%PROJET\/scans\/(?:scan_0001|1_scan)\.tif$/,
+            ),
+          }),
         );
       });
   });
@@ -566,7 +593,7 @@ describe('Project AMC Scan', () => {
               manual: -1,
               question: 1,
             }),
-          ])
+          ]),
         );
       });
   });
@@ -599,7 +626,7 @@ describe('Project AMC Scan', () => {
               manual: 1,
               question: 1,
             }),
-          ])
+          ]),
         );
       });
   });
@@ -628,7 +655,7 @@ describe('Project AMC Scan', () => {
               manual: -1,
               question: 1,
             }),
-          ])
+          ]),
         );
       });
   });
@@ -663,7 +690,7 @@ describe('Project AMC Grade', () => {
               page: 5,
               student: 1,
             }),
-          ])
+          ]),
         );
       });
   });
@@ -697,7 +724,7 @@ describe('Project AMC Grade', () => {
               page: 5,
               student: 1,
             }),
-          ])
+          ]),
         );
       });
   });
@@ -730,7 +757,7 @@ describe('Project AMC Grade', () => {
               score: 1,
               student: 1,
             }),
-          ])
+          ]),
         );
       });
   });
@@ -743,11 +770,15 @@ describe('Project AMC Grade', () => {
   });
 
   it('can generate annotation single', async () => {
-    const log = await runAmcJob('annotate', () => true, () =>
-      api.post(`/project/${PROJECT_NAME}/annotate`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ids: [1]})
-        .expect(200),
+    const log = await runAmcJob(
+      'annotate',
+      () => true,
+      () =>
+        api
+          .post(`/project/${PROJECT_NAME}/annotate`)
+          .set('Authorization', `Bearer ${token}`)
+          .send({ids: [1]})
+          .expect(200),
     );
     expect(log.file).toBe('cr/corrections/pdf/101_Alice.pdf');
     const res = await api
@@ -774,7 +805,7 @@ describe('Project AMC Grade', () => {
             'print.bat.txt',
             'extractFirstPage.bat.txt',
             'annotate/101_Alice.pdf',
-          ])
+          ]),
         );
       });
   });
@@ -799,7 +830,7 @@ describe('Project folder/files', () => {
             'data/association.sqlite',
             'data/capture.sqlite',
             'data/scoring.sqlite',
-          ])
+          ]),
         );
       });
   }, 20000);
@@ -838,7 +869,7 @@ describe('Project folder/files', () => {
               auto_capture_mode: '0', // ensure modified file from preivous test
             }),
             users: [TEST_USER],
-          })
+          }),
         );
       });
   });
