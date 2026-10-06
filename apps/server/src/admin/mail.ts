@@ -7,6 +7,7 @@ interface Message {
   to: string;
   subject: string;
   text: string;
+  html?: string;
   attempts: number;
   nextAt: number;
   error?: string;
@@ -43,9 +44,15 @@ export class AdminMail {
         })
       : null;
   }
-  webLink(token: string) {
+  pageLink(page: 'login' | 'admin') {
     const url = new URL(this.env.AMCUI_WEB_URL!);
-    url.pathname = url.pathname.replace(/\/$/, '') + '/login';
+    url.pathname = url.pathname.replace(/\/$/, '') + '/' + page;
+    url.search = '';
+    url.hash = '';
+    return url.toString();
+  }
+  webLink(token: string) {
+    const url = new URL(this.pageLink('login'));
     url.search = new URLSearchParams({verify: token}).toString();
     return url.toString();
   }
@@ -55,6 +62,7 @@ export class AdminMail {
     text: string,
     dedupe?: string,
     expiresAt?: number,
+    html?: string,
   ) {
     if (!this.configured)
       throw new AdminError('Email delivery is not configured', 503);
@@ -68,6 +76,7 @@ export class AdminMail {
       to,
       subject,
       text,
+      html,
       attempts: 0,
       nextAt: Date.now(),
       expiresAt,
@@ -86,12 +95,12 @@ export class AdminMail {
       .ZREM('amcui:admin:mailqueue', id)
       .EXEC();
   }
-  async notifyAdmins(subject: string, text: string) {
+  async notifyAdmins(subject: string, text: string, html?: string) {
     for (const address of (this.env.AMCUI_ADMIN_EMAILS || '')
       .split(',')
       .map((value) => value.trim())
       .filter(Boolean))
-      await this.enqueue(address, subject, text);
+      await this.enqueue(address, subject, text, undefined, undefined, html);
   }
   async status() {
     const ids = await this.store.redis.ZRANGE('amcui:admin:mailqueue', 0, 99);
@@ -152,6 +161,7 @@ export class AdminMail {
             to: message.to,
             subject: message.subject,
             text: message.text,
+            html: message.html,
           });
           // Erase addresses and verification links once delivery has completed.
           await this.store.set('mail:' + id, {sentAt: Date.now()});

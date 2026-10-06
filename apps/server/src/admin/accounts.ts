@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import {z} from 'zod';
 import {AdminError, AdminStore} from './store.js';
 import {AdminMail} from './mail.js';
+import {accountEmail} from './emailTemplate.js';
 import {hasControlCharacters} from '../security/paths.js';
 
 export type AccountState =
@@ -159,12 +160,26 @@ export class AdminAccounts {
     const old = meta.verificationHash;
     meta.verificationHash = hash;
     await this.save(meta);
+    const message = accountEmail({
+      title: 'Confirm your email address',
+      greeting: `Hello ${meta.displayName || meta.username},`,
+      paragraphs: [
+        'Thank you for requesting an AMCUI account. Please confirm your email address to continue.',
+        'After confirmation, an administrator will review your request. We will email you when your account is activated.',
+      ],
+      action: {
+        label: 'Confirm my email address',
+        url: this.mail.webLink(token),
+      },
+      note: 'This link is valid for 24 hours. If you did not request an AMCUI account, you can ignore this email.',
+    });
     await this.mail.enqueue(
       meta.email!,
       'Verify your AMCUI account request',
-      `Verify your email address using this link (valid for 24 hours):\n${this.mail.webLink(token)}\n\nAn administrator will then review your request.`,
+      message.text,
       'verification:' + hash,
       Date.now() + 86400_000,
+      message.html,
     );
     if (old) {
       await this.store.redis.DEL('amcui:admin:verify:' + old);
@@ -199,9 +214,25 @@ export class AdminAccounts {
       delete meta.verificationHash;
       await this.save(meta);
       await this.store.redis.DEL('amcui:admin:verify:' + hash);
+      const message = accountEmail({
+        title: 'Account request awaiting approval',
+        greeting: 'Hello administrator,',
+        paragraphs: [
+          `${meta.displayName || username} has confirmed their email address and their AMCUI account request is ready for review.`,
+          `Name: ${meta.displayName || username}`,
+          `Username: ${username}`,
+          `Email: ${meta.email}`,
+          'Open the administration page and select Approvals to approve or reject this request.',
+        ],
+        action: {
+          label: 'Review account requests',
+          url: this.mail.pageLink('admin'),
+        },
+      });
       await this.mail.notifyAdmins(
         'AMCUI account awaiting approval',
-        `A verified account request is awaiting review: ${username}. Open the admin approvals page.`,
+        message.text,
+        message.html,
       );
       await this.store.audit(username, 'account.verify', username);
     });
@@ -244,13 +275,38 @@ export class AdminAccounts {
       await this.save(meta);
       await this.revokeGrants(username);
       await this.disconnect(username);
-      if (meta.email)
+      if (meta.email) {
+        const message = accountEmail({
+          title:
+            status === 'active'
+              ? 'Your AMCUI account is ready'
+              : 'Your AMCUI account update',
+          greeting: `Hello ${meta.displayName || username},`,
+          paragraphs:
+            status === 'active'
+              ? [
+                  'Your AMCUI account is now active. You can sign in and start using AMCUI.',
+                  `Sign in with your username (${username}) and the password you chose for your account.`,
+                ]
+              : [
+                  status === 'rejected'
+                    ? `Your AMCUI account request (${username}) has been declined by an administrator.`
+                    : `Your AMCUI account (${username}) has been disabled by an administrator.`,
+                ],
+          action:
+            status === 'active'
+              ? {label: 'Sign in to AMCUI', url: this.mail.pageLink('login')}
+              : undefined,
+        });
         await this.mail.enqueue(
           meta.email,
           'AMCUI account ' + status,
-          `Your account request (${username}) is ${status}.`,
+          message.text,
           `account:${username}:${meta.sessionVersion}`,
+          undefined,
+          message.html,
         );
+      }
       await this.store.audit(actor, 'account.' + status, username);
     });
   }

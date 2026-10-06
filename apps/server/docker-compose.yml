@@ -33,6 +33,7 @@ services:
       AMCUI_SMTP_PASSWORD: ""
       AMCUI_MAIL_FROM: "AMCUI TEST <amcui@example.org>"
       AMCUI_WEB_URL: "http://localhost:5173"
+      AMCUI_ADMIN_EMAILS: "${AMCUI_ADMIN_EMAILS:-admin@example.org}"
     command: npm run dev --workspace=amcui-server
     working_dir: /amc
     volumes:
