@@ -10,7 +10,7 @@ const router = createRouter({
   routes
 });
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const store = useStore();
   if (to.name === 'Login') {
     if (store.isLoggedIn) {
@@ -26,6 +26,9 @@ router.beforeEach((to) => {
   // if is a project url, check/load project
   const API = useApiStore();
   if (to.params.project) {
+    if (to.name === 'ArchivedProject') { API.unloadProject(); API.project = ''; return; }
+    const response = await API.$http.get(`${API.URL}/project/${encodeURIComponent(String(to.params.project))}/options`);
+    if ((response.data as any).status?.archived) return {name: 'ArchivedProject', params: {project: to.params.project}};
     API.loadProject(to.params.project as string);
     API.setAwarenessLocation([String(to.name)]);
   } else {

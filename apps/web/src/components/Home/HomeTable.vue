@@ -21,7 +21,9 @@
             <b>{{ item.project }}</b>
           </td>
           <td>
-            <q-chip v-if="item.status?.printed && !item.status?.annotated" icon="sym_o_print"
+            <q-chip v-if="item.status?.archived" icon="sym_o_archive">Archived</q-chip>
+            <q-chip v-else-if="item.status?.archiving === '1'" icon="sym_o_hourglass_empty">Archiving</q-chip>
+            <q-chip v-else-if="item.status?.printed && !item.status?.annotated" icon="sym_o_print"
               >printed</q-chip
             >
             <q-chip v-else-if="item.status?.annotated" icon="sym_o_checklist">annotated</q-chip>

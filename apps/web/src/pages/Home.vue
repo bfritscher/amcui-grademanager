@@ -47,19 +47,32 @@
           active-color="primary"
           indicator-color="primary"
         >
-          <q-tab label="Recent" name="recent" />
+          <q-tab
+            :label="`Active (${store.projects.filter((p) => !p.status.archived).length})`"
+            name="active"
+          />
+          <q-tab
+            :label="`Archived (${store.projects.filter((p) => p.status.archived).length})`"
+            name="archived"
+          />
           <q-tab label="All" name="all" />
         </q-tabs>
 
         <q-separator />
         <q-tab-panels v-model="selectedTab" animated swipeable>
-          <q-tab-panel name="recent" class="q-pa-none">
+          <q-tab-panel name="active" class="q-pa-none">
             <home-table
               :items="filteredProjects"
               @copy-project="copyProject"
               @open-project="openProject"
             ></home-table>
           </q-tab-panel>
+          <q-tab-panel name="archived" class="q-pa-none"
+            ><home-table
+              :items="filteredProjects"
+              @copy-project="copyProject"
+              @open-project="openProject"
+          /></q-tab-panel>
           <q-tab-panel name="all" class="q-pa-none">
             <home-table
               group="prefix"
@@ -118,13 +131,16 @@ export default defineComponent({
       ]
     });
 
-    const selectedTab = ref('recent');
+    const selectedTab = ref('active');
     const search = ref('');
     const serverVersion = ref('');
 
     const filteredProjects = computed(() => {
-      return (selectedTab.value === 'recent' ? store.projectsRecent : store.projects).filter((p) =>
-        p.project.toLowerCase().includes(search.value.toLowerCase())
+      return store.projects.filter(
+        (p) =>
+          (selectedTab.value === 'all' ||
+            (selectedTab.value === 'archived' ? !!p.status.archived : !p.status.archived)) &&
+          p.project.toLowerCase().includes(search.value.toLowerCase())
       );
     });
 
@@ -135,7 +151,9 @@ export default defineComponent({
           project: project.project
         }
       };
-      if (project.status && project.status.annotated) {
+      if (project.status?.archived) {
+        route.name = 'ArchivedProject';
+      } else if (project.status && project.status.annotated) {
         route.name = 'Grade';
       } else if (project.status && project.status.printed) {
         route.name = 'Scan';
@@ -144,6 +162,7 @@ export default defineComponent({
     };
 
     return {
+      store,
       form,
       selectedTab,
       search,

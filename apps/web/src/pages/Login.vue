@@ -2,11 +2,11 @@
   <q-page padding>
     <div class="row q-pa-md flex flex-center">
       <div class="col col-md-4">
-        <q-form @submit="login()">
+        <q-form @submit="registerMode ? register() : login()">
           <q-card square flat bordered class="q-pa-md q-mt-lg shadow-1">
             <q-card-section>
               <div class="text-h5 row">
-                Login <q-space />
+                {{ registerMode ? 'Request an account' : 'Login' }} <q-space />
                 <q-btn
                   icon="sym_o_settings"
                   padding="xs"
@@ -28,19 +28,45 @@
                 v-model="password"
                 type="password"
                 label="Password"
-                autocomplete="current-password"
+                :autocomplete="registerMode ? 'new-password' : 'current-password'"
               />
+              <template v-if="registerMode">
+                <q-input v-model="displayName" label="Your name" class="q-my-md" required />
+                <q-input v-model="email" type="email" label="Email address" required />
+                <p class="text-caption q-mt-md">
+                  Use at least 12 characters for your password. Verify your email, then wait for
+                  administrator approval.
+                </p>
+              </template>
             </q-card-section>
             <q-card-section v-if="error">
               <p class="text-red">{{ error }}</p>
             </q-card-section>
+            <q-card-section v-if="message"
+              ><p>{{ message }}</p></q-card-section
+            >
             <q-card-actions class="q-px-md">
-              <q-btn flat label="create" type="submit" :disable="!username || !password" />
+              <q-btn
+                flat
+                :label="registerMode ? 'Back to login' : 'Request an account'"
+                :disable="!registerMode && !registrationAvailable"
+                @click="
+                  registerMode = !registerMode;
+                  error = '';
+                  message = '';
+                "
+              />
+              <q-btn
+                v-if="!registerMode && needsVerification"
+                flat
+                label="Resend verification"
+                @click="resend"
+              />
               <q-space />
               <q-btn
                 flat
                 color="primary"
-                label="Login"
+                :label="registerMode ? 'Submit request' : 'Login'"
                 type="submit"
                 :disable="!username || !password"
               />
@@ -53,7 +79,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watchEffect } from 'vue';
+import { defineComponent, ref, watchEffect, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import * as base64buffer from 'base64-arraybuffer';
@@ -68,9 +94,36 @@ export default defineComponent({
     const password = ref('');
     const showApi = ref(false);
     const error = ref('');
+    const message = ref('');
+    const registerMode = ref(false);
+    const email = ref('');
+    const displayName = ref('');
+    const registrationAvailable = ref(false);
+    const needsVerification = ref(false);
     const store = useStore();
     const router = useRouter();
     const $q = useQuasar();
+    onMounted(async () => {
+      try {
+        registrationAvailable.value = (
+          await API.$http.get(`${API.URL}/registration/status`)
+        ).data.available;
+      } catch {
+        /* Login remains available. */
+      }
+      const token = router.currentRoute.value.query.verify;
+      if (typeof token === 'string') {
+        try {
+          message.value = (
+            await API.$http.post(`${API.URL}/register/verify`, { token })
+          ).data.message;
+        } catch (e: any) {
+          error.value =
+            e.response?.data?.error || e.response?.data || 'Invalid or expired verification link';
+        }
+        await router.replace({ name: 'Login' });
+      }
+    });
 
     watchEffect(() => {
       if (store.isLoggedIn) {
@@ -84,6 +137,41 @@ export default defineComponent({
       password,
       error,
       showApi,
+      message,
+      registerMode,
+      email,
+      displayName,
+      registrationAvailable,
+      needsVerification,
+      async register() {
+        error.value = '';
+        message.value = '';
+        try {
+          const response = await API.$http.post(`${API.URL}/register`, {
+            username: username.value,
+            password: password.value,
+            email: email.value,
+            displayName: displayName.value
+          });
+          message.value = response.data.message;
+          registerMode.value = false;
+        } catch (e: any) {
+          error.value = e.response?.data?.error || e.response?.data || 'Unable to submit request';
+        }
+      },
+      async resend() {
+        try {
+          message.value = (
+            await API.$http.post(`${API.URL}/register/resend`, {
+              username: username.value,
+              password: password.value
+            })
+          ).data.message;
+        } catch (e: any) {
+          error.value =
+            e.response?.data?.error || e.response?.data || 'Unable to resend verification';
+        }
+      },
       API,
       login() {
         API.$http
@@ -114,7 +202,7 @@ export default defineComponent({
                       }
                     })
                     .catch((err: any) => {
-                      error.value = err.data;
+                      error.value = err.response?.data;
                     });
                 });
               }
@@ -156,7 +244,7 @@ export default defineComponent({
                       }
                     })
                     .catch((err: any) => {
-                      error.value = err.data;
+                      error.value = err.response?.data;
                     });
                 }
               }
@@ -164,6 +252,14 @@ export default defineComponent({
             (err: any) => {
               if (err.status === 401) {
                 error.value = 'Wrong user or password';
+              } else if (err.status === 403 && err.response?.data?.status) {
+                needsVerification.value = err.response?.data.status === 'unverified';
+                error.value =
+                  err.response?.data.status === 'pending'
+                    ? 'Your account is awaiting administrator approval.'
+                    : err.response?.data.status === 'unverified'
+                      ? 'Please verify your email address.'
+                      : 'Your account is unavailable. Contact an administrator.';
               } else {
                 error.value = err.msg || 'Unable to connect to server';
               }

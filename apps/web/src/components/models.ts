@@ -1,6 +1,8 @@
 export interface Project {
   project: string;
   status: {
+    archived?: string;
+    archiving?: string;
     preview: string;
     locked?: string;
     printed: string;
@@ -24,6 +26,8 @@ export interface Options {
     [key: string]: string;
   };
   status: {
+    archived?: string;
+    archiving?: string;
     preview?: string;
     locked: string;
     printed?: string;

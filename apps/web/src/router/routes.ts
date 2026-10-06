@@ -33,6 +33,12 @@ const routes: RouteRecordRaw[] = [
         }
       },
       {
+        path: ':project/archive',
+        name: 'ArchivedProject',
+        component: () => import('@/pages/ArchivedProject.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
         path: ':project/edit',
         redirect: (to) => {
           return {
