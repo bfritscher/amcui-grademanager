@@ -55,6 +55,21 @@ Project access is checked again on every tool/resource request. Profile → MCP
 connections revokes a grant immediately. Grants last 30 days, access tokens 15
 minutes, and refresh tokens rotate. Browser JWTs are not MCP bearer tokens.
 
+To add or remove projects from an existing connection, open **Profile → Connected
+exam editors → Edit projects**, update the selection, and save. The picker loads
+the projects currently accessible to your account and preserves existing selections.
+Changes apply on the next MCP request using the same access token; ask the editor
+to list projects again. No ChatGPT reconnection is needed. This changes only the
+selected projects, not the connection's read/write scopes or expiration. Select
+at most 200 projects. Editing connections may have no selected projects and can
+still create and access new projects from chat; read-only connections require at
+least one selected project. Use **Revoke** to disconnect the editor entirely.
+
+For a quick addition, open the project's **Options** page and click **Add editor
+access** beside **Collaborators**. Choose a connected editor and click **Add access**;
+its existing project selections are preserved. Both flows require your AMCUI login
+and can change only your own active connections and projects you can access.
+
 Clients can use dynamic registration, HTTPS client metadata documents, or operator
 configured `MCP_CLIENTS_JSON` containing an array of OAuth client metadata with
 `client_id`, `client_name`, `redirect_uris` and `token_endpoint_auth_method`.
@@ -66,6 +81,7 @@ private addresses, pins DNS, limits size/time and refuses redirects.
 | Tools | Purpose |
 | --- | --- |
 | `projects_list`, `exam_get` | Discover consented projects and exam structure |
+| `projects_create` | Create an empty project and authorize the calling connection immediately |
 | `questions_search`, `question_get` | Find and read questions, choices and solutions |
 | `exam_validate` | Report incomplete choice questions and duplicate answer wording |
 | `exam_apply_changes` | Apply typed section/question/answer operations atomically |
@@ -74,7 +90,19 @@ private addresses, pins DNS, limits size/time and refuses redirects.
 | `exam_preview`, `preview_get`, `preview_download` | Capture an exam and compile/download its preview PDF |
 
 Read tools require `exam:read`; mutation/preview tools require `exam:write`.
-There are no MCP tools for printing, grading, accounts, project administration,
+Editing connections, including existing ones, can call `projects_create` with
+`{"name":"New exam"}`. The result contains the normalized `projectId`, its AMCUI
+`url`, and `accessGranted`. The project belongs to the authenticated account and
+only the calling connection gains access. Existing selections, scopes, and grant
+expiration are preserved. Connect with an empty project selection to create a
+first project directly from chat. Read-only connections cannot create projects.
+
+Existing names are rejected, including retries; creation never overwrites or
+authorizes an existing project. If creation succeeds but granting access fails,
+the error includes the created project ID and a recovery message. Open that
+project's **Options → Add editor access** rather than creating it again.
+
+There are no MCP tools for printing, grading, accounts, other project administration,
 templates, arbitrary paths, raw Yjs updates or bulk exam replacement.
 
 The usual editing loop is: read the exam, read the target question, apply changes,

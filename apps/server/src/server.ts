@@ -15,7 +15,6 @@ import {expressjwt, Request as JWTRequest} from 'express-jwt';
 import bcrypt from 'bcrypt';
 import {createClient, type RedisClientType} from 'redis';
 import xml2js from 'xml2js';
-import {mkdirp} from 'mkdirp';
 import ACL from 'acl2';
 import multer from 'multer';
 import tmp from 'tmp';
@@ -69,6 +68,11 @@ import {ZodError} from 'zod';
 import {AdminMail} from './admin/mail.js';
 import {AdminAccounts} from './admin/accounts.js';
 import {ProjectLifecycle} from './admin/lifecycle.js';
+import {
+  ProjectCreator,
+  projectCreationHandler,
+  projectCopyHandler,
+} from './projectCreation.js';
 import {AdminService} from './admin/service.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -405,6 +409,33 @@ const secure = (
   });
 };
 
+const projectCreator = new ProjectCreator(
+  PROJECTS_FOLDER,
+  path.resolve(APP_FOLDER, 'assets'),
+  addProjectAcl,
+  (project, root) => {
+    // Preserve the existing asynchronous AMC association initialization.
+    amcCommande(
+      null,
+      root,
+      project,
+      'create association db',
+      [
+        'association-auto',
+        '--data',
+        path.join(root, 'data'),
+        '--notes-id',
+        'etu',
+        '--liste',
+        path.join(root, 'students.csv'),
+        '--liste-key',
+        'id',
+      ],
+      null,
+    );
+  },
+);
+
 // Shared browser/MCP asset and preview services.
 const assets = new ExamAssets(PROJECTS_FOLDER, makeThumbnail, async (data) => {
   const response = await fetch(
@@ -461,6 +492,13 @@ if (process.env.MCP_ENABLED === 'true') {
       set: async (key, value, seconds) => {
         await redisClient.SET(key, value, {EX: seconds});
       },
+      compareAndSet: async (key, expected, value) =>
+        (await redisClient.EVAL(
+          `if redis.call('GET', KEYS[1]) ~= ARGV[1] then return 0 end
+           redis.call('SET', KEYS[1], ARGV[2], 'KEEPTTL')
+           return 1`,
+          {keys: [key], arguments: [expected, value]},
+        )) === 1,
       take: (key) => redisClient.GETDEL(key),
       delete: async (key) => {
         await redisClient.DEL(key);
@@ -489,6 +527,7 @@ if (process.env.MCP_ENABLED === 'true') {
     publicApiUrl,
     webUrl,
     secure,
+    createProject: (name, username) => projectCreator.create(name, username),
     projects,
     allowed: async (username, project) => {
       const allowed =
@@ -1495,75 +1534,6 @@ app.get('/project/recent', async (req, res) => {
   }
 });
 
-function createProject(
-  projectName: string,
-  username: string,
-  success: (project: string) => void,
-  error: () => void,
-): void {
-  // create project
-  const project = slug(projectName);
-  if (project === 'admin') {
-    return error();
-  }
-  const root = path.resolve(PROJECTS_FOLDER, project);
-  if (!fs.existsSync(root)) {
-    mkdirp.sync(root + '/cr/corrections/jpg');
-    mkdirp.sync(root + '/cr/corrections/pdf');
-    mkdirp.sync(root + '/cr/zooms');
-    mkdirp.sync(root + '/cr/diagnostic');
-    mkdirp.sync(root + '/data');
-    mkdirp.sync(root + '/scans');
-    mkdirp.sync(root + '/exports');
-    mkdirp.sync(root + '/out');
-    mkdirp.sync(root + '/pdf');
-    mkdirp.sync(root + '/src/graphics');
-    mkdirp.sync(root + '/src/codes');
-    //copy default option file
-    fs.copySync(
-      path.resolve(APP_FOLDER, 'assets/options.xml'),
-      root + '/options.xml',
-    );
-    fs.copySync(
-      path.resolve(APP_FOLDER, 'assets/students.csv'),
-      root + '/students.csv',
-    );
-    fs.copySync(
-      path.resolve(APP_FOLDER, 'assets/gitignore.template'),
-      root + '/.gitignore',
-    );
-
-    addProjectAcl(project, username);
-    //create association db other are created on print
-    amcCommande(
-      null,
-      PROJECTS_FOLDER + '/' + project,
-      project,
-      'create association db',
-      [
-        'association-auto',
-        '--data',
-        PROJECTS_FOLDER + '/' + project + '/data',
-        '--notes-id',
-        'etu',
-        '--liste',
-        PROJECTS_FOLDER + '/' + project + '/students.csv',
-        '--liste-key',
-        'id',
-      ],
-      null,
-    );
-
-    if (success) {
-      success(project);
-    }
-  } else {
-    if (error) {
-      error();
-    }
-  }
-}
-
 function ignoreGitError() {}
 
 // Git lock mechanism to prevent concurrent operations
@@ -1620,19 +1590,7 @@ async function performGitCommit(
     });
 }
 
-app.post('/project/create', (req, res) => {
-  if (!req.user) return res.sendStatus(403);
-  createProject(
-    req.body.project,
-    req.user.username,
-    (project) => {
-      res.send(project);
-    },
-    () => {
-      res.status(403).send('Project already exists!');
-    },
-  );
-});
+app.post('/project/create', projectCreationHandler(projectCreator));
 
 app.get('/project/:project/options', aclProject, (req, res) => {
   projectOptions(req.params.project, async (_err, result) => {
@@ -1710,58 +1668,11 @@ app.post('/project/:project/copy/template', aclProject, (req, res) => {
   );
 });
 
-app.post('/project/:project/copy/project', aclProject, (req, res, next) => {
-  if (!req.user) return res.sendStatus(403);
-  const src = req.params.project;
-  const dest = req.body.project.toLowerCase();
-  createProject(
-    dest,
-    req.user.username,
-    (destination) => {
-      void documents
-        .withDocument(src, async (doc) => {
-          const snapshot = readExam(doc);
-          await fs.copy(
-            path.join(PROJECTS_FOLDER, src, 'src'),
-            path.join(PROJECTS_FOLDER, destination, 'src'),
-          );
-          const sourceOptions = await xml2js.parseStringPromise(
-            await fs.readFile(
-              projectPath(PROJECTS_FOLDER, src, 'options.xml'),
-              'utf8',
-            ),
-            {explicitArray: false},
-          );
-          const targetOptions = await xml2js.parseStringPromise(
-            await fs.readFile(
-              projectPath(PROJECTS_FOLDER, destination, 'options.xml'),
-              'utf8',
-            ),
-            {explicitArray: false},
-          );
-          for (const [key, value] of Object.entries(sourceOptions.project))
-            if (!/mail|email|liste|assoc|student|archive/i.test(key))
-              targetOptions.project[key] = value;
-          await fs.writeFile(
-            projectPath(PROJECTS_FOLDER, destination, 'options.xml'),
-            new xml2js.Builder().buildObject(targetOptions),
-          );
-          await fs.writeJson(
-            path.join(PROJECTS_FOLDER, destination, 'data.json'),
-            snapshot,
-          );
-          await documents.withDocument(destination, (target) =>
-            replaceExam(target, snapshot),
-          );
-        })
-        .then(() => res.sendStatus(200))
-        .catch(next);
-    },
-    () => {
-      res.status(403).send('Project already exists!');
-    },
-  );
-});
+app.post(
+  '/project/:project/copy/project',
+  aclProject,
+  projectCopyHandler(projectCreator, documents),
+);
 
 //TODO: handle only graphics or codes needed?
 app.post('/project/:project/copy/graphics', aclProject, async (req, res) => {

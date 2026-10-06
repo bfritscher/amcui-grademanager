@@ -32,6 +32,13 @@ export class MemoryOAuth implements OAuthStorage {
   async set(key: string, value: string, seconds: number) {
     this.values.set(key, {value, expires: Date.now() + seconds * 1000});
   }
+  async compareAndSet(key: string, expected: string, value: string) {
+    const entry = this.values.get(key);
+    if (!entry || entry.expires <= Date.now() || entry.value !== expected)
+      return false;
+    this.values.set(key, {...entry, value});
+    return true;
+  }
   async take(key: string) {
     const entry = this.values.get(key);
     this.values.delete(key);

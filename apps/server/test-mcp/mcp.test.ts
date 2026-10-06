@@ -275,7 +275,7 @@ it('provides proxy-correct OAuth metadata and authenticated stateless HTTP trans
         {requestInit: {headers: {Authorization: 'Bearer test'}}},
       ),
     );
-    expect((await client.listTools()).tools).toHaveLength(20);
+    expect((await client.listTools()).tools).toHaveLength(21);
     const raw = await request(app)
       .post('/mcp')
       .set('Authorization', 'Bearer test')

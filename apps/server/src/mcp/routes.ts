@@ -26,7 +26,7 @@ import {ExamDocuments} from '../exam/documents.js';
 import {ExamCopy} from '../exam/copy.js';
 import {ExamAssets} from '../exam/assets.js';
 import {ExamPreviews} from '../exam/previews.js';
-import {ExamOAuth} from './oauth.js';
+import {ExamOAuth, GrantAccessError} from './oauth.js';
 import {examGuide, examGuideUri, examInstructions} from './guide.js';
 
 const projectId = z.string().min(1).max(200);
@@ -61,10 +61,15 @@ export interface McpDependencies {
   publicApiUrl: string;
   webUrl: string;
   secure: RequestHandler;
+  createProject: (name: string, username: string) => Promise<string>;
   projects: (username: string) => Promise<string[]>;
   allowed: (username: string, project: string) => Promise<boolean>;
   writable?: (project: string) => Promise<void>;
-  operation?: <T>(projects: string[], write: boolean, run: () => Promise<T>) => Promise<T>;
+  operation?: <T>(
+    projects: string[],
+    write: boolean,
+    run: () => Promise<T>,
+  ) => Promise<T>;
   audit: (event: Record<string, unknown>) => Promise<void>;
 }
 export function createExamMcp(deps: McpDependencies, auth: AuthInfo) {
@@ -76,6 +81,94 @@ export function createExamMcp(deps: McpDependencies, auth: AuthInfo) {
   );
   const username = String(auth.extra?.username || '');
   const grants = (auth.extra?.projects as string[]) || [];
+  if (auth.scopes.includes('exam:write')) {
+    server.registerTool(
+      'projects_create',
+      {
+        description:
+          'Create a new, empty project under your account and give this connection access immediately. Use the returned projectId for exam_get and editing. Existing project names are rejected; a retry never grants access to an existing project.',
+        inputSchema: {
+          name: z
+            .string()
+            .trim()
+            .min(1)
+            .max(200)
+            .describe(
+              'Name for a new project. The server returns its normalized projectId.',
+            ),
+        },
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: false,
+        },
+      },
+      async ({name}) => {
+        let project: string | undefined;
+        let accessGranted = false;
+        let url: string | undefined;
+        try {
+          const grantId = String(auth.extra?.grantId || '');
+          await deps.oauth.projectCreationGrant(
+            username,
+            grantId,
+            auth.clientId,
+          );
+          project = await deps.createProject(name, username);
+          url = new URL(
+            `${encodeURIComponent(project)}/edit`,
+            deps.webUrl.endsWith('/') ? deps.webUrl : deps.webUrl + '/',
+          ).href;
+          const createdProject = project;
+          const finish = async () => {
+            await deps.documents.withDocument(createdProject, () => {});
+            if (!(await deps.allowed(username, createdProject)))
+              throw new Error(
+                'Account or project access is no longer available.',
+              );
+            await deps.oauth.addGrantProject(username, grantId, createdProject);
+            accessGranted = true;
+          };
+          if (deps.operation)
+            await deps.operation([createdProject], true, finish);
+          else await finish();
+          // Also support another call on a long-lived MCP server instance.
+          if (!grants.includes(project)) grants.push(project);
+          return dataResult({projectId: project, url, accessGranted});
+        } catch (error) {
+          const cause =
+            error instanceof Error ? error.message : 'Project creation failed';
+          return {
+            ...dataResult({
+              ...(project ? {projectId: project, url, accessGranted} : {}),
+              message: project
+                ? `Project ${project} was created, but editor access could not be completed: ${cause} Open its Options > Add editor access, or reconnect if this connection was revoked. Do not create the project again.`
+                : cause,
+            }),
+            isError: true,
+          };
+        } finally {
+          try {
+            await deps.audit({
+              username,
+              clientId: auth.clientId,
+              project,
+              tool: 'projects_create',
+              result: accessGranted
+                ? 'success'
+                : project
+                  ? 'partial'
+                  : 'failed',
+              at: new Date().toISOString(),
+            });
+          } catch (error) {
+            console.error('MCP audit write failed', 'projects_create', error);
+          }
+        }
+      },
+    );
+  }
   const access = async (project: string, write = false) => {
     ExamDocuments.projectName(project);
     if (
@@ -107,15 +200,24 @@ export function createExamMcp(deps: McpDependencies, auth: AuthInfo) {
       },
       async (args: any) => {
         try {
-          if (args.projectId) await access(args.projectId, write && name !== 'exam_copy_content');
+          if (args.projectId)
+            await access(args.projectId, write && name !== 'exam_copy_content');
           if (
             JSON.stringify(args).length > 2_000_000 &&
             name !== 'graphics_upload'
           )
             throw new Error('REQUEST_TOO_LARGE');
           const execute = () => run(args);
-          const projects = [args.projectId, args.destinationProjectId].filter(Boolean) as string[];
-          const result = deps.operation ? await deps.operation(projects, write && name !== 'exam_copy_content', execute) : await execute();
+          const projects = [args.projectId, args.destinationProjectId].filter(
+            Boolean,
+          ) as string[];
+          const result = deps.operation
+            ? await deps.operation(
+                projects,
+                write && name !== 'exam_copy_content',
+                execute,
+              )
+            : await execute();
           if (write) {
             // The edit is already durable. An unavailable audit sink must not invite
             // a client to repeat a non-idempotent upload or code-block creation.
@@ -177,7 +279,7 @@ export function createExamMcp(deps: McpDependencies, auth: AuthInfo) {
   );
   tool(
     'projects_list',
-    'List authorized projects.',
+    'List authorized projects. For a new project, use projects_create with editing access; it grants access immediately. For a missing existing project, ask the user to add it through Options > Add editor access or AMCUI Profile > Connected exam editors > Edit projects, then call projects_list again. No reconnection is needed.',
     z.object({}),
     false,
     async () => ({
@@ -657,7 +759,13 @@ export function installMcp(app: express.Express, deps: McpDependencies) {
       res.setHeader('Cache-Control', 'no-store');
       void run(req)
         .then((result) => res.json(result))
-        .catch(next);
+        .catch((error) => {
+          if (error instanceof GrantAccessError) {
+            res.status(error.status).json({error: error.message});
+          } else {
+            next(error);
+          }
+        });
     };
   app.get(
     '/profile/mcp/authorize/:ticket',
@@ -692,6 +800,40 @@ export function installMcp(app: express.Express, deps: McpDependencies) {
     browser(async (req) => {
       await deps.oauth.revokeGrant(req.user!.username, req.params.id);
       return {revoked: true};
+    }),
+  );
+  app.get(
+    '/profile/mcp/grants/:id',
+    deps.secure,
+    browser((req) =>
+      deps.oauth.grantProjects(req.user!.username, req.params.id),
+    ),
+  );
+  app.put(
+    '/profile/mcp/grants/:id/projects',
+    deps.secure,
+    browser(async (req) => {
+      const input = z
+        .object({projects: z.array(projectId).max(200)})
+        .strict()
+        .parse(req.body);
+      return deps.oauth.updateGrantProjects(
+        req.user!.username,
+        req.params.id,
+        input.projects,
+      );
+    }),
+  );
+  app.post(
+    '/profile/mcp/grants/:id/projects',
+    deps.secure,
+    browser(async (req) => {
+      const input = z.object({projectId}).strict().parse(req.body);
+      return deps.oauth.addGrantProject(
+        req.user!.username,
+        req.params.id,
+        input.projectId,
+      );
     }),
   );
   const bearer = requireBearerAuth({

@@ -32,6 +32,7 @@ export const examGuideUri = 'amcui://help/exam-editing';
 export const examInstructions = [
   'AMCUI exams contain ordered sections, questions, and answer choices. Use stable IDs, not displayed numbers.',
   'Read exam_help before first editing for model settings, HTML formatting, and examples.',
+  'Use projects_create to create a new empty project with editing access. It immediately authorizes this connection for the returned projectId. Existing projects require user consent in AMCUI.',
   'Use inline <code>text</code> monospace for identifiers and short code expressions; use code_block_upsert for multiline code, with plain text and real newlines.',
   'Read the target before editing. Writes apply immediately and synchronize to browser sessions; HTML fields use whole-value Yjs conflict resolution.',
   'Preserve unrelated content and asset references. Validate after editing and preview when layout matters.',
@@ -46,10 +47,12 @@ export const examGuide = `# Editing an AMCUI exam
 A project holds one exam. An exam contains ordered sections; each section contains questions; choice questions contain answer choices. Graphics and code blocks may be referenced from their HTML content.
 Sections are stored as a flat list. The level setting controls heading depth (0 section, 1 subsection, 2 subsubsection), not parent-child ownership.
 Use project IDs from projects_list and entity IDs returned by exam_get or question_get. Displayed question numbers and section labels are computed and change after moves. Never invent IDs for existing entities.
+Editing connections can call projects_create with a name to create a standard empty project under the authenticated user's account. The result returns projectId, url, and accessGranted. Use that projectId with exam_get and editing tools immediately; no reconnect or project selector is required. An editing connection may initially have no selected projects. Creating a project authorizes only the calling connection. Existing names are rejected, never overwritten or authorized through creation. If the result says the project was created but access failed, use the reported project and ask the user to use Options > Add editor access; do not repeat creation.
+If a project is missing from projects_list, ask the user to use Options > Add editor access in that project, or open AMCUI Profile > Connected exam editors > Edit projects for this connection, select the project, and save. Then call projects_list again. Existing connections pick up the new selection without reconnecting; the user must make this authorization change in AMCUI.
 The question's singular answer field is the model solution for an OPEN question. Its plural answers list contains selectable choices for SINGLE or MULTIPLE questions.
 
 ## Workflow
-1. Call projects_list and choose the user's intended project. Call exam_get for sections, settings, and question summaries.
+1. Call projects_list and choose the user's intended project, or call projects_create when the user wants a new project. Call exam_get for sections, settings, and question summaries.
 2. Call question_get for complete content before changing an existing question. questions_search can locate relevant questions and choices.
 3. Use exam_apply_changes for section, question, and choice creation, updates, moves, duplication, and deletion. Patches preserve omitted fields; supplied HTML replaces the entire field. A batch is validated before being applied in one transaction.
 4. Use returned IDs for subsequent calls. Create a section first, then use its returned ID to create questions. A question.create operation can include its initial answers.

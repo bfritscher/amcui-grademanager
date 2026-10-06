@@ -1,6 +1,9 @@
 <template>
   <q-page padding>
-    <h2 class="text-h5">Collaborators</h2>
+    <div class="row items-center justify-between q-gutter-sm">
+      <h2 class="text-h5">Collaborators</h2>
+      <McpProjectAccess :project-id="API.project" />
+    </div>
     <q-select
       :model-value="API.options.users"
       placeholder="add username"
@@ -207,13 +210,15 @@ import { defineComponent, ref, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import AnnotationMarks from '../components/Options/AnnotationMarks.vue';
+import McpProjectAccess from '@/components/McpProjectAccess.vue';
 import { useApiStore } from '@/stores/api';
 import { useStore } from '@/stores/store';
 
 export default defineComponent({
   name: 'Options',
   components: {
-    AnnotationMarks
+    AnnotationMarks,
+    McpProjectAccess
   },
   setup() {
     const API = useApiStore();

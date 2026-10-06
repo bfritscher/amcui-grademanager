@@ -26,6 +26,8 @@ import {
 export interface OAuthStorage {
   get(key: string): Promise<string | null>;
   set(key: string, value: string, seconds: number): Promise<void>;
+  // Replace only the expected, still-live value, preserving its expiration.
+  compareAndSet(key: string, expected: string, value: string): Promise<boolean>;
   take(key: string): Promise<string | null>;
   delete(key: string): Promise<void>;
   addMember(key: string, value: string): Promise<void>;
@@ -39,6 +41,14 @@ export interface Grant {
   projects: string[];
   scopes: string[];
   expiresAt: number;
+}
+export class GrantAccessError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
 }
 interface Pending {
   clientId: string;
@@ -153,7 +163,8 @@ export class ExamOAuth implements OAuthServerProvider {
     private webUrl: string,
     private projectList: (username: string) => Promise<string[]>,
     clients: OAuthClientInformationFull[] = [],
-    private accountActive: (username: string) => Promise<boolean> = async () => true,
+    private accountActive: (username: string) => Promise<boolean> = async () =>
+      true,
   ) {
     this.clientsStore = {
       getClient: async (id) => {
@@ -273,7 +284,9 @@ export class ExamOAuth implements OAuthServerProvider {
     const available = await this.projectList(username);
     if (
       allow &&
-      (!projects.length || projects.some((p) => !available.includes(p)))
+      ((!projects.length && !pending.params.scopes?.includes('exam:write')) ||
+        projects.length > 200 ||
+        projects.some((p) => !available.includes(p)))
     )
       throw new InvalidGrantError('Select accessible projects');
     if (!(await this.consume(`pending:${digest(ticket)}`)))
@@ -362,7 +375,11 @@ export class ExamOAuth implements OAuthServerProvider {
   }
   private async issue(grantId: string, scopes: string[]): Promise<OAuthTokens> {
     const grant = await this.read<Grant>(`grant:${grantId}`);
-    if (!grant || grant.expiresAt <= now() || !await this.accountActive(grant.username))
+    if (
+      !grant ||
+      grant.expiresAt <= now() ||
+      !(await this.accountActive(grant.username))
+    )
       throw new InvalidGrantError('Grant expired or revoked');
     const access = secret(),
       refresh = secret();
@@ -396,8 +413,8 @@ export class ExamOAuth implements OAuthServerProvider {
       !grant ||
       record.expiresAt <= now() ||
       grant.expiresAt <= now() ||
-      record.resource !== this.resource
-      || !await this.accountActive(grant.username)
+      record.resource !== this.resource ||
+      !(await this.accountActive(grant.username))
     )
       throw new InvalidTokenError('Token expired or revoked');
     return {
@@ -432,6 +449,86 @@ export class ExamOAuth implements OAuthServerProvider {
     return grants.filter(
       (g): g is Grant => !!g && g.username === username && g.expiresAt > now(),
     );
+  }
+  private async ownedGrant(username: string, id: string) {
+    const stored = await this.storage.get(this.key(`grant:${id}`));
+    const grant: Grant | null = stored ? JSON.parse(stored) : null;
+    if (!grant || grant.username !== username || grant.expiresAt <= now())
+      throw new GrantAccessError(
+        'This connection has expired or been revoked. Reconnect your editor to continue.',
+        404,
+      );
+    return {grant, stored: stored!};
+  }
+  async grantProjects(username: string, id: string) {
+    const {grant} = await this.ownedGrant(username, id);
+    return {grant, availableProjects: await this.projectList(username)};
+  }
+  async projectCreationGrant(username: string, id: string, clientId: string) {
+    const {grant} = await this.ownedGrant(username, id);
+    if (grant.clientId !== clientId || !grant.scopes.includes('exam:write'))
+      throw new GrantAccessError(
+        'FORBIDDEN: project creation requires editing access.',
+        403,
+      );
+    if (grant.projects.length >= 200)
+      throw new GrantAccessError(
+        'This connection already has 200 projects. Remove a project in your profile first.',
+        400,
+      );
+    return grant;
+  }
+  async updateGrantProjects(username: string, id: string, projects: string[]) {
+    const {grant, stored} = await this.ownedGrant(username, id);
+    if (
+      (!projects.length && !grant.scopes.includes('exam:write')) ||
+      projects.length > 200
+    )
+      throw new GrantAccessError(
+        grant.scopes.includes('exam:write')
+          ? 'Select at most 200 projects.'
+          : 'Select between 1 and 200 projects.',
+        400,
+      );
+    const available = await this.projectList(username);
+    if (projects.some((project) => !available.includes(project)))
+      throw new GrantAccessError(
+        'Some selected projects are no longer accessible. Reopen Edit projects and try again.',
+        403,
+      );
+    return this.saveGrantProjects(grant, stored, [...new Set(projects)]);
+  }
+  async addGrantProject(username: string, id: string, project: string) {
+    const {grant, stored} = await this.ownedGrant(username, id);
+    if (!(await this.projectList(username)).includes(project))
+      throw new GrantAccessError('This project is no longer accessible.', 403);
+    if (grant.projects.includes(project)) return grant;
+    if (grant.projects.length >= 200)
+      throw new GrantAccessError(
+        'This connection already has 200 projects. Remove a project in your profile first.',
+        400,
+      );
+    return this.saveGrantProjects(grant, stored, [...grant.projects, project]);
+  }
+  private async saveGrantProjects(
+    grant: Grant,
+    stored: string,
+    projects: string[],
+  ) {
+    const updated = {...grant, projects};
+    // A concurrent revoke/expiry must never be undone by saving an open picker.
+    if (
+      !(await this.storage.compareAndSet(
+        this.key(`grant:${grant.id}`),
+        stored,
+        JSON.stringify(updated),
+      ))
+    )
+      throw new GrantAccessError(
+        'This connection changed or expired. Reopen Edit projects and try again.',
+        409,
+      );
+    return updated;
   }
   async revokeGrant(username: string, id: string) {
     const grant = await this.read<Grant>(`grant:${id}`);
