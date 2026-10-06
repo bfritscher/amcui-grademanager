@@ -1,4 +1,9 @@
 services:
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
   redis:
     image: redis
     volumes:
@@ -19,6 +24,15 @@ services:
       context: ../..
       dockerfile: apps/server/Dockerfile
     env_file: .env
+    environment:
+      AMCUI_SMTP_HOST: mailpit
+      AMCUI_SMTP_PORT: "1025"
+      AMCUI_SMTP_SECURE: "false"
+      AMCUI_SMTP_REQUIRE_TLS: "false"
+      AMCUI_SMTP_USER: ""
+      AMCUI_SMTP_PASSWORD: ""
+      AMCUI_MAIL_FROM: "AMCUI TEST <amcui@example.org>"
+      AMCUI_WEB_URL: "http://localhost:5173"
     command: npm run dev --workspace=amcui-server
     working_dir: /amc
     volumes:
@@ -35,6 +49,7 @@ services:
     depends_on:
       - redis
       - svg2pdf
+      - mailpit
   svg2pdf:
     build: ./svg2pdf
     cap_add:

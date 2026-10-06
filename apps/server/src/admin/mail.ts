@@ -32,7 +32,9 @@ export class AdminMail {
           host: env.AMCUI_SMTP_HOST,
           port: Number(env.AMCUI_SMTP_PORT || 587),
           secure: env.AMCUI_SMTP_SECURE === 'true',
-          requireTLS: env.AMCUI_SMTP_SECURE !== 'true',
+          requireTLS:
+            env.AMCUI_SMTP_SECURE !== 'true' &&
+            env.AMCUI_SMTP_REQUIRE_TLS !== 'false',
           auth: env.AMCUI_SMTP_USER
             ? {user: env.AMCUI_SMTP_USER, pass: env.AMCUI_SMTP_PASSWORD}
             : undefined,
