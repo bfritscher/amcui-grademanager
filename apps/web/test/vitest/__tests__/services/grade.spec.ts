@@ -239,7 +239,7 @@ describe('Grade', () => {
     it('makeFunc catch syntax error', () => {
       const gs = new GradeService();
       const func = gs.makeFunc('row..name');
-      expect(func({ name: 'test' })).toBe("Error: Unexpected token '.'");
+      expect(func({ name: 'test' })).toMatch(/^Error: Unexpected token/);
     });
 
     it('makeFunc catch code error with valid syntax', () => {

@@ -46,6 +46,7 @@ import { NUMBERS_DATA_ATTRIBUTE, LANGUAGE_DATA_ATTRIBUTE } from './nodes/CustomC
 import BlurEventPlugin from './plugins/BlurEventPlugin.vue';
 import { useExamStore } from '@/stores/exam';
 import { htmlReferences } from '@amcui/exam-core';
+import { safeHtml } from '@/utils/safeHtml';
 
 import { EditorView, lineNumbers } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
@@ -62,6 +63,7 @@ import { useStore } from '@/stores/store';
 const props = defineProps({ modelValue: { type: String, required: true } });
 
 const emit = defineEmits(['update:modelValue']);
+const sanitizedHtml = computed(() => safeHtml(props.modelValue));
 
 const API = useApiStore();
 const store = useStore();
@@ -86,7 +88,7 @@ const modeToLexical = {
 
 function setFromHTML(editor: LexicalEditor) {
   const parser = new DOMParser();
-  const dom = parser.parseFromString(props.modelValue, 'text/html');
+  const dom = parser.parseFromString(sanitizedHtml.value, 'text/html');
   // legacy support center alignment without creating customParagraphNode
   dom.querySelectorAll('.wysiwyg-text-align-center').forEach((el) => {
     (el as HTMLElement).style.textAlign = 'center';
@@ -272,7 +274,7 @@ watch(
 );
 watch(assetRevision, () => {
   if (showPreview.value && preview.value) {
-    preview.value.innerHTML = props.modelValue;
+    preview.value.innerHTML = sanitizedHtml.value;
     decoratePreview();
   }
 });
@@ -343,7 +345,7 @@ const oulinedClass = computed(() => {
         class="preview"
         :class="{ empty: props.modelValue == '' || props.modelValue == '<p></p>' }"
         @click="enable()"
-        v-html="props.modelValue"
+        v-html="sanitizedHtml"
       ></div>
       <!-- eslint-enable -->
       <LexicalComposer v-else :initial-config="config" @error="onError">

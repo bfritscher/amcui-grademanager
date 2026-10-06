@@ -4,6 +4,8 @@ import { debounce } from 'lodash-es';
 import type { GradeRecord, GradeQuestion, Score, GradeFile, Stat } from '../components/models';
 import { useApiStore } from '@/stores/api';
 import router from '@/router';
+import { gradeExpression } from '@/utils/gradeExpression';
+import { roundGrade, scaledGrade } from '@amcui/exam-core';
 
 export default class GradeService {
   private API;
@@ -321,14 +323,7 @@ export default class GradeService {
   }
 
   makeFunc(func: string) {
-    try {
-      return new Function(
-        'row',
-        'try{ return ' + func + '; } catch (e) { return `Error: ${e.message}`; }'
-      );
-    } catch (e: any) {
-      return () => 'Error: ' + e.message;
-    }
+    return gradeExpression(func);
   }
 
   importCols(file: GradeFile) {
@@ -417,25 +412,11 @@ export default class GradeService {
   // calc part
 
   minMaxRoundGrade(grade: any): number {
-    if (grade === '' || isNaN(Number(grade))) {
-      return NaN;
-    }
-    grade = parseFloat(Number(grade).toFixed(10));
-    // TODO-nice note_arrondi as custom roundingFormula instead of round
-    const roundingUnit = parseFloat(this.API.options.options.note_grain);
-    const minGrade = parseFloat(this.API.options.options.note_min);
-    const maxGrade = parseFloat(this.API.options.options.note_max);
-    const roundedGrade = Math.max(
-      minGrade,
-      Math.min(maxGrade, Math.round(grade * (1 / roundingUnit)) * roundingUnit)
-    );
-    return roundedGrade;
+    return roundGrade(grade, this.API.options.options);
   }
 
   computeScaledGrade(points: number, maxPoints: number): number {
-    const minGrade = parseFloat(this.API.options.options.note_min);
-    const maxGrade = parseFloat(this.API.options.options.note_max);
-    return (points / maxPoints) * (maxGrade - minGrade) + minGrade;
+    return scaledGrade(points, maxPoints, this.API.options.options);
   }
 
   computedRoundedScaledGrade(points: number, maxPoints: number): number {

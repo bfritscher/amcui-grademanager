@@ -35,6 +35,37 @@ afterEach(() => {
 });
 
 describe('HTML editor initialization after reload', () => {
+  it('sanitizes saved and remote HTML before previewing and importing into the editor', async () => {
+    const unsafe =
+      '<p>Safe <strong>formatting</strong></p><img id="first" src="x" onerror="window.pwned=1"><svg onload="window.pwned=1"></svg><iframe srcdoc="<script>alert(1)</script>"></iframe><script>alert(1)</script>';
+    const wrapper = mount(LexicalEditor, {
+      props: { modelValue: unsafe },
+      attrs: { id: 'unsafe-saved-content' },
+      global: { plugins: [Quasar] },
+      attachTo: document.body
+    });
+    const check = () => {
+      expect(wrapper.findAll('script, iframe, svg, [onerror], [onload], [srcdoc]')).toHaveLength(0);
+      expect(wrapper.find('strong').text()).toBe('formatting');
+    };
+    try {
+      await flushPromises();
+      check();
+      expect(wrapper.find('img').attributes('src')).toBe('/first.png?preview=1');
+      await wrapper.setProps({ modelValue: unsafe.replace('Safe', 'Remote') });
+      await flushPromises();
+      check();
+      await wrapper.find('.preview').trigger('click');
+      await flushPromises();
+      check();
+      await wrapper.setProps({ modelValue: unsafe.replace('Safe', 'Live update') });
+      await flushPromises();
+      check();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('keeps image selection and its toolbar working after moving image blocks', async () => {
     const html = ref(
       '<p><img id="first" alt="first.png"></p><p><img id="second" alt="second.png"></p>'

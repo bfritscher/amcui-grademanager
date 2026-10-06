@@ -7,6 +7,8 @@ export * from './types.js';
 export * from './schema.js';
 export * from './migrations.js';
 export * from './copy.js';
+export * from './gradeExpression.js';
+export * from './grades.js';
 
 export const entityMaps = ['sections', 'questions', 'answers', 'graphics', 'codes'] as const;
 export type EntityMap = (typeof entityMaps)[number];
