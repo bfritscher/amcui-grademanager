@@ -20,6 +20,11 @@
     "format": "npm run format --workspaces",
     "format:check": "npm run format:check --workspaces"
   },
+  "overrides": {
+    "lodash-es": "4.18.1",
+    "nanoid@3.3.3": "3.3.19",
+    "nanoid@4.0.2": "5.1.16"
+  },
   "devDependencies": {
     "typescript": "~6.0.3",
     "vitest": "5.0.2",

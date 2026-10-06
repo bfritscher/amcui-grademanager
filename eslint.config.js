@@ -17,7 +17,10 @@ export default defineConfig(
   {
     files: ['apps/server/**/*.{js,mjs,cjs,ts}', 'packages/**/*.{js,mjs,cjs,ts}'],
     extends: [js.configs.recommended],
-    languageOptions: { globals: globals.node }
+    languageOptions: {
+      globals: globals.node,
+      parserOptions: { tsconfigRootDir: import.meta.dirname }
+    }
   },
   {
     files: ['apps/server/**/*.ts', 'packages/**/*.ts'],
