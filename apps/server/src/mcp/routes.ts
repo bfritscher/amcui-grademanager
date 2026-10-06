@@ -63,6 +63,8 @@ export interface McpDependencies {
   secure: RequestHandler;
   projects: (username: string) => Promise<string[]>;
   allowed: (username: string, project: string) => Promise<boolean>;
+  writable?: (project: string) => Promise<void>;
+  operation?: <T>(projects: string[], write: boolean, run: () => Promise<T>) => Promise<T>;
   audit: (event: Record<string, unknown>) => Promise<void>;
 }
 export function createExamMcp(deps: McpDependencies, auth: AuthInfo) {
@@ -82,6 +84,7 @@ export function createExamMcp(deps: McpDependencies, auth: AuthInfo) {
       !(await deps.allowed(username, project))
     )
       throw new Error('FORBIDDEN: project or scope');
+    if (write) await deps.writable?.(project);
   };
   function tool(
     name: string,
@@ -104,13 +107,15 @@ export function createExamMcp(deps: McpDependencies, auth: AuthInfo) {
       },
       async (args: any) => {
         try {
-          if (args.projectId) await access(args.projectId, write);
+          if (args.projectId) await access(args.projectId, write && name !== 'exam_copy_content');
           if (
             JSON.stringify(args).length > 2_000_000 &&
             name !== 'graphics_upload'
           )
             throw new Error('REQUEST_TOO_LARGE');
-          const result = await run(args);
+          const execute = () => run(args);
+          const projects = [args.projectId, args.destinationProjectId].filter(Boolean) as string[];
+          const result = deps.operation ? await deps.operation(projects, write && name !== 'exam_copy_content', execute) : await execute();
           if (write) {
             // The edit is already durable. An unavailable audit sink must not invite
             // a client to repeat a non-idempotent upload or code-block creation.

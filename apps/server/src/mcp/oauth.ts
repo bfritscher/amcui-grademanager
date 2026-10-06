@@ -153,6 +153,7 @@ export class ExamOAuth implements OAuthServerProvider {
     private webUrl: string,
     private projectList: (username: string) => Promise<string[]>,
     clients: OAuthClientInformationFull[] = [],
+    private accountActive: (username: string) => Promise<boolean> = async () => true,
   ) {
     this.clientsStore = {
       getClient: async (id) => {
@@ -361,7 +362,7 @@ export class ExamOAuth implements OAuthServerProvider {
   }
   private async issue(grantId: string, scopes: string[]): Promise<OAuthTokens> {
     const grant = await this.read<Grant>(`grant:${grantId}`);
-    if (!grant || grant.expiresAt <= now())
+    if (!grant || grant.expiresAt <= now() || !await this.accountActive(grant.username))
       throw new InvalidGrantError('Grant expired or revoked');
     const access = secret(),
       refresh = secret();
@@ -396,6 +397,7 @@ export class ExamOAuth implements OAuthServerProvider {
       record.expiresAt <= now() ||
       grant.expiresAt <= now() ||
       record.resource !== this.resource
+      || !await this.accountActive(grant.username)
     )
       throw new InvalidTokenError('Token expired or revoked');
     return {
