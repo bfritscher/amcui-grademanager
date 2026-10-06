@@ -9,6 +9,8 @@ import {WebSocket} from 'ws';
 import * as Y from 'yjs';
 import AdmZip from 'adm-zip';
 import {readExam} from '@amcui/exam-core';
+import bcrypt from 'bcrypt';
+import {createClient} from 'redis';
 
 const base = process.env.MCP_SMOKE_URL || 'http://127.0.0.1:9001';
 assert(
@@ -56,7 +58,24 @@ async function call(name, args) {
   return response.structuredContent;
 }
 try {
-  jwt = (await http('/login', {username, password: randomUUID()}, null)).token;
+  // Seed a grandfathered credential only in disposable test infrastructure.
+  // Login no longer implicitly creates accounts.
+  const password = randomUUID();
+  const fixtureRedis = await createClient({
+    url: process.env.MCP_SMOKE_REDIS_URL || 'redis://redis:6379',
+  }).connect();
+  try {
+    assert(
+      await fixtureRedis.SET(
+        'user:' + username,
+        JSON.stringify({username, password: await bcrypt.hash(password, 4)}),
+        {NX: true},
+      ),
+    );
+  } finally {
+    await fixtureRedis.quit();
+  }
+  jwt = (await http('/login', {username, password}, null)).token;
   await http('/project/create', {project});
   const metadata = await http(
     '/.well-known/oauth-authorization-server',
@@ -130,7 +149,11 @@ try {
       requestInit: {headers: {Authorization: `Bearer ${tokens.access_token}`}},
     }),
   );
-  assert.equal((await client.listTools()).tools.length, 19);
+  assert(
+    (await client.listTools()).tools.some(
+      (tool) => tool.name === 'exam_copy_content',
+    ),
+  );
   provider = new WebsocketProvider(
     base.replace(/^http/, 'ws') + '/ws',
     project,

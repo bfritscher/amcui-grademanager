@@ -104,6 +104,109 @@ it('reports persistence failures instead of claiming durable success', async () 
   await manager.close().catch(() => {});
 });
 
+it.each(['revoked', 'expired', 'authorization error'])(
+  'stops outbound edits to an idle connection after %s access',
+  async (reason) => {
+    const manager = new ExamDocuments(
+      new MemoryPersistence(),
+      async () => null,
+    );
+    const server = new WebSocketServer({port: 0});
+    await new Promise<void>((resolve) => server.on('listening', resolve));
+    let allowed = true;
+    server.on('connection', (socket) => {
+      void manager.connect('exam', socket, async () => {
+        if (!allowed && reason !== 'revoked') throw new Error(reason);
+        return allowed;
+      });
+    });
+    const socket = new WebSocket(
+      `ws://127.0.0.1:${(server.address() as {port: number}).port}`,
+    );
+    const messages: Buffer[] = [];
+    socket.on('message', (message) => messages.push(message as Buffer));
+    try {
+      await expect.poll(() => messages.length).toBe(1);
+      allowed = false;
+      const closed = new Promise<number>((resolve) =>
+        socket.once('close', (code) => resolve(code)),
+      );
+      await manager.withDocument('exam', (doc) => {
+        const section = readExam(doc).sections[0];
+        applyChanges(doc, [
+          {
+            op: 'section.update',
+            id: section.id,
+            fields: {title: 'Confidential after revocation'},
+          },
+        ]);
+      });
+      expect(await closed).toBe(1008);
+      expect(messages).toHaveLength(1);
+    } finally {
+      socket.terminate();
+      await manager.close();
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  },
+);
+
+it('periodically closes revoked idle connections even without document edits', async () => {
+  const manager = new ExamDocuments(
+    new MemoryPersistence(),
+    async () => null,
+    1000,
+    20,
+  );
+  const server = new WebSocketServer({port: 0});
+  await new Promise<void>((resolve) => server.on('listening', resolve));
+  let allowed = true;
+  server.on('connection', (socket) => {
+    void manager.connect('exam', socket, async () => allowed);
+  });
+  const socket = new WebSocket(
+    `ws://127.0.0.1:${(server.address() as {port: number}).port}`,
+  );
+  try {
+    await new Promise<void>((resolve) =>
+      socket.once('message', () => resolve()),
+    );
+    const closed = new Promise<number>((resolve) =>
+      socket.once('close', resolve),
+    );
+    allowed = false;
+    expect(await closed).toBe(1008);
+  } finally {
+    socket.terminate();
+    await manager.close();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});
+
+it('rechecks authorization before the initial document handshake', async () => {
+  const manager = new ExamDocuments(new MemoryPersistence(), async () => null);
+  const server = new WebSocketServer({port: 0});
+  await new Promise<void>((resolve) => server.on('listening', resolve));
+  server.on('connection', (socket) => {
+    void manager.connect('exam', socket, async () => false);
+  });
+  const socket = new WebSocket(
+    `ws://127.0.0.1:${(server.address() as {port: number}).port}`,
+  );
+  const messages: unknown[] = [];
+  socket.on('message', (message) => messages.push(message));
+  try {
+    expect(
+      await new Promise<number>((resolve) => socket.once('close', resolve)),
+    ).toBe(1008);
+    expect(messages).toHaveLength(0);
+  } finally {
+    socket.terminate();
+    await manager.close();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});
+
 it('migrates persisted fields before access and preserves unexported edits across rename', async () => {
   const persistence = new MemoryPersistence();
   const seed = new Y.Doc();
