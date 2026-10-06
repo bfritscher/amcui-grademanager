@@ -25,7 +25,7 @@ export interface DocumentPersistence {
 interface Entry {
   doc: Y.Doc;
   awareness: Awareness;
-  sockets: Map<WebSocket, Set<number>>;
+  sockets: Map<WebSocket, {enqueue: (work: () => void) => void}>;
   pending: Promise<unknown>;
   users: number;
   timer?: ReturnType<typeof setTimeout>;
@@ -37,6 +37,9 @@ export class ExamDocuments {
     private persistence: DocumentPersistence | null,
     private legacy: (project: string) => Promise<unknown>,
     private idleMs = 60_000,
+    private accessCheckMs = 30_000,
+    private persistProject: (project: string) => Promise<boolean> = async () =>
+      true,
   ) {}
   static projectName(project: string): string {
     if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,199}$/.test(project))
@@ -48,8 +51,10 @@ export class ExamDocuments {
     let entry = this.entries.get(project);
     if (!entry) {
       entry = (async () => {
-        const doc = this.persistence
-          ? await this.persistence.getYDoc(name)
+        const persist =
+          this.persistence && (await this.persistProject(project));
+        const doc = persist
+          ? await this.persistence!.getYDoc(name)
           : new Y.Doc();
         const state: Entry = {
           doc,
@@ -60,7 +65,7 @@ export class ExamDocuments {
         };
         state.awareness.setLocalState(null);
         doc.on('update', (update: Uint8Array) => {
-          if (this.persistence)
+          if (persist)
             state.pending = state.pending.then(() =>
               this.persistence!.storeUpdate(name, update),
             );
@@ -116,8 +121,8 @@ export class ExamDocuments {
     return entry;
   }
   private broadcast(entry: Entry, data: Uint8Array) {
-    for (const socket of entry.sockets.keys())
-      if (socket.readyState === 1) socket.send(data);
+    for (const [socket, connection] of entry.sockets)
+      connection.enqueue(() => socket.send(data));
   }
   private release(project: string, entry: Entry) {
     if (!this.entries.has(project) || entry.users || entry.sockets.size) return;
@@ -167,6 +172,7 @@ export class ExamDocuments {
     project: string,
     socket: WebSocket,
     authorized: () => Promise<boolean>,
+    onEdit: () => Promise<void> = async () => {},
   ): Promise<void> {
     const early: RawData[] = [];
     let earlyBytes = 0;
@@ -188,70 +194,83 @@ export class ExamDocuments {
     }
     clearTimeout(entry.timer);
     const ids = new Set<number>();
-    entry.sockets.set(socket, ids);
     let pending = Promise.resolve();
+    const enqueue = (work: () => void) => {
+      pending = pending
+        .then(async () => {
+          if (socket.readyState !== 1) return;
+          // Recheck before every outgoing message as well as incoming edits.
+          let allowed = false;
+          try {
+            allowed = await authorized();
+          } catch {
+            /* Fail closed. */
+          }
+          if (!allowed) {
+            socket.close(1008, 'Access revoked');
+            return;
+          }
+          if (socket.readyState === 1) work();
+        })
+        .catch(() => socket.close(1008, 'Invalid sync message'));
+    };
+    entry.sockets.set(socket, {enqueue});
+    const humanUpdate = (_update: Uint8Array, origin: unknown) => {
+      if (origin === socket) void onEdit().catch(() => {});
+    };
+    entry.doc.on('update', humanUpdate);
     let alive = true;
     const heartbeat = setInterval(() => {
-      if (!alive) socket.terminate();
-      else {
-        alive = false;
-        socket.ping();
-      }
-    }, 30_000);
+      enqueue(() => {
+        if (!alive) socket.terminate();
+        else {
+          alive = false;
+          socket.ping();
+        }
+      });
+    }, this.accessCheckMs);
     heartbeat.unref?.();
     socket.on('pong', () => {
       alive = true;
     });
     socket.on('message', (data) => {
-      pending = pending
-        .then(async () => {
-          if (!(await authorized())) {
-            socket.close(1008, 'Access revoked');
-            return;
+      enqueue(() => {
+        const decoder = decoding.createDecoder(new Uint8Array(data as Buffer));
+        const type = decoding.readVarUint(decoder);
+        if (type === 0) {
+          const reply = encoding.createEncoder();
+          encoding.writeVarUint(reply, 0);
+          sync.readSyncMessage(decoder, reply, entry.doc, socket);
+          if (encoding.length(reply) > 1 && socket.readyState === 1)
+            socket.send(encoding.toUint8Array(reply));
+        } else if (type === 1) {
+          const update = decoding.readVarUint8Array(decoder);
+          const awarenessDecoder = decoding.createDecoder(update);
+          const count = decoding.readVarUint(awarenessDecoder);
+          for (let i = 0; i < count; i++) {
+            const id = decoding.readVarUint(awarenessDecoder);
+            decoding.readVarUint(awarenessDecoder);
+            const value = decoding.readVarString(awarenessDecoder);
+            if (value !== 'null') ids.add(id);
           }
-          if (socket.readyState !== 1) return;
-          const decoder = decoding.createDecoder(
-            new Uint8Array(data as Buffer),
-          );
-          const type = decoding.readVarUint(decoder);
-          if (type === 0) {
-            const reply = encoding.createEncoder();
-            encoding.writeVarUint(reply, 0);
-            sync.readSyncMessage(decoder, reply, entry.doc, socket);
-            if (encoding.length(reply) > 1 && socket.readyState === 1)
-              socket.send(encoding.toUint8Array(reply));
-          } else if (type === 1) {
-            const update = decoding.readVarUint8Array(decoder);
-            const awarenessDecoder = decoding.createDecoder(update);
-            const count = decoding.readVarUint(awarenessDecoder);
-            for (let i = 0; i < count; i++) {
-              const id = decoding.readVarUint(awarenessDecoder);
-              decoding.readVarUint(awarenessDecoder);
-              const value = decoding.readVarString(awarenessDecoder);
-              if (value !== 'null') ids.add(id);
-            }
-            applyAwarenessUpdate(entry.awareness, update, socket);
-          }
-        })
-        .catch(() => {
-          socket.close(1008, 'Invalid sync message');
-        });
+          applyAwarenessUpdate(entry.awareness, update, socket);
+        }
+      });
     });
     socket.off('message', buffer);
     for (const data of early) socket.emit('message', data);
     socket.on('close', () => {
+      entry.doc.off('update', humanUpdate);
       clearInterval(heartbeat);
-      void pending.finally(() => {
-        entry.sockets.delete(socket);
-        removeAwarenessStates(entry.awareness, [...ids], socket);
-        this.release(project, entry);
-      });
+      entry.sockets.delete(socket);
+      removeAwarenessStates(entry.awareness, [...ids], socket);
+      void pending.finally(() => this.release(project, entry));
     });
     socket.on('error', () => socket.close());
     const encoder = encoding.createEncoder();
     encoding.writeVarUint(encoder, 0);
     sync.writeSyncStep1(encoder, entry.doc);
-    socket.send(encoding.toUint8Array(encoder));
+    enqueue(() => socket.send(encoding.toUint8Array(encoder)));
     if (entry.awareness.getStates().size) {
       const awareness = encoding.createEncoder();
       encoding.writeVarUint(awareness, 1);
@@ -261,7 +280,7 @@ export class ExamDocuments {
           ...entry.awareness.getStates().keys(),
         ]),
       );
-      socket.send(encoding.toUint8Array(awareness));
+      enqueue(() => socket.send(encoding.toUint8Array(awareness)));
     }
   }
   async clear(project: string) {
@@ -280,6 +299,14 @@ export class ExamDocuments {
     }
     // A deleted project's directory may already be gone. Never initialize it here.
     await this.persistence?.clearDocument(ExamDocuments.projectName(project));
+  }
+  async disconnectProject(project: string) {
+    const loaded = this.entries.get(project);
+    if (!loaded) return;
+    const entry = await loaded;
+    for (const socket of entry.sockets.keys())
+      socket.close(1012, 'Project maintenance');
+    await entry.pending;
   }
   async rename(
     project: string,

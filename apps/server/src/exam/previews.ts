@@ -6,6 +6,7 @@ import {JSDOM} from 'jsdom';
 import {readExam, normalizeExam, type Exam} from '@amcui/exam-core';
 import {renderExam} from '@amcui/exam-core/render';
 import {ExamDocuments} from './documents.js';
+import {validateSourceFiles} from './sourceFiles.js';
 
 export interface PreviewJob {
   id: string;
@@ -52,27 +53,10 @@ export class ExamPreviews {
     if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('INVALID_PREVIEW_ID');
     return path.join(this.projectsRoot, '.previews', project, id);
   }
+  async wait(project: string) { await this.queues.get(project); }
   async enqueue(project: string, username: string, rendered?: RenderedExam) {
     ExamDocuments.projectName(project);
-    if (rendered) {
-      for (const field of [
-        'source',
-        'questions_definition',
-        'questions_layout',
-        'json',
-      ] as const)
-        if (typeof rendered[field] !== 'string')
-          throw new Error('INVALID_PREVIEW');
-      if (
-        !rendered.codes ||
-        typeof rendered.codes !== 'object' ||
-        Array.isArray(rendered.codes)
-      )
-        throw new Error('INVALID_PREVIEW');
-      for (const code of Object.values(rendered.codes))
-        if (!code || typeof code.content !== 'string')
-          throw new Error('INVALID_PREVIEW');
-    }
+    if (rendered) validateSourceFiles(this.projectsRoot, project, rendered);
     if ((this.counts.get(project) || 0) >= 20)
       throw new Error('PREVIEW_QUEUE_FULL');
     this.counts.set(project, (this.counts.get(project) || 0) + 1);

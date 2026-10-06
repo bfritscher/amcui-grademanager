@@ -170,6 +170,7 @@ export class ExamCopy {
 export function copyContentHandler(
   copy: ExamCopy,
   allowed: (username: string, project: string) => Promise<boolean>,
+  operation?: <T>(projects: string[], run: () => Promise<T>) => Promise<T>,
 ): RequestHandler {
   return async (req, res, next) => {
     try {
@@ -191,12 +192,13 @@ export function copyContentHandler(
         res.sendStatus(403);
         return;
       }
+      const username = req.user.username;
+      const run = () =>
+        copy.copy(source, input.data, JSON.stringify([username, 'web']));
       res.json(
-        await copy.copy(
-          source,
-          input.data,
-          JSON.stringify([req.user.username, 'web']),
-        ),
+        await (operation
+          ? operation([source, input.data.destinationProjectId], run)
+          : run()),
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : '';

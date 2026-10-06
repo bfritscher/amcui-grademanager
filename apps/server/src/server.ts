@@ -33,6 +33,21 @@ import * as base64buffer from 'base64-arraybuffer';
 import {WebSocketServer} from 'ws';
 import fetch from 'node-fetch';
 import {readExam, replaceExam} from '@amcui/exam-core';
+import {installProjectFileRoutes} from './exam/fileRoutes.js';
+import {projectPath, safeFilename} from './security/paths.js';
+import {
+  validateLogin,
+  validatePassword,
+  validatePasswordChange,
+  asyncHandler,
+} from './security/login.js';
+import {
+  configureProxyTrust,
+  createRateLimits,
+  credentialRoutes,
+  redisRateLimitStores,
+} from './security/rateLimits.js';
+import {saveSourceFilesSync, validateSourceFiles} from './exam/sourceFiles.js';
 import {importArchive, streamArchive} from './exam/archives.js';
 
 import {URL} from 'url';
@@ -44,11 +59,17 @@ import {
   isThumbnail,
   makeThumbnail,
   missingThumbnails,
-  resolveThumbnail,
 } from './exam/thumbnails.js';
 import {ExamPreviews, renderSnapshot} from './exam/previews.js';
 import {ExamOAuth} from './mcp/oauth.js';
 import {installMcp} from './mcp/routes.js';
+import {AdminStore} from './admin/store.js';
+import {AdminError} from './admin/store.js';
+import {ZodError} from 'zod';
+import {AdminMail} from './admin/mail.js';
+import {AdminAccounts} from './admin/accounts.js';
+import {ProjectLifecycle} from './admin/lifecycle.js';
+import {AdminService} from './admin/service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -79,6 +100,7 @@ declare global {
 }
 
 const app = express();
+configureProxyTrust(app, process.env.AMCUI_TRUST_PROXY);
 Sentry.setupExpressErrorHandler(app);
 
 const APP_FOLDER = path.resolve(__dirname, '../src/');
@@ -86,14 +108,22 @@ const PROJECTS_FOLDER =
   process.env.AMCUI_PROJECTS_DIR || path.resolve(__dirname, '../projects/');
 const TEMPLATES_FOLDER =
   process.env.AMCUI_TEMPLATES_DIR || path.resolve(__dirname, '../templates/');
+await fs.ensureDir(PROJECTS_FOLDER);
 
-const redisClient = (await createClient({socket: {port: 6379, host: 'redis'}})
+const redisClient = (await createClient({
+  socket: {port: 6379, host: 'redis'},
+  disableOfflineQueue: true,
+})
   .on('error', (err) => {
     console.log('Redis error ' + err);
     Sentry.captureException(err);
   })
   .connect()) as RedisClientType;
 const acl = new ACL(new ACL.redisBackend({redis: redisClient, prefix: 'acl'}));
+const adminStore = new AdminStore(redisClient);
+const accountMail = new AdminMail(adminStore);
+const accounts = new AdminAccounts(adminStore, accountMail, acl);
+const lifecycle = new ProjectLifecycle(adminStore, PROJECTS_FOLDER);
 
 const f2l = new Fido2Lib({
   rpName: 'AMCUI',
@@ -115,10 +145,34 @@ const corsOptions: cors.CorsOptions = {
     'Content-Encoding',
     'Content-Length',
     'Content-Range',
+    'Retry-After',
+    'RateLimit',
+    'RateLimit-Policy',
   ],
 };
 
 app.use(cors(corsOptions));
+const limits = createRateLimits(
+  redisRateLimitStores((...args) => redisClient.sendCommand(args)),
+);
+// Reject excessive requests before parsing bodies or performing authentication.
+app.use((_req, res, next) => {
+  const start = performance.now();
+  res.once('finish', () => {
+    const ms = performance.now() - start;
+    administration.metrics.requests++;
+    administration.metrics.latencyMs += ms;
+    administration.metrics.maxLatencyMs = Math.max(
+      administration.metrics.maxLatencyMs,
+      ms,
+    );
+    if (res.statusCode >= 500) administration.metrics.errors++;
+    if (res.statusCode === 429) administration.metrics.throttled++;
+  });
+  next();
+});
+app.use(limits.api);
+app.use(credentialRoutes, limits.authIp);
 
 const httpServer = createServer(app);
 const ws = new Server(httpServer, {cors: corsOptions});
@@ -128,6 +182,21 @@ ws.use(
     secret: process.env.JWT_SECRET,
   }),
 );
+ws.use((socket, next) => {
+  void accounts
+    .active(
+      socket.decodedToken.username,
+      socket.decodedToken.sessionVersion || 0,
+    )
+    .then((active) =>
+      next(active ? undefined : new Error('Account access revoked')),
+    )
+    .catch(next);
+});
+accounts.disconnect = async (username) => {
+  for (const socket of ws.sockets.sockets.values())
+    if (socket.decodedToken?.username === username) socket.disconnect(true);
+};
 
 const wss = new WebSocketServer({noServer: true, maxPayload: 5 * 1024 * 1024});
 if (process.env.MCP_ENABLED === 'true' && !process.env.YPERSISTENCE)
@@ -135,12 +204,29 @@ if (process.env.MCP_ENABLED === 'true' && !process.env.YPERSISTENCE)
 const documentPersistence = process.env.YPERSISTENCE
   ? new LeveldbPersistence(process.env.YPERSISTENCE)
   : null;
-const documents = new ExamDocuments(documentPersistence, async (project) => {
-  const folder = path.join(PROJECTS_FOLDER, project);
-  if (!(await fs.pathExists(folder))) throw new Error('Project not found');
-  const file = path.join(folder, 'data.json');
-  return (await fs.pathExists(file)) ? fs.readJson(file) : null;
-});
+const documents = new ExamDocuments(
+  documentPersistence,
+  async (project) => {
+    const folder = path.join(PROJECTS_FOLDER, project);
+    if (!(await fs.pathExists(folder))) throw new Error('Project not found');
+    const file = path.join(folder, 'data.json');
+    return (await fs.pathExists(file)) ? fs.readJson(file) : null;
+  },
+  60_000,
+  30_000,
+  async (project) => (await lifecycle.state(project)) !== 'archived',
+);
+const administration = new AdminService(
+  adminStore,
+  accounts,
+  lifecycle,
+  documents,
+  async (project) => {
+    await previews.wait(project);
+    await gitLocks.get(project);
+  },
+  withGit,
+);
 
 httpServer.on('upgrade', async (request, socket, head) => {
   // You may check auth of request here..
@@ -160,20 +246,43 @@ httpServer.on('upgrade', async (request, socket, head) => {
         const decodedToken = jwt.verify(
           accessToken,
           process.env.JWT_SECRET || '',
-        ) as {username: string};
+        ) as {username: string; sessionVersion?: number};
         if (
           decodedToken &&
+          (await accounts.active(
+            decodedToken.username,
+            decodedToken.sessionVersion || 0,
+          )) &&
+          (await lifecycle.state(projectName)) === 'active' &&
           (await acl.hasRole(decodedToken.username, projectName))
         ) {
           wss.handleUpgrade(request, socket, head, (ws) => {
             void documents
-              .connect(projectName, ws, async () => {
-                const token = jwt.verify(
-                  accessToken,
-                  process.env.JWT_SECRET || '',
-                ) as {username: string};
-                return acl.hasRole(token.username, projectName);
-              })
+              .connect(
+                projectName,
+                ws,
+                async () => {
+                  const token = jwt.verify(
+                    accessToken,
+                    process.env.JWT_SECRET || '',
+                  ) as {username: string; sessionVersion?: number};
+                  return (
+                    (await accounts.active(
+                      token.username,
+                      token.sessionVersion || 0,
+                    )) &&
+                    (await lifecycle.state(projectName)) === 'active' &&
+                    (await acl.hasRole(token.username, projectName))
+                  );
+                },
+                async () => {
+                  await accounts.activity(decodedToken.username, 'human');
+                  await redisClient.HSET('project:' + projectName + ':status', {
+                    lastModifiedAt: String(Date.now()),
+                    lastHumanActivityAt: String(Date.now()),
+                  });
+                },
+              )
               .catch(() => ws.close(1011, 'Document unavailable'));
           });
           return;
@@ -190,6 +299,12 @@ httpServer.on('upgrade', async (request, socket, head) => {
 const uploadMiddleware = multer({dest: '/tmp/amcui-uploads/'});
 
 async function userSaveVisit(username: string, projectName: string) {
+  await accounts.activity(username, 'human');
+  await redisClient.HSET(
+    'project:' + projectName + ':status',
+    'lastHumanActivityAt',
+    String(Date.now()),
+  );
   await redisClient.ZADD('user:' + username + ':recent', {
     score: new Date().getTime(),
     value: projectName,
@@ -200,15 +315,31 @@ async function userSaveVisit(username: string, projectName: string) {
 ws.on('connection', (socket) => {
   //this socket is authenticated, we are good to handle more events from it.
   const username: string = socket.decodedToken.username;
+  const recheck = setInterval(() => {
+    void accounts
+      .active(username, socket.decodedToken.sessionVersion || 0)
+      .then((active) => {
+        if (!active) socket.disconnect(true);
+      })
+      .catch(() => socket.disconnect(true));
+  }, 30_000);
+  recheck.unref();
+  socket.on('disconnect', () => clearInterval(recheck));
 
-  socket.on('listen', async (project: string) => {
-    const hasRole = await acl.hasRole(username, project);
-    if (!hasRole) {
-      socket.disconnect(true);
-    } else {
-      userSaveVisit(username, project);
-      socket.join(project + '-notifications');
-    }
+  socket.on('listen', (project: string) => {
+    void (async () => {
+      const hasRole =
+        (await accounts.active(
+          username,
+          socket.decodedToken.sessionVersion || 0,
+        )) && (await acl.hasRole(username, project));
+      if (!hasRole) {
+        socket.disconnect(true);
+      } else {
+        userSaveVisit(username, project);
+        socket.join(project + '-notifications');
+      }
+    })().catch(() => socket.disconnect(true));
   });
 });
 
@@ -263,7 +394,14 @@ const secure = (
     if (req.auth) {
       req.user = req.auth as any;
     }
-    next();
+    void accounts
+      .active(req.user?.username || '', (req.auth as any)?.sessionVersion || 0)
+      .then((active) =>
+        active
+          ? next()
+          : res.status(401).json({error: 'Account access revoked'}),
+      )
+      .catch(next);
   });
 };
 
@@ -282,12 +420,13 @@ const previews = new ExamPreviews(
   async (project, username, body, pdf) => {
     // A captured preview can finish during printing; retain its isolated result without
     // changing the working files used by that print run.
+    if ((await lifecycle.state(project)) !== 'active') return;
     if (
       (await redisClient.HGET('project:' + project + ':status', 'locked')) ===
       '1'
     )
       return;
-    saveSourceFilesSync(project, body);
+    saveSourceFilesSync(PROJECTS_FOLDER, project, body);
     await fs.copy(pdf, path.join(PROJECTS_FOLDER, project, 'out', 'out.pdf'));
     await commitGit(project, username, 'preview');
   },
@@ -335,7 +474,12 @@ if (process.env.MCP_ENABLED === 'true') {
     webUrl,
     projects,
     JSON.parse(process.env.MCP_CLIENTS_JSON || '[]'),
+    (username) => accounts.active(username),
   );
+  accounts.revokeGrants = async (username) => {
+    for (const grant of await oauth.grants(username))
+      await oauth.revokeGrant(username, grant.id);
+  };
   installMcp(app, {
     copy: new ExamCopy(PROJECTS_FOLDER, documents),
     oauth,
@@ -346,8 +490,25 @@ if (process.env.MCP_ENABLED === 'true') {
     webUrl,
     secure,
     projects,
-    allowed: async (username, project) => acl.hasRole(username, project),
+    allowed: async (username, project) => {
+      const allowed =
+        (await accounts.active(username)) &&
+        (await acl.hasRole(username, project));
+      if (allowed) await accounts.activity(username, 'mcp');
+      return allowed;
+    },
+    writable: (project) => lifecycle.writable(project),
+    operation: (projects, write, run) =>
+      lifecycle.operation(projects, write, run),
     audit: async (event) => {
+      if (typeof event.username === 'string')
+        await accounts.activity(event.username, 'mcp');
+      if (event.result === 'success' && typeof event.project === 'string')
+        await redisClient.HSET(
+          'project:' + event.project + ':status',
+          'lastModifiedAt',
+          String(Date.now()),
+        );
       await redisClient.LPUSH('mcp:audit', JSON.stringify(event));
       await redisClient.LTRIM('mcp:audit', 0, 9999);
     },
@@ -358,13 +519,70 @@ if (process.env.MCP_ENABLED === 'true') {
 app.use('/project', secure);
 app.use('/admin', secure);
 app.use('/profile', secure);
+app.use('/project/:project', lifecycle.middleware);
+app.use((req, res, next) => {
+  res.once('finish', () => {
+    if (
+      req.user &&
+      req.method !== 'GET' &&
+      req.path.startsWith('/project/') &&
+      !req.path.endsWith('/delete') &&
+      res.statusCode < 400
+    ) {
+      void accounts.activity(req.user.username, 'human').catch(() => {});
+      const project = req.path.split('/')[2];
+      if (!['list', 'recent', 'create'].includes(project))
+        void redisClient
+          .HSET(
+            'project:' + project + ':status',
+            'lastModifiedAt',
+            String(Date.now()),
+          )
+          .catch(() => {});
+    }
+  });
+  next();
+});
 
-const aclProject: express.RequestHandler = acl.middleware(
+const projectAcl = acl.middleware(
   2,
   (req) => {
     return (req as express.Request)?.user?.username as any;
   },
   'admin',
+);
+
+const aclProject: express.RequestHandler = (req, res, next) => {
+  try {
+    projectPath(PROJECTS_FOLDER, req.params.project);
+    if (req.params.project === 'admin')
+      throw new AdminError('Reserved project');
+  } catch (error) {
+    next(error);
+    return;
+  }
+  projectAcl(req, res, next);
+};
+
+installProjectFileRoutes(
+  app,
+  PROJECTS_FOLDER,
+  APP_FOLDER + '/assets/image_not_found.jpg',
+  aclProject,
+  uploadMiddleware.single('file'),
+  makeThumbnail,
+  async (bytes) => {
+    const response = await fetch(
+      process.env.SVG2PDF_URL || 'http://svg2pdf:3000/convert',
+      {
+        method: 'POST',
+        body: bytes,
+        signal: AbortSignal.timeout(60_000),
+      },
+    );
+    if (!response.ok) throw new Error('SVG conversion failed');
+    return Buffer.from(await response.arrayBuffer());
+  },
 );
 
 const aclAdmin: express.RequestHandler = acl.middleware(
@@ -374,6 +592,7 @@ const aclAdmin: express.RequestHandler = acl.middleware(
   },
   'admin',
 );
+administration.install(app, aclAdmin, aclProject, limits.authAccount);
 
 //TODO check types with db
 interface DbParams {
@@ -532,10 +751,16 @@ function amcCommande(
     action: 'start',
     params: params,
   });
+  const releaseOperation = lifecycle.begin(project);
   const amc = childProcess.spawn('auto-multiple-choice', params, {
     cwd: cwd,
   });
 
+  amc.once('close', releaseOperation);
+  amc.once('error', () => {
+    releaseOperation();
+    if (res && !res.headersSent) res.sendStatus(500);
+  });
   let log = '';
   let errorlog = '';
 
@@ -613,171 +838,117 @@ if (process.env.ADMIN_USER) {
   addProjectAcl('admin', process.env.ADMIN_USER);
 }
 
-function countStudentsCSV(project: string): Promise<number> {
-  const filename = path.resolve(PROJECTS_FOLDER, project + '/students.csv');
-  return new Promise((resolve) => {
-    fs.readFile(filename, (err, data) => {
-      if (err) {
-        resolve(-1);
-      } else {
-        resolve(data.toString('utf8').split('\n').length - 1);
-      }
-    });
-  });
-}
-
-// TODO migrate master to main?
-async function countGitCommits(
-  project: string,
-  branch = 'master',
-): Promise<number> {
-  if (!fs.existsSync(PROJECTS_FOLDER + '/' + project + '/.git')) {
-    return -1;
-  }
-  try {
-    const g = simpleGit(PROJECTS_FOLDER + '/' + project);
-    const data = await g.raw(['rev-list', '--count', branch]);
-    return Number(data.trim());
-  } catch {
-    if (branch === 'master') {
-      return countGitCommits(project, 'main');
-    }
-    return -1;
-  }
-}
-
-app.get('/admin/stats', aclAdmin, async (_req, res) => {
-  const stats = {users: {} as any, projects: {} as any};
-  const roles = new Set<string>();
-  const users = new Set<string>();
-  const exams = await redisClient.KEYS('exam:*');
-  exams.forEach((name: string) => {
-    roles.add(name.split(':')[1]);
-  });
-  const projects = await redisClient.KEYS('project:*');
-  projects.forEach((name: string) => {
-    roles.add(name.split(':')[1]);
-  });
-  const aclProjects = await redisClient.SMEMBERS('acl_meta@roles');
-  aclProjects.forEach((name: string) => {
-    roles.add(name);
-  });
-
-  const dbUsers = await redisClient.KEYS('user:*');
-  dbUsers.forEach((name: string) => {
-    users.add(name.split(':')[1]);
-  });
-
-  const aclUsers = await redisClient.SMEMBERS('acl_meta@users');
-  aclUsers.forEach((name: string) => {
-    users.add(name);
-  });
-
-  await Promise.all(
-    [...users].map(async (user: string) => {
-      stats.users[user] = await acl.userRoles(user);
-    }),
-  );
-
-  await Promise.all(
-    [...roles].map(async (project: string) => {
-      const p = {
-        students: undefined as undefined | number,
-        commits: undefined as undefined | number,
-        v2: false, //TODO check if v2?
-      };
-      stats.projects[project] = p;
-      p.commits = await countGitCommits(project);
-      p.students = await countStudentsCSV(project);
-    }),
-  );
-
-  res.json(stats);
-});
-
-app.get('/admin/du', aclAdmin, (_req, res) => {
-  const size = childProcess.spawn('du', ['-k', '-d 2'], {
-    cwd: PROJECTS_FOLDER,
-  });
-  size.stdout.setEncoding('utf8');
-  const projects: any = {};
-  const re = /(\d+)[\t ]+\.\/([^/]*)\/?(.*)/;
-  const splitter = size.stdout.pipe(StreamSplitter('\n'));
-  splitter.encoding = 'utf8';
-  splitter.on('token', function (data: string) {
-    const entry = re.exec(data.trim());
-    if (entry === null) {
-      return;
-    }
-    if (!Object.hasOwn(projects, entry[2])) {
-      projects[entry[2]] = {total: 0, folders: []};
-    }
-    if (entry[3] === '') {
-      projects[entry[2]].total = Number(entry[1]);
-    } else {
-      const folder: any = {};
-      folder[entry[3]] = Number(entry[1]);
-      projects[entry[2]].folders.push(folder);
-    }
-  });
-
-  size.on('exit', () => {
-    Object.keys(projects).forEach((k) => {
-      const p = projects[k];
-      const sum = p.folders.reduce((total: number, f: any) => {
-        return total + f[Object.keys(f)[0]];
-      }, 0);
-      p.folders.push({'.': p.total - sum});
-    });
-    res.json(projects);
-  });
-});
-
 app.post('/admin/import', aclAdmin, (req, res) => {
-  // Warning, does not check if project folder is valid
-  addProjectAcl(req.body.project, req.user?.username);
-  res.sendStatus(200);
+  if (req.body.project === 'admin')
+    return res.status(400).send('Reserved project');
+  const folder = projectPath(PROJECTS_FOLDER, req.body.project);
+  if (!fs.existsSync(folder)) return res.sendStatus(404);
+  void addProjectAcl(req.body.project, req.user?.username)
+    .then(async () => {
+      await administration.jobs.enqueue(
+        'inventory',
+        req.user!.username,
+        req.body.project,
+      );
+      res.sendStatus(200);
+    })
+    .catch((error) => res.status(500).send(error.message));
 });
 
-app.post('/admin/addtoproject', aclAdmin, async (req, res) => {
-  if (!req.user) return res.sendStatus(403);
-  await acl.addUserRoles(req.user.username, req.body.project);
-  const msg = `ADMIN: ${req.user.username} added himself to ${req.body.project}`;
-  Sentry.captureMessage(msg);
-  res.sendStatus(200);
-});
-
-app.post('/admin/removefromproject', aclAdmin, async (req, res) => {
-  if (!req.user) return res.sendStatus(403);
-  await acl.removeUserRoles(req.user.username, req.body.project);
-  const msg = `ADMIN: ${req.user.username} removed himself from ${req.body.project}`;
-  Sentry.captureMessage(msg);
-  res.sendStatus(200);
-});
-
-app.post('/admin/user/:username/removemfa', aclAdmin, async (req, res) => {
-  const reply = await redisClient.GET('user:' + req.params.username);
-  if (reply) {
-    const user = JSON.parse(reply);
-    user.authenticators = [];
-    await redisClient.SET('user:' + user.username, JSON.stringify(user));
+app.post(
+  '/admin/addtoproject',
+  aclAdmin,
+  asyncHandler(async (req, res) => {
+    if (!req.user) return res.sendStatus(403);
+    if (req.body.project === 'admin') throw new AdminError('Reserved project');
+    projectPath(PROJECTS_FOLDER, req.body.project);
+    await acl.addUserRoles(req.user.username, req.body.project);
+    await adminStore.audit(req.user.username, 'project.join', req.body.project);
+    const msg = `ADMIN: ${req.user.username} added himself to ${req.body.project}`;
+    Sentry.captureMessage(msg);
     res.sendStatus(200);
-  } else {
-    res.status(404).send('user not found');
-  }
-});
+  }),
+);
 
-app.post('/admin/user/:username/changepassword', aclAdmin, async (req, res) => {
-  const reply = await redisClient.GET('user:' + req.params.username);
-  if (reply) {
-    const user = JSON.parse(reply);
-    user.password = bcrypt.hashSync(req.body.newPassword, 10);
-    await redisClient.SET('user:' + user.username, JSON.stringify(user));
+app.post(
+  '/admin/removefromproject',
+  aclAdmin,
+  asyncHandler(async (req, res) => {
+    if (!req.user) return res.sendStatus(403);
+    if (req.body.project === 'admin') throw new AdminError('Reserved project');
+    projectPath(PROJECTS_FOLDER, req.body.project);
+    await acl.removeUserRoles(req.user.username, req.body.project);
+    await adminStore.audit(
+      req.user.username,
+      'project.leave',
+      req.body.project,
+    );
+    const msg = `ADMIN: ${req.user.username} removed himself from ${req.body.project}`;
+    Sentry.captureMessage(msg);
     res.sendStatus(200);
-  } else {
-    res.status(404).send('user not found');
-  }
-});
+  }),
+);
+
+app.post(
+  '/admin/user/:username/removemfa',
+  aclAdmin,
+  asyncHandler(async (req, res) => {
+    const reply = await redisClient.GET('user:' + req.params.username);
+    if (reply) {
+      await accounts.updateCredentials(
+        req.params.username,
+        req.user!.username,
+        'account.resetMfa',
+        async () => {
+          const user = JSON.parse(
+            (await redisClient.GET('user:' + req.params.username))!,
+          );
+          user.authenticators = [];
+          await redisClient.SET('user:' + user.username, JSON.stringify(user));
+        },
+      );
+      res.sendStatus(200);
+    } else {
+      res.status(404).send('user not found');
+    }
+  }),
+);
+
+app.post(
+  '/admin/user/:username/changepassword',
+  aclAdmin,
+  asyncHandler(async (req, res) => {
+    if (
+      typeof req.body.newPassword !== 'string' ||
+      req.body.newPassword.length < 12 ||
+      Buffer.byteLength(req.body.newPassword) > 72
+    )
+      return res
+        .status(400)
+        .send(
+          'Password must be 12 characters or more and at most 72 UTF-8 bytes',
+        );
+    const reply = await redisClient.GET('user:' + req.params.username);
+    if (reply) {
+      const password = await bcrypt.hash(req.body.newPassword, 12);
+      await accounts.updateCredentials(
+        req.params.username,
+        req.user!.username,
+        'account.resetPassword',
+        async () => {
+          const user = JSON.parse(
+            (await redisClient.GET('user:' + req.params.username))!,
+          );
+          user.password = password;
+          await redisClient.SET('user:' + user.username, JSON.stringify(user));
+        },
+      );
+      res.sendStatus(200);
+    } else {
+      res.status(404).send('user not found');
+    }
+  }),
+);
 
 app.post('/admin/project/:project/delete', aclAdmin, (req, res) => {
   deleteProject(req.params.project, (err) => {
@@ -789,44 +960,34 @@ app.post('/admin/project/:project/delete', aclAdmin, (req, res) => {
   });
 });
 
-app.post('/admin/project/:project/gitgc', aclAdmin, async (req, res) => {
-  try {
-    // Use the same Git lock mechanism to prevent conflicts
-    const existingLock = gitLocks.get(req.params.project);
-    if (existingLock) {
-      await existingLock;
-    }
-
-    const gitOperation = performGitGc(req.params.project);
-    gitLocks.set(req.params.project, gitOperation);
-
-    try {
-      const data = await gitOperation;
-      res.json(data);
-    } finally {
-      gitLocks.delete(req.params.project);
-    }
-  } catch (err) {
-    res.status(500).send(err);
-  }
-});
-
-async function performGitGc(project: string): Promise<string> {
-  const g = simpleGit(PROJECTS_FOLDER + '/' + project);
-  return await g.raw(['gc', '--aggressive']);
-}
-
-app.post('/admin/user/:username/delete', aclAdmin, async (req, res) => {
-  const username = req.params.username;
-  const roles = await acl.userRoles(username);
-  roles.forEach(async (project) => {
-    await acl.removeUserRoles(username, project);
-  });
-  redisClient.DEL('user:' + username);
-  redisClient.DEL('user:' + username + ':recent');
-  redisClient.SREM('acl_meta@users', username);
-  res.sendStatus(200);
-});
+app.post(
+  '/admin/project/:project/gitgc',
+  aclAdmin,
+  asyncHandler(async (req, res) => {
+    projectPath(PROJECTS_FOLDER, req.params.project);
+    res
+      .status(202)
+      .json(
+        await administration.jobs.enqueue(
+          'gitgc',
+          req.user!.username,
+          req.params.project,
+        ),
+      );
+  }),
+);
+app.post(
+  '/admin/user/:username/delete',
+  aclAdmin,
+  asyncHandler(async (req, res) => {
+    await accounts.transition(
+      req.params.username,
+      'disabled',
+      req.user!.username,
+    );
+    res.sendStatus(200);
+  }),
+);
 
 /*
 ZONE_FRAME=>1,
@@ -849,243 +1010,356 @@ version > 1.2.1 feature seuil-up not supported
  */
 
 /* Project API */
-app.post('/login', async (req, res) => {
-  if (!req.body.username) {
-    return res.sendStatus(400);
-  }
-  const username = req.body.username.toLowerCase();
-  const sendToken = (user: any): void => {
-    try {
-      delete user.password;
-      user.authenticators = user.authenticators
-        ? user.authenticators.map(
-            ({label, type}: {label: string; type: string}) => {
-              return {
-                label,
-                type,
-              };
-            },
-          )
-        : [];
-      const token = jwt.sign(user, process.env.JWT_SECRET || '', {
-        expiresIn: '6h',
-      });
-      res.json({token: token});
-    } catch (e) {
-      console.log('login', e, user);
-      res.status(500).send(e);
-    }
-  };
-  const userData = await redisClient.GET('user:' + username);
-
-  if (!userData) {
-    // create Account
-    const password = bcrypt.hashSync(req.body.password, 10);
-    const newUser = {username: username, password: password};
-    await redisClient.SET('user:' + newUser.username, JSON.stringify(newUser));
-    sendToken(newUser);
-  } else {
-    const user = JSON.parse(userData);
-    if (bcrypt.compareSync(req.body.password, user.password)) {
-      // check mfa
-      if (user.authenticators && user.authenticators.length > 0) {
-        if (
-          req.body.authenticator &&
-          req.body.authenticator.type === 'authenticator' &&
-          req.body.authenticator.token
-        ) {
-          // validate token test all
-          if (
-            user.authenticators
-              .filter((c: {type: string}) => c.type === 'authenticator')
-              .some((config: {secret: string}) => {
-                return authenticator.verify({
-                  token: req.body.authenticator.token,
-                  secret: config.secret,
-                });
-              })
-          ) {
-            sendToken(user);
-          } else {
-            res.status(401).send('Wrong token');
-          }
-        } else if (
-          req.body.authenticator &&
-          req.body.authenticator.type === 'fido2'
-        ) {
-          // validate fido2
-          const logResponse = req.body.authenticator.response;
-          const credListFiltered = user.authenticators.filter(
-            (x: {credentialId: string}) => x.credentialId == logResponse.rawId,
-          );
-
-          if (!credListFiltered.length)
-            return res.status(404).send('Authenticator does not exist');
-          const thisCred = credListFiltered.pop();
-
-          logResponse.rawId = base64buffer.decode(logResponse.rawId);
-          logResponse.response.authenticatorData = base64buffer.decode(
-            logResponse.response.authenticatorData,
-          );
-
-          const assertionExpectations = {
-            challenge: Fido2inMemoryChallenges[user.username],
-            origin: process.env.FRONTEND_DOMAIN
-              ? `https://${process.env.FRONTEND_DOMAIN}`
-              : 'http://localhost:8080',
-            factor: 'either' as Factor, // TODO config?
-            publicKey: thisCred.publicKey,
-            prevCounter: thisCred.counter,
-            userHandle: thisCred.credentialId,
-          };
-
-          f2l
-            .assertionResult(logResponse, assertionExpectations)
-            .then(async (logResult) => {
-              thisCred.counter = logResult.authnrData.get('counter');
-              delete Fido2inMemoryChallenges[user.username];
-              await redisClient.SET(
-                'user:' + user.username,
-                JSON.stringify(user),
-              );
-              sendToken(user);
-            })
-            .catch((err) => {
-              res.status(401).send(err.message);
-            });
-        } else {
-          // request mfa
-          const authenticators = {
-            authenticator: user.authenticators
-              .filter(
-                (config: {type: string}) => config.type === 'authenticator',
-              )
-              .map(({label, type}: {label: string; type: string}) => {
+app.post(
+  '/login',
+  validateLogin,
+  limits.authAccount,
+  asyncHandler(async (req, res) => {
+    const username = req.body.username.toLowerCase();
+    const accountMeta = await accounts.meta(username);
+    const sendToken = (user: any): void => {
+      try {
+        delete user.password;
+        user.authenticators = user.authenticators
+          ? user.authenticators.map(
+              ({label, type}: {label: string; type: string}) => {
                 return {
                   label,
                   type,
                 };
-              }),
-            fido2: {}, // TODO add fido request challenge
-          };
-          const filteredFido2 = user.authenticators.filter(
-            (config: {type: string}) => config.type === 'fido2',
-          );
-          if (filteredFido2.length > 0) {
-            const authnOptions: any = await f2l.assertionOptions();
-            authnOptions.challenge = base64buffer.encode(
-              authnOptions.challenge,
-            );
-            authnOptions.allowCredentials = filteredFido2.map(
-              (config: {credentialId: string}) => {
-                return {id: config.credentialId, type: 'public-key'};
               },
+            )
+          : [];
+        const token = jwt.sign(
+          {...user, sessionVersion: accountMeta.sessionVersion},
+          process.env.JWT_SECRET || '',
+          {
+            expiresIn: '6h',
+          },
+        );
+        void accounts.activity(username, 'login').catch(() => {});
+        res.locals.authenticationComplete = true;
+        res.json({token: token});
+      } catch (e) {
+        console.log('login', e, user);
+        res.status(500).send(e);
+      }
+    };
+    const userData = await redisClient.GET('user:' + username);
+
+    if (!userData) {
+      return res.status(401).send('Wrong user or password');
+    } else {
+      const user = JSON.parse(userData);
+      if (await bcrypt.compare(req.body.password, user.password)) {
+        if (accountMeta.status !== 'active')
+          return res.status(403).json({
+            status: accountMeta.status,
+            message: 'Account ' + accountMeta.status,
+          });
+        // check mfa
+        if (user.authenticators && user.authenticators.length > 0) {
+          if (
+            req.body.authenticator &&
+            req.body.authenticator.type === 'authenticator' &&
+            req.body.authenticator.token
+          ) {
+            // validate token test all
+            if (
+              user.authenticators
+                .filter((c: {type: string}) => c.type === 'authenticator')
+                .some((config: {secret: string}) => {
+                  return authenticator.verify({
+                    token: req.body.authenticator.token,
+                    secret: config.secret,
+                  });
+                })
+            ) {
+              sendToken(user);
+            } else {
+              res.status(401).send('Wrong token');
+            }
+          } else if (
+            req.body.authenticator &&
+            req.body.authenticator.type === 'fido2'
+          ) {
+            // validate fido2
+            const logResponse = req.body.authenticator.response;
+            const credListFiltered = user.authenticators.filter(
+              (x: {credentialId: string}) =>
+                x.credentialId == logResponse.rawId,
             );
-            Fido2inMemoryChallenges[user.username] = authnOptions.challenge;
-            authenticators.fido2 = authnOptions;
+
+            if (!credListFiltered.length)
+              return res.status(404).send('Authenticator does not exist');
+            const thisCred = credListFiltered.pop();
+
+            logResponse.rawId = base64buffer.decode(logResponse.rawId);
+            logResponse.response.authenticatorData = base64buffer.decode(
+              logResponse.response.authenticatorData,
+            );
+
+            const assertionExpectations = {
+              challenge: Fido2inMemoryChallenges[user.username],
+              origin: process.env.FRONTEND_DOMAIN
+                ? `https://${process.env.FRONTEND_DOMAIN}`
+                : 'http://localhost:8080',
+              factor: 'either' as Factor, // TODO config?
+              publicKey: thisCred.publicKey,
+              prevCounter: thisCred.counter,
+              userHandle: thisCred.credentialId,
+            };
+
+            f2l
+              .assertionResult(logResponse, assertionExpectations)
+              .then(async (logResult) => {
+                thisCred.counter = logResult.authnrData.get('counter');
+                delete Fido2inMemoryChallenges[user.username];
+                const saved = await redisClient.eval(
+                  "if redis.call('get',KEYS[1]) == ARGV[1] then redis.call('set',KEYS[1],ARGV[2]); return 1 else return 0 end",
+                  {
+                    keys: ['user:' + user.username],
+                    arguments: [userData, JSON.stringify(user)],
+                  },
+                );
+                if (!saved)
+                  throw new AdminError(
+                    'Credentials changed; authenticate again',
+                    409,
+                  );
+                sendToken(user);
+              })
+              .catch((err) => {
+                res.status(401).send(err.message);
+              });
+          } else {
+            // request mfa
+            const authenticators = {
+              authenticator: user.authenticators
+                .filter(
+                  (config: {type: string}) => config.type === 'authenticator',
+                )
+                .map(({label, type}: {label: string; type: string}) => {
+                  return {
+                    label,
+                    type,
+                  };
+                }),
+              fido2: {}, // TODO add fido request challenge
+            };
+            const filteredFido2 = user.authenticators.filter(
+              (config: {type: string}) => config.type === 'fido2',
+            );
+            if (filteredFido2.length > 0) {
+              const authnOptions: any = await f2l.assertionOptions();
+              authnOptions.challenge = base64buffer.encode(
+                authnOptions.challenge,
+              );
+              authnOptions.allowCredentials = filteredFido2.map(
+                (config: {credentialId: string}) => {
+                  return {id: config.credentialId, type: 'public-key'};
+                },
+              );
+              Fido2inMemoryChallenges[user.username] = authnOptions.challenge;
+              authenticators.fido2 = authnOptions;
+            }
+            res.send(authenticators);
           }
-          res.send(authenticators);
+        } else {
+          // only password login
+          sendToken(user);
         }
       } else {
-        // only password login
-        sendToken(user);
+        res.status(401).send('Wrong user or password');
       }
-    } else {
-      res.status(401).send('Wrong user or password');
     }
-  }
-});
+  }),
+);
 
-app.post('/profile/addAuthenticator', async (req, res) => {
-  const userData = await redisClient.GET('user:' + req.user?.username);
-  if (!userData) {
-    return res.sendStatus(401);
-  }
-  const user = JSON.parse(userData);
-  if (!bcrypt.compareSync(req.body.password, user.password)) {
-    return res.status(500).send('Wrong password');
-  }
-  if (!user.authenticators) {
-    user.authenticators = [];
-  }
-  if (
-    user.authenticators
-      .filter((c: {type: string}) => c.type === 'authenticator')
-      .map((c: {label: string}) => c.label)
-      .includes(req.body.label)
-  ) {
-    return res.status(500).send('name already exists');
-  }
-  const authenticatorConfig = {
-    type: 'authenticator',
-    label: req.body.label,
-    secret: authenticator.generateSecret(),
-  };
-  user.authenticators.push(authenticatorConfig);
-  await redisClient.SET('user:' + user.username, JSON.stringify(user));
-  // TODO config
-  const service = 'AMCUI Server';
-  const otpauthUrl = authenticator.keyuri(
-    user.username,
-    service,
-    authenticatorConfig.secret,
+async function updateProfileAccount(
+  req: express.Request,
+  reason: string,
+  update: (user: any) => void,
+) {
+  const username = req.user!.username;
+  let updated: any;
+  await accounts.updateCredentials(username, username, reason, async () => {
+    if (!(await accounts.active(username)))
+      throw new AdminError('Account access revoked', 403);
+    const current = JSON.parse((await redisClient.GET('user:' + username))!);
+    if (!(await bcrypt.compare(req.body.password, current.password)))
+      throw new AdminError('Password changed; authenticate again', 409);
+    update(current);
+    await redisClient.SET('user:' + username, JSON.stringify(current));
+    updated = current;
+  });
+  return updated;
+}
+async function profileToken(user: any) {
+  const meta = await accounts.meta(user.username);
+  if (!(await accounts.active(user.username)))
+    throw new AdminError('Account access revoked', 403);
+  return jwt.sign(
+    {
+      username: user.username,
+      sessionVersion: meta.sessionVersion,
+      authenticators: (user.authenticators || []).map(
+        ({label, type}: {label: string; type: string}) => ({label, type}),
+      ),
+    },
+    process.env.JWT_SECRET!,
+    {expiresIn: '6h'},
   );
-  QRCode.toDataURL(otpauthUrl)
-    .then((qrCodeDataUrl) => {
-      res.send({
-        otpauthUrl,
-        qrCodeDataUrl,
+}
+app.post(
+  '/profile/addAuthenticator',
+  validatePassword,
+  limits.authAccount,
+  asyncHandler(async (req, res) => {
+    const userData = await redisClient.GET('user:' + req.user?.username);
+    if (!userData) {
+      return res.sendStatus(401);
+    }
+    const user = JSON.parse(userData);
+    if (!(await bcrypt.compare(req.body.password, user.password))) {
+      return res.status(500).send('Wrong password');
+    }
+    res.locals.authenticationComplete = true;
+    if (!user.authenticators) {
+      user.authenticators = [];
+    }
+    if (
+      user.authenticators
+        .filter((c: {type: string}) => c.type === 'authenticator')
+        .map((c: {label: string}) => c.label)
+        .includes(req.body.label)
+    ) {
+      return res.status(500).send('name already exists');
+    }
+    const authenticatorConfig = {
+      type: 'authenticator',
+      label: req.body.label,
+      secret: authenticator.generateSecret(),
+    };
+    const updated = await updateProfileAccount(
+      req,
+      'account.addMfa',
+      (current) => {
+        current.authenticators ||= [];
+        if (
+          current.authenticators.some(
+            (item: any) =>
+              item.type === 'authenticator' && item.label === req.body.label,
+          )
+        )
+          throw new AdminError('Name already exists', 409);
+        current.authenticators.push(authenticatorConfig);
+      },
+    );
+    const token = await profileToken(updated);
+    // TODO config
+    const service = 'AMCUI Server';
+    const otpauthUrl = authenticator.keyuri(
+      user.username,
+      service,
+      authenticatorConfig.secret,
+    );
+    QRCode.toDataURL(otpauthUrl)
+      .then((qrCodeDataUrl) => {
+        res.send({
+          token,
+          otpauthUrl,
+          qrCodeDataUrl,
+        });
+      })
+      .catch(() => {
+        res.send({
+          token,
+          otpauthUrl,
+        });
       });
-    })
-    .catch(() => {
-      res.send({
-        otpauthUrl,
-      });
-    });
-});
+  }),
+);
 
-app.post('/profile/removeMFA', async (req, res) => {
-  const userData = await redisClient.GET('user:' + req.user?.username);
-  if (!userData) {
-    return res.sendStatus(401);
-  }
-  const user = JSON.parse(userData);
-  if (!bcrypt.compareSync(req.body.password, user.password)) {
-    return res.status(500).send('Wrong user or password');
-  }
-  user.authenticators = user.authenticators
-    ? user.authenticators.filter(
-        (authConfig: {type: string; label: string}) =>
-          !(
-            authConfig.type === req.body.type &&
-            authConfig.label === req.body.label
-          ),
-      )
-    : [];
-  await redisClient.SET('user:' + user.username, JSON.stringify(user));
-  res.sendStatus(200);
-});
+app.post(
+  '/profile/removeMFA',
+  validatePassword,
+  limits.authAccount,
+  asyncHandler(async (req, res) => {
+    const userData = await redisClient.GET('user:' + req.user?.username);
+    if (!userData) {
+      return res.sendStatus(401);
+    }
+    const user = JSON.parse(userData);
+    if (!(await bcrypt.compare(req.body.password, user.password))) {
+      return res.status(500).send('Wrong user or password');
+    }
+    res.locals.authenticationComplete = true;
+    const updated = await updateProfileAccount(
+      req,
+      'account.removeMfa',
+      (current) => {
+        current.authenticators = current.authenticators
+          ? current.authenticators.filter(
+              (authConfig: {type: string; label: string}) =>
+                !(
+                  authConfig.type === req.body.type &&
+                  authConfig.label === req.body.label
+                ),
+            )
+          : [];
+      },
+    );
+    res.json({token: await profileToken(updated)});
+  }),
+);
 
-app.post('/changePassword', async (req, res) => {
-  if (req.body.password && req.body.username && req.body.newPassword) {
-    const username = req.body.username.toLowerCase();
-    const reply = await redisClient.GET('user:' + username);
-    if (reply) {
-      const user = JSON.parse(reply);
-      if (bcrypt.compareSync(req.body.password, user.password)) {
-        user.password = bcrypt.hashSync(req.body.newPassword, 10);
-        await redisClient.SET('user:' + user.username, JSON.stringify(user));
-        res.sendStatus(200);
+app.post(
+  '/changePassword',
+  validatePasswordChange,
+  limits.authAccount,
+  asyncHandler(async (req, res) => {
+    if (req.body.password && req.body.username && req.body.newPassword) {
+      const username = req.body.username.toLowerCase();
+      const reply = await redisClient.GET('user:' + username);
+      if (reply) {
+        const user = JSON.parse(reply);
+        if (await bcrypt.compare(req.body.password, user.password)) {
+          if (!(await accounts.active(username))) return res.sendStatus(403);
+          const password = await bcrypt.hash(req.body.newPassword, 12);
+          await accounts.updateCredentials(
+            username,
+            username,
+            'account.changePassword',
+            async () => {
+              const current = JSON.parse(
+                (await redisClient.GET('user:' + username))!,
+              );
+              if (!(await bcrypt.compare(req.body.password, current.password)))
+                throw new AdminError(
+                  'Password changed; authenticate again',
+                  409,
+                );
+              current.password = password;
+              await redisClient.SET(
+                'user:' + username,
+                JSON.stringify(current),
+              );
+            },
+          );
+          res.locals.authenticationComplete = true;
+          res.sendStatus(200);
+        } else {
+          res.status(404).send('Wrong user or password');
+        }
       } else {
         res.status(404).send('Wrong user or password');
       }
     } else {
       res.status(404).send('Wrong user or password');
     }
-  } else {
-    res.status(404).send('Wrong user or password');
-  }
-});
+  }),
+);
 
 const Fido2inMemoryChallenges = {} as {[key: string]: string};
 
@@ -1112,74 +1386,100 @@ app.get('/profile/addFido2', async (req, res) => {
     });
 });
 
-app.post('/profile/addFido2', async (req, res) => {
-  const userData = await redisClient.GET('user:' + req.user?.username);
-  if (!userData) {
-    return res.sendStatus(401);
-  }
-  const user = JSON.parse(userData);
-  if (!bcrypt.compareSync(req.body.password, user.password)) {
-    return res.status(500).send('Wrong password');
-  }
-  if (!user.authenticators) {
-    user.authenticators = [];
-  }
-  if (
-    user.authenticators
-      .filter((c: {type: string}) => c.type === 'fido2')
-      .map((c: {label: string}) => c.label)
-      .includes(req.body.label)
-  ) {
-    return res.status(500).send('name already exists');
-  }
-
-  const regResponse = req.body.response;
-  regResponse.rawId = base64buffer.decode(regResponse.rawId);
-
-  const attestationExpectations = {
-    challenge: Fido2inMemoryChallenges[user.username],
-    origin: 'http://localhost:8080', // TODO config
-    factor: 'either' as Factor, // TODO config
-  };
-
-  f2l
-    .attestationResult(regResponse, attestationExpectations)
-    .then(async (regResult) => {
-      const authnrData = regResult.authnrData;
-      user.authenticators.push({
-        type: 'fido2',
-        label: req.body.label,
-        counter: authnrData.get('counter'),
-        credentialId: base64buffer.encode(authnrData.get('credId')),
-        publicKey: authnrData.get('credentialPublicKeyPem'),
-      });
-      delete Fido2inMemoryChallenges[user.username];
-      await redisClient.SET('user:' + user.username, JSON.stringify(user));
-      res.sendStatus(200);
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).send(err.message);
-    });
-});
-
-app.get('/project/list', async (req, res) => {
-  if (!req.user) return res.sendStatus(403);
-  const roles = await acl.userRoles(req.user.username);
-  const projects: any[] = [];
-  roles.forEach(async (role) => {
-    const status = await redisClient.HGETALL('project:' + role + ':status');
-    const users = await acl.roleUsers(role);
-    projects.push({
-      project: role,
-      status: status,
-      users: users,
-    });
-    if (projects.length === roles.length) {
-      res.json(projects);
+app.post(
+  '/profile/addFido2',
+  validatePassword,
+  limits.authAccount,
+  asyncHandler(async (req, res) => {
+    const userData = await redisClient.GET('user:' + req.user?.username);
+    if (!userData) {
+      return res.sendStatus(401);
     }
-  });
-});
+    const user = JSON.parse(userData);
+    if (!(await bcrypt.compare(req.body.password, user.password))) {
+      return res.status(500).send('Wrong password');
+    }
+    res.locals.authenticationComplete = true;
+    if (!user.authenticators) {
+      user.authenticators = [];
+    }
+    if (
+      user.authenticators
+        .filter((c: {type: string}) => c.type === 'fido2')
+        .map((c: {label: string}) => c.label)
+        .includes(req.body.label)
+    ) {
+      return res.status(500).send('name already exists');
+    }
+
+    const regResponse = req.body.response;
+    regResponse.rawId = base64buffer.decode(regResponse.rawId);
+
+    const attestationExpectations = {
+      challenge: Fido2inMemoryChallenges[user.username],
+      origin: 'http://localhost:8080', // TODO config
+      factor: 'either' as Factor, // TODO config
+    };
+
+    f2l
+      .attestationResult(regResponse, attestationExpectations)
+      .then(async (regResult) => {
+        const authnrData = regResult.authnrData;
+        const credential = {
+          type: 'fido2',
+          label: req.body.label,
+          counter: authnrData.get('counter'),
+          credentialId: base64buffer.encode(authnrData.get('credId')),
+          publicKey: authnrData.get('credentialPublicKeyPem'),
+        };
+        delete Fido2inMemoryChallenges[user.username];
+        const updated = await updateProfileAccount(
+          req,
+          'account.addFido2',
+          (current) => {
+            current.authenticators ||= [];
+            if (
+              current.authenticators.some(
+                (item: any) =>
+                  item.type === 'fido2' && item.label === req.body.label,
+              )
+            )
+              throw new AdminError('Name already exists', 409);
+            current.authenticators.push(credential);
+          },
+        );
+        res.json({token: await profileToken(updated)});
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).send(err.message);
+      });
+  }),
+);
+
+app.get(
+  '/project/list',
+  asyncHandler(async (req, res) => {
+    if (!req.user) return res.sendStatus(403);
+    const roles = await acl.userRoles(req.user.username);
+    const projects = await Promise.all(
+      roles
+        .filter((role) => role !== 'admin')
+        .map(async (role) => {
+          const status = await redisClient.HGETALL(
+            'project:' + role + ':status',
+          );
+          const users = await acl.roleUsers(role);
+          return {
+            project: role,
+            status: status,
+            users: users,
+          };
+        }),
+    );
+    res.json(projects);
+  }),
+);
 
 app.get('/project/recent', async (req, res) => {
   try {
@@ -1268,28 +1568,27 @@ function ignoreGitError() {}
 
 // Git lock mechanism to prevent concurrent operations
 const gitLocks = new Map<string, Promise<any>>();
+function withGit<T>(project: string, run: () => Promise<T>): Promise<T> {
+  const operation = (gitLocks.get(project) || Promise.resolve())
+    .catch(() => {})
+    .then(run);
+  gitLocks.set(project, operation);
+  return operation.finally(() => {
+    if (gitLocks.get(project) === operation) gitLocks.delete(project);
+  });
+}
 
 async function commitGit(
   project: string,
   username: string,
   message: string,
 ): Promise<void> {
-  // Check if there's already a Git operation running for this project
-  const existingLock = gitLocks.get(project);
-  if (existingLock) {
-    // Wait for the existing operation to complete
-    await existingLock;
-  }
-
-  // Create a new lock for this operation
-  const gitOperation = performGitCommit(project, username, message);
-  gitLocks.set(project, gitOperation);
-
+  const release = lifecycle.begin(project);
   try {
-    await gitOperation;
+    if ((await lifecycle.state(project)) === 'archived') return;
+    await withGit(project, () => performGitCommit(project, username, message));
   } finally {
-    // Clean up the lock
-    gitLocks.delete(project);
+    release();
   }
 }
 
@@ -1392,11 +1691,16 @@ app.post(
   copyContentHandler(
     new ExamCopy(PROJECTS_FOLDER, documents),
     (username, project) => acl.hasRole(username, project),
+    (projects, run) =>
+      lifecycle.operation(projects, false, async () => {
+        await lifecycle.writable(projects[1]);
+        return run();
+      }),
   ),
 );
 
 app.post('/project/:project/copy/template', aclProject, (req, res) => {
-  const TEMPLATE_FOLDER = TEMPLATES_FOLDER + '/' + req.body.template;
+  const TEMPLATE_FOLDER = projectPath(TEMPLATES_FOLDER, req.body.template);
   fs.copy(
     TEMPLATE_FOLDER + '/src',
     PROJECTS_FOLDER + '/' + req.params.project + '/src',
@@ -1420,6 +1724,27 @@ app.post('/project/:project/copy/project', aclProject, (req, res, next) => {
           await fs.copy(
             path.join(PROJECTS_FOLDER, src, 'src'),
             path.join(PROJECTS_FOLDER, destination, 'src'),
+          );
+          const sourceOptions = await xml2js.parseStringPromise(
+            await fs.readFile(
+              projectPath(PROJECTS_FOLDER, src, 'options.xml'),
+              'utf8',
+            ),
+            {explicitArray: false},
+          );
+          const targetOptions = await xml2js.parseStringPromise(
+            await fs.readFile(
+              projectPath(PROJECTS_FOLDER, destination, 'options.xml'),
+              'utf8',
+            ),
+            {explicitArray: false},
+          );
+          for (const [key, value] of Object.entries(sourceOptions.project))
+            if (!/mail|email|liste|assoc|student|archive/i.test(key))
+              targetOptions.project[key] = value;
+          await fs.writeFile(
+            projectPath(PROJECTS_FOLDER, destination, 'options.xml'),
+            new xml2js.Builder().buildObject(targetOptions),
           );
           await fs.writeJson(
             path.join(PROJECTS_FOLDER, destination, 'data.json'),
@@ -1550,37 +1875,37 @@ async function deleteProject(
   project: string,
   callback: (err: boolean) => void,
 ) {
-  if (project.length === 0 || project.indexOf('.') === 0) {
+  try {
+    const folder = projectPath(PROJECTS_FOLDER, project);
+    if (project === 'admin') return callback(true);
+    await adminStore.lock('project:' + project, () =>
+      lifecycle.operation([project], false, async () => {
+        await documents.disconnectProject(project);
+        await previews.wait(project);
+        await gitLocks.get(project);
+        await documents.clear(project);
+        await fs.remove(folder);
+        for (const username of await acl.roleUsers(project)) {
+          await acl.removeUserRoles(username, project);
+          await redisClient.ZREM('user:' + username + ':recent', project);
+        }
+        await acl.removeAllow(project, '/project/' + project, 'admin');
+        await acl.removeRole(project);
+        await acl.removeResource(project);
+        await redisClient.DEL('exam:' + project);
+        for await (const key of redisClient.scanIterator({
+          MATCH: 'project:' + project + ':*',
+          COUNT: 100,
+        }))
+          await redisClient.DEL(key);
+        await redisClient.SREM('amcui:admin:projects', project);
+      }),
+    );
+    callback(false);
+  } catch (error) {
+    console.error('Project deletion failed', error);
     callback(true);
   }
-  if (project === 'admin') {
-    return callback(true);
-  }
-  const users = await acl.roleUsers(project);
-  users.forEach(async (username: string) => {
-    await acl.removeUserRoles(username, project);
-    await redisClient.ZREM('user:' + username + ':recent', project);
-  });
-  await acl.removeAllow(project, '/project/' + project, 'admin');
-  await acl.removeRole(project);
-  await acl.removeResource(project);
-  await redisClient.DEL(['exam:' + project]);
-  const keys = await redisClient.KEYS('project:' + project + ':*');
-  keys.forEach((key) => {
-    redisClient.DEL(key);
-  });
-  fs.remove(PROJECTS_FOLDER + '/' + project, async (err) => {
-    if (err) {
-      callback(true);
-    } else {
-      try {
-        await documents.clear(project);
-      } catch (err) {
-        console.log(err);
-      }
-      callback(false);
-    }
-  });
 }
 
 app.post('/project/:project/delete', aclProject, (req, res) => {
@@ -1648,17 +1973,8 @@ app.get('/project/:project/gitlogs', aclProject, async (req, res) => {
 
 app.post('/project/:project/revert', aclProject, async (req, res) => {
   try {
-    // Use the same Git lock mechanism to prevent conflicts
-    const existingLock = gitLocks.get(req.params.project);
-    if (existingLock) {
-      await existingLock;
-    }
-
-    const gitOperation = performGitRevert(req.params.project, req.body.sha);
-    gitLocks.set(req.params.project, gitOperation);
-
-    try {
-      await gitOperation;
+    await withGit(req.params.project, async () => {
+      await performGitRevert(req.params.project, req.body.sha);
       const json = path.resolve(
         PROJECTS_FOLDER,
         req.params.project + '/data.json',
@@ -1667,9 +1983,7 @@ app.post('/project/:project/revert', aclProject, async (req, res) => {
         replaceExam(doc, fs.readJsonSync(json), 'revert'),
       );
       res.send(fs.readFileSync(json));
-    } finally {
-      gitLocks.delete(req.params.project);
-    }
+    });
   } catch (err) {
     Sentry.captureException(err);
     res.status(500).send(err);
@@ -1741,90 +2055,6 @@ app.post(
   },
 );
 
-app.get('/project/:project/static/:file*', aclProject, (req, res) => {
-  let file = req.params.file;
-  if (Object.hasOwn(req.params, 0)) {
-    file += req.params[0];
-  }
-  res.sendFile(
-    resolveThumbnail(PROJECTS_FOLDER + '/' + req.params.project + '/' + file),
-    (err) => {
-      if (
-        err &&
-        (isThumbnail(file) || file.split('.').splice(-1)[0] === 'jpg')
-      ) {
-        res.sendFile(APP_FOLDER + '/assets/image_not_found.jpg');
-      } else if (err) {
-        res.sendStatus(404);
-      }
-    },
-  );
-});
-
-/* EDIT */
-app.post(
-  '/project/:project/upload/graphics',
-  aclProject,
-  uploadMiddleware.single('file'),
-  async (req, res) => {
-    if (!req.file) {
-      console.log('No file received');
-      return res.sendStatus(500);
-    }
-    console.log('File received', req.file.originalname);
-    const GRAPHICS_FOLDER =
-      PROJECTS_FOLDER + '/' + req.params.project + '/src/graphics/';
-    const extension = req.file.originalname.split('.').splice(-1)[0];
-    const supported = ['jpg', 'jpeg', 'png', 'svg', 'pdf'];
-    if (!supported.includes(extension)) {
-      return res.sendStatus(415);
-    }
-    let filename: string;
-    try {
-      if (extension === 'svg') {
-        const response = await fetch('http://svg2pdf:3000/convert', {
-          method: 'POST',
-          body: await fs.readFile(req.file.path),
-        });
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(
-            `Error from svg2pdf service: ${response.statusText}, details: ${errorText}`,
-          );
-          return res
-            .status(response.status)
-            .send(`Convert service error: ${errorText}`);
-        }
-        const pdfBuffer = await response.arrayBuffer();
-        filename = `${req.body.id}.pdf`;
-        await fs.writeFile(GRAPHICS_FOLDER + filename, new DataView(pdfBuffer));
-        if (req.body.excalidraw) {
-          await fs.writeFile(
-            `${GRAPHICS_FOLDER}${req.body.id}.excalidraw`,
-            req.body.excalidraw,
-          );
-        }
-      } else {
-        filename = `${req.body.id}.${extension}`;
-        await fs.copy(req.file.path, GRAPHICS_FOLDER + filename);
-      }
-
-      // don't forget to delete all req.files when done
-      await fs.unlink(req.file.path);
-    } catch (e) {
-      console.error(e);
-      return res.sendStatus(500);
-    }
-    try {
-      await makeThumbnail(GRAPHICS_FOLDER, filename, req.body.id);
-      res.sendStatus(200);
-    } catch (error) {
-      console.error(error);
-      res.sendStatus(500);
-    }
-  },
-);
-
 app.get('/project/:project/graphics/sync', aclProject, (req, res) => {
   const GRAPHICS_FOLDER =
     PROJECTS_FOLDER + '/' + req.params.project + '/src/graphics/';
@@ -1848,62 +2078,6 @@ app.get('/project/:project/graphics/sync', aclProject, (req, res) => {
     }),
   ).then(() => res.json(files));
 });
-
-app.post('/project/:project/graphics/delete', aclProject, (req, res) => {
-  const GRAPHICS_FOLDER =
-    PROJECTS_FOLDER + '/' + req.params.project + '/src/graphics/';
-  try {
-    fs.unlinkSync(
-      GRAPHICS_FOLDER +
-        req.body.id +
-        '.' +
-        req.body.filename.split('.').splice(-1)[0],
-    );
-    for (const extension of ['png', 'jpg']) {
-      const thumbnail = GRAPHICS_FOLDER + req.body.id + '_thumb.' + extension;
-      if (fs.existsSync(thumbnail)) fs.unlinkSync(thumbnail);
-    }
-    const excalidrawPath = `${GRAPHICS_FOLDER}${req.body.id}.excalidraw`;
-    if (fs.existsSync(excalidrawPath)) {
-      fs.unlinkSync(excalidrawPath);
-    }
-    res.sendStatus(200);
-  } catch {
-    res.sendStatus(500);
-  }
-});
-
-function saveSourceFilesSync(project: string, body: any): void {
-  const OUT_FOLDER = PROJECTS_FOLDER + '/' + project + '/out';
-  fs.readdirSync(OUT_FOLDER).forEach((item) => {
-    fs.unlinkSync(OUT_FOLDER + '/' + item);
-  });
-
-  const json = path.resolve(PROJECTS_FOLDER, project + '/data.json');
-  fs.writeFileSync(json, body.json);
-
-  const source = path.resolve(PROJECTS_FOLDER, project + '/source.tex');
-  fs.writeFileSync(source, body.source);
-
-  const questionsDefinition = path.resolve(
-    PROJECTS_FOLDER,
-    project + '/questions_definition.tex',
-  );
-  fs.writeFileSync(questionsDefinition, body.questions_definition);
-
-  const questionsLayout = path.resolve(
-    PROJECTS_FOLDER,
-    project + '/questions_layout.tex',
-  );
-  fs.writeFileSync(questionsLayout, body.questions_layout);
-
-  for (const id in body.codes) {
-    if (Object.hasOwn(body.codes, id)) {
-      const file = path.resolve(PROJECTS_FOLDER, project + '/src/codes/' + id);
-      fs.writeFileSync(file, body.codes[id].content);
-    }
-  }
-}
 
 app.post('/project/:project/preview', aclProject, async (req, res, next) => {
   // Preserve the rendered-body contract for older clients. Current clients and
@@ -1932,174 +2106,179 @@ app.get('/project/:project/reset/lock', aclProject, async (req, res) => {
 });
 
 /* PRINT */
-app.post('/project/:project/print', aclProject, async (req, res) => {
-  const locked = await redisClient.HGET(
-    'project:' + req.params.project + ':status',
-    'locked',
-  );
-  if (locked === '1') {
-    return res.status(409).end('ALREADY PRINTING!');
-  }
+app.post(
+  '/project/:project/print',
+  aclProject,
+  asyncHandler(async (req, res) => {
+    validateSourceFiles(PROJECTS_FOLDER, req.params.project, req.body);
+    const locked = await redisClient.HGET(
+      'project:' + req.params.project + ':status',
+      'locked',
+    );
+    if (locked === '1') {
+      return res.status(409).end('ALREADY PRINTING!');
+    }
 
-  await redisClient.HSET('project:' + req.params.project + ':status', {
-    locked: 1,
-    printed: '',
-  });
-  const PROJECT_FOLDER = PROJECTS_FOLDER + '/' + req.params.project + '/';
-  const project = req.params.project;
+    await redisClient.HSET('project:' + req.params.project + ':status', {
+      locked: 1,
+      printed: '',
+    });
+    const PROJECT_FOLDER = PROJECTS_FOLDER + '/' + req.params.project + '/';
+    const project = req.params.project;
 
-  saveSourceFilesSync(req.params.project, req.body);
+    saveSourceFilesSync(PROJECTS_FOLDER, req.params.project, req.body);
 
-  fs.readdirSync(PROJECT_FOLDER + 'pdf/').forEach((item) => {
-    fs.unlinkSync(PROJECT_FOLDER + 'pdf/' + item);
-  });
+    fs.readdirSync(PROJECT_FOLDER + 'pdf/').forEach((item) => {
+      fs.unlinkSync(PROJECT_FOLDER + 'pdf/' + item);
+    });
 
-  res.sendStatus(200);
+    res.sendStatus(200);
 
-  ws.to(project + '-notifications').emit('print', {action: 'start'});
+    ws.to(project + '-notifications').emit('print', {action: 'start'});
 
-  projectOptions(req.params.project, (_err, result) => {
-    //sujet.pdf, catalog.pdf, calage.xy
-    amcCommande(
-      null,
-      PROJECT_FOLDER,
-      project,
-      'generating pdf',
-      [
-        'prepare',
-        '--with',
-        'pdflatex',
-        '--filter',
-        'latex',
-        '--mode',
-        's[c]',
-        '--n-copies',
-        result.project.nombre_copies,
-        'source.tex',
-        '--prefix',
+    projectOptions(req.params.project, (_err, result) => {
+      //sujet.pdf, catalog.pdf, calage.xy
+      amcCommande(
+        null,
         PROJECT_FOLDER,
-        '--latex-stdout',
-        '--data',
-        PROJECT_FOLDER + 'data',
-      ],
-      () => {
-        //corrige.pdf for all series
-        amcCommande(
-          null,
+        project,
+        'generating pdf',
+        [
+          'prepare',
+          '--with',
+          'pdflatex',
+          '--filter',
+          'latex',
+          '--mode',
+          's[c]',
+          '--n-copies',
+          result.project.nombre_copies,
+          'source.tex',
+          '--prefix',
           PROJECT_FOLDER,
-          project,
-          'generating answers pdf',
-          [
-            'prepare',
-            '--with',
-            'pdflatex',
-            '--filter',
-            'latex',
-            '--mode',
-            'k',
-            '--n-copies',
-            result.project.nombre_copies,
-            'source.tex',
-            '--prefix',
+          '--latex-stdout',
+          '--data',
+          PROJECT_FOLDER + 'data',
+        ],
+        () => {
+          //corrige.pdf for all series
+          amcCommande(
+            null,
             PROJECT_FOLDER,
-            '--latex-stdout',
-            '--data',
-            PROJECT_FOLDER + 'data',
-          ],
-          () => {
-            //create capture and scoring db
-            amcCommande(
-              null,
+            project,
+            'generating answers pdf',
+            [
+              'prepare',
+              '--with',
+              'pdflatex',
+              '--filter',
+              'latex',
+              '--mode',
+              'k',
+              '--n-copies',
+              result.project.nombre_copies,
+              'source.tex',
+              '--prefix',
               PROJECT_FOLDER,
-              project,
-              'computing scoring data',
-              [
-                'prepare',
-                '--mode',
-                'b',
-                '--n-copies',
-                result.project.nombre_copies,
-                'source.tex',
-                '--prefix',
+              '--latex-stdout',
+              '--data',
+              PROJECT_FOLDER + 'data',
+            ],
+            () => {
+              //create capture and scoring db
+              amcCommande(
+                null,
                 PROJECT_FOLDER,
-                '--data',
-                PROJECT_FOLDER + 'data',
-                '--latex-stdout',
-              ],
-              () => {
-                //create layout
-                amcCommande(
-                  null,
+                project,
+                'computing scoring data',
+                [
+                  'prepare',
+                  '--mode',
+                  'b',
+                  '--n-copies',
+                  result.project.nombre_copies,
+                  'source.tex',
+                  '--prefix',
                   PROJECT_FOLDER,
-                  project,
-                  'calculating layout',
-                  [
-                    'meptex',
-                    '--src',
-                    PROJECT_FOLDER + 'calage.xy',
-                    '--data',
-                    PROJECT_FOLDER + 'data',
-                    '--progression-id',
-                    'MEP',
-                    '--progression',
-                    '1',
-                  ],
-                  () => {
-                    // print
-                    const params = [
-                      'imprime',
-                      '--methode',
-                      'file',
-                      '--output',
-                      PROJECT_FOLDER + 'pdf/sheet-%e.pdf',
-                      '--sujet',
-                      'sujet.pdf',
+                  '--data',
+                  PROJECT_FOLDER + 'data',
+                  '--latex-stdout',
+                ],
+                () => {
+                  //create layout
+                  amcCommande(
+                    null,
+                    PROJECT_FOLDER,
+                    project,
+                    'calculating layout',
+                    [
+                      'meptex',
+                      '--src',
+                      PROJECT_FOLDER + 'calage.xy',
                       '--data',
                       PROJECT_FOLDER + 'data',
                       '--progression-id',
-                      'impression',
+                      'MEP',
                       '--progression',
                       '1',
-                    ];
-                    if (result.project.split === '1') {
-                      params.push('--split');
-                    }
-                    amcCommande(
-                      null,
-                      PROJECT_FOLDER,
-                      project,
-                      'splitting pdf',
-                      params,
-                      async () => {
-                        const pdfs = fs
-                          .readdirSync(PROJECT_FOLDER + 'pdf/')
-                          .filter((item) => {
-                            return item.indexOf('.pdf') > 0;
+                    ],
+                    () => {
+                      // print
+                      const params = [
+                        'imprime',
+                        '--methode',
+                        'file',
+                        '--output',
+                        PROJECT_FOLDER + 'pdf/sheet-%e.pdf',
+                        '--sujet',
+                        'sujet.pdf',
+                        '--data',
+                        PROJECT_FOLDER + 'data',
+                        '--progression-id',
+                        'impression',
+                        '--progression',
+                        '1',
+                      ];
+                      if (result.project.split === '1') {
+                        params.push('--split');
+                      }
+                      amcCommande(
+                        null,
+                        PROJECT_FOLDER,
+                        project,
+                        'splitting pdf',
+                        params,
+                        async () => {
+                          const pdfs = fs
+                            .readdirSync(PROJECT_FOLDER + 'pdf/')
+                            .filter((item) => {
+                              return item.indexOf('.pdf') > 0;
+                            });
+                          commitGit(project, req.user?.username || '', 'print');
+                          await redisClient.HSET(
+                            'project:' + req.params.project + ':status',
+                            {
+                              locked: 0,
+                              printed: new Date().getTime(),
+                            },
+                          );
+                          ws.to(project + '-notifications').emit('print', {
+                            action: 'end',
+                            pdfs: pdfs,
                           });
-                        commitGit(project, req.user?.username || '', 'print');
-                        await redisClient.HSET(
-                          'project:' + req.params.project + ':status',
-                          {
-                            locked: 0,
-                            printed: new Date().getTime(),
-                          },
-                        );
-                        ws.to(project + '-notifications').emit('print', {
-                          action: 'end',
-                          pdfs: pdfs,
-                        });
-                      },
-                    );
-                  },
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  });
-});
+                        },
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          );
+        },
+      );
+    });
+  }),
+);
 
 app.get('/project/:project/zip/pdf', aclProject, (req, res) => {
   const zip = new ZipArchive();
@@ -2188,12 +2367,12 @@ app.post(
   uploadMiddleware.single('file'),
   (req, res) => {
     if (!req.file) return res.sendStatus(500);
-    const filename = req.file.originalname;
+    const filename = safeFilename(req.file.originalname);
     const PROJECT_FOLDER = PROJECTS_FOLDER + '/' + req.params.project + '/';
     const project = req.params.project;
     fs.copySync(
       req.file.path,
-      path.resolve(PROJECTS_FOLDER, req.params.project, 'scans/', filename),
+      projectPath(PROJECTS_FOLDER, req.params.project, 'scans', filename),
     );
     // don't forget to delete all req.files when done
     fs.unlinkSync(req.file.path);
@@ -3323,6 +3502,12 @@ app.use(
     if (!err) {
       return next();
     }
+    if (err instanceof AdminError)
+      return res.status(err.status).json({error: err.message});
+    if (err instanceof ZodError)
+      return res
+        .status(400)
+        .json({error: err.issues[0]?.message || 'Invalid request'});
     // Something is wrong, inform user
     if (err.errorCode && err.message) {
       res.status(err.errorCode).json(err.message);
@@ -3345,6 +3530,7 @@ if (env === 'development') {
   });
 }
 
+administration.start();
 httpServer.listen(process.env.SERVER_PORT);
 httpServer.on('listening', function () {
   const address = httpServer.address();
