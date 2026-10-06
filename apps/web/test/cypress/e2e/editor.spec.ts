@@ -188,11 +188,27 @@ describe('Rich-text toolbar workflows', () => {
     cy.contains(`${toolbar} label`, 'LaTeX Options').find('input').should('have.value', 'angle=90');
   });
 
-  it('opens the real drawing canvas and returns to editing after discard', () => {
+  it('inserts a Mermaid diagram with the print-oriented drawing tools and discards cleanly', () => {
     cy.get(editable).type('Keep this text');
     insert('Excalidraw');
     cy.get('.excalidraw canvas', { timeout: 20000 }).should('exist');
     cy.contains('.excalidraw-dialog button', /^save as$/i).should('not.be.disabled');
+    cy.get('.excalidraw-dialog button[title="More tools"]').click();
+    cy.contains('.App-toolbar__extra-tools-dropdown button', 'Frame tool').should('not.be.visible');
+    cy.contains('.App-toolbar__extra-tools-dropdown button', 'Web Embed').should('not.be.visible');
+    cy.contains('.App-toolbar__extra-tools-dropdown button', 'Laser pointer').should(
+      'not.be.visible'
+    );
+    // Mermaid shares data-testid="toolbar-embeddable" with Web Embed upstream.
+    cy.contains('.App-toolbar__extra-tools-dropdown button', 'Mermaid to Excalidraw').click();
+    // A normal click/type catches both a portal hidden behind Quasar and its focus trap.
+    cy.get('.ttd-dialog textarea').click();
+    cy.get('.ttd-dialog textarea').should('be.focused').clear();
+    cy.get('.ttd-dialog textarea').type('flowchart LR\n A[Start] --> B[Finish]');
+    cy.get('.ttd-dialog canvas', { timeout: 20000 }).should('be.visible');
+    cy.contains('.ttd-dialog button', /^Insert$/).click();
+    cy.get('.ttd-dialog').should('not.exist');
+    cy.get('.excalidraw-dialog button[aria-label="Undo"]').should('not.be.disabled');
     cy.contains('.excalidraw-dialog button', /^discard$/i).click();
     cy.get('.excalidraw-dialog').should('not.exist');
     cy.get(editable).click();

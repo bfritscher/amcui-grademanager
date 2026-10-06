@@ -2,6 +2,7 @@
   <q-dialog
     ref="dialogRef"
     persistent
+    allow-focus-outside
     :maximized="$q.screen.lt.sm || maximized"
     @hide="onDialogHide()"
   >
@@ -204,6 +205,22 @@ export default defineComponent({
 }
 </style>
 <style>
+/* Excalidraw portals its dialogs to body, outside Quasar's dialog/focus trap. */
+body:has(.excalidraw-dialog) .excalidraw.excalidraw-modal-container {
+  --zIndex-modal: 6001;
+}
+
+/* Excalidraw 0.18 has no UIOptions for these tools. Its Mermaid item also uses
+   toolbar-embeddable, so target only the web embed item directly after frame. */
+.excalidraw-dialog .App-toolbar__extra-tools-dropdown [data-testid='toolbar-frame'],
+.excalidraw-dialog
+  .App-toolbar__extra-tools-dropdown
+  [data-testid='toolbar-frame']
+  + [data-testid='toolbar-embeddable'],
+.excalidraw-dialog .App-toolbar__extra-tools-dropdown [data-testid='toolbar-laser'] {
+  display: none;
+}
+
 .q-dialog__inner--minimized .q-card.q-dialog-plugin.excalidraw-dialog {
   max-width: 90vw;
   min-width: 90vw;

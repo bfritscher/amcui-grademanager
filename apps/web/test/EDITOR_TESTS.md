@@ -30,8 +30,9 @@ npm run test:web
 `test/cypress/e2e/editor.spec.ts` uses Chrome and a real server. Each test creates
 and deletes its own project, independently of the legacy `edit.spec.ts` suite.
 It covers formatting/undo/redo, CSS padding and focus outline, table insertion
-and actions, image upload/properties/DOM drag events, and opening/discarding the
-real drawing canvas. Page reloads verify saved content. It does not call editor
+and actions, image upload/properties/DOM drag events, and Mermaid input, preview,
+insertion, hidden non-print tools, and discard in the real drawing canvas.
+Page reloads verify saved content. It does not call editor
 internals or mock persistence. The image fixture is shared with server tests.
 
 With a local development server and backend running (PowerShell):
