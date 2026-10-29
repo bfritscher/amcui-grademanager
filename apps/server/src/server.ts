@@ -1215,6 +1215,19 @@ app.post(
   }),
 );
 
+app.get(
+  '/profile',
+  asyncHandler(async (req, res) => {
+    const username = req.user!.username;
+    const meta = await accounts.meta(username);
+    res.json({
+      username,
+      displayName: meta.displayName || null,
+      email: meta.email || null,
+    });
+  }),
+);
+
 async function updateProfileAccount(
   req: express.Request,
   reason: string,

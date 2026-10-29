@@ -426,6 +426,30 @@ export class AdminService {
       ),
     );
     router.post(
+      '/user/:username/name',
+      asyncHandler(async (req, res) =>
+        res.json(
+          await this.accounts.updateDisplayName(
+            req.params.username,
+            req.body?.displayName,
+            req.user!.username,
+          ),
+        ),
+      ),
+    );
+    router.post(
+      '/user/:username/email',
+      asyncHandler(async (req, res) =>
+        res.json(
+          await this.accounts.updateEmail(
+            req.params.username,
+            req.body?.email,
+            req.user!.username,
+          ),
+        ),
+      ),
+    );
+    router.post(
       '/user/:username/state',
       asyncHandler(async (req, res) => {
         const status = z

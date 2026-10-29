@@ -151,6 +151,97 @@ export class AdminAccounts {
       await this.store.audit(data.username, 'account.request', data.username);
     });
   }
+  async updateDisplayName(username: string, input: unknown, actor: string) {
+    const displayName = registrationSchema.shape.displayName.parse(input);
+    return this.store.lock('account-administration', () =>
+      this.store.lock('account:' + digest(username), async () => {
+        if (!(await this.store.redis.EXISTS('user:' + username)))
+          throw new AdminError('Account not found', 404);
+        const meta = await this.meta(username);
+        if (meta.status === 'merging' || meta.status === 'merged')
+          throw new AdminError(
+            'Account is being merged or has been retired',
+            409,
+          );
+        if (meta.displayName !== displayName) {
+          meta.displayName = displayName;
+          await this.save(meta);
+          await this.store.audit(actor, 'account.name', username);
+        }
+        return {username, displayName};
+      }),
+    );
+  }
+  async updateEmail(username: string, input: unknown, actor: string) {
+    const email = z
+      .string()
+      .trim()
+      .pipe(registrationSchema.shape.email)
+      .parse(input);
+    return this.store.lock('account-administration', () =>
+      this.store.lock('account:' + digest(username), async () => {
+        if (!(await this.store.redis.EXISTS('user:' + username)))
+          throw new AdminError('Account not found', 404);
+        const meta = await this.meta(username);
+        if (meta.status === 'merging' || meta.status === 'merged')
+          throw new AdminError(
+            'Account is being merged or has been retired',
+            409,
+          );
+        if (meta.email === email) return {username, email};
+        const previousEmail = meta.email;
+        const verificationHash = meta.verificationHash;
+        meta.email = email;
+        delete meta.verifiedAt;
+        delete meta.verificationHash;
+        // Claim the address and release its previous reservation atomically with
+        // metadata, including when public registration races with this update.
+        const changed = await this.store.redis.eval(
+          `local owner = redis.call('get', KEYS[1])
+          if owner and owner ~= ARGV[1] then return 0 end
+          redis.call('set', KEYS[1], ARGV[1])
+          if KEYS[1] ~= KEYS[2] and redis.call('get', KEYS[2]) == ARGV[1] then
+            redis.call('del', KEYS[2])
+          end
+          redis.call('set', KEYS[3], ARGV[2])
+          redis.call('sadd', KEYS[4], ARGV[1])
+          if ARGV[3] ~= '' then
+            redis.call('del', KEYS[5], KEYS[6])
+            redis.call('zrem', KEYS[7], ARGV[3])
+          end
+          return 1`,
+          {
+            keys: [
+              'amcui:admin:email:' + digest(email),
+              'amcui:admin:email:' + digest(previousEmail || email),
+              'amcui:admin:' + this.key(username),
+              'amcui:admin:users',
+              'amcui:admin:verify:' + (verificationHash || ''),
+              'amcui:admin:mail:' +
+                (verificationHash
+                  ? digest('verification:' + verificationHash)
+                  : ''),
+              'amcui:admin:mailqueue',
+            ],
+            arguments: [
+              username,
+              JSON.stringify(meta),
+              verificationHash
+                ? digest('verification:' + verificationHash)
+                : '',
+            ],
+          },
+        );
+        if (!changed)
+          throw new AdminError(
+            'Email address is already associated with another account',
+            409,
+          );
+        await this.store.audit(actor, 'account.email', username);
+        return {username, email};
+      }),
+    );
+  }
   private async sendVerification(meta: AccountMeta) {
     const token = randomBytes(32).toString('base64url');
     const hash = digest(token);

@@ -39,7 +39,9 @@ services:
     volumes:
       - ./data/db:/data/db
       - ./src:/amc/apps/server/src
-      - ../../packages/exam-core:/amc/packages/exam-core
+      # Keep workspace dependencies installed in the image visible.
+      - ../../packages/exam-core/src:/amc/packages/exam-core/src
+      - ../../packages/exam-core/dist:/amc/packages/exam-core/dist
       - ./projects:/amc/projects
       - ./templates:/amc/templates
       - ./coverage:/amc/coverage

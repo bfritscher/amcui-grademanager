@@ -72,6 +72,40 @@
       wrap-cells
       @request="requestPage"
     >
+      <template #body-cell-displayName="props">
+        <q-td :props="props">
+          {{ props.row.displayName || 'Not set' }}
+          <q-btn
+            v-if="!['merging', 'merged'].includes(props.row.status)"
+            flat
+            dense
+            round
+            color="primary"
+            icon="sym_o_edit"
+            :aria-label="`Edit name for ${props.row.username}`"
+            @click="openAccountField(props.row, 'displayName')"
+          >
+            <q-tooltip>Edit name</q-tooltip>
+          </q-btn>
+        </q-td>
+      </template>
+      <template #body-cell-email="props">
+        <q-td :props="props">
+          {{ props.row.email || 'Not set' }}
+          <q-btn
+            v-if="!['merging', 'merged'].includes(props.row.status)"
+            flat
+            dense
+            round
+            color="primary"
+            icon="sym_o_edit"
+            :aria-label="`Edit email for ${props.row.username}`"
+            @click="openAccountField(props.row, 'email')"
+          >
+            <q-tooltip>Edit email</q-tooltip>
+          </q-btn>
+        </q-td>
+      </template>
       <template #body-cell-bytes="props"
         ><q-td :props="props"
           >{{ size(props.row.bytes)
@@ -178,21 +212,69 @@
         ><q-td :props="props" class="text-negative">{{ props.row.error }}</q-td></template
       >
     </q-table>
+    <q-dialog v-model="editDialog" :persistent="editSaving">
+      <q-card style="width: 480px; max-width: 95vw">
+        <q-form @submit="saveAccountField">
+          <q-card-section class="text-h6"
+            >Edit {{ editLabel }} for {{ editUsername }}</q-card-section
+          >
+          <q-card-section>
+            <q-input
+              v-model="editValue"
+              :type="editField === 'email' ? 'email' : 'text'"
+              :label="editInputLabel"
+              outlined
+              autofocus
+              required
+              :maxlength="editField === 'email' ? 254 : 150"
+              :disable="editSaving"
+              :rules="[(value) => !!value.trim() || `${editInputLabel} is required`]"
+            />
+            <p v-if="editField === 'email'" class="text-caption q-mt-sm">
+              Account access stays unchanged. The new address is not marked as verified.
+            </p>
+            <p v-if="editField === 'email' && editNeedsVerification" class="text-caption">
+              The user must resend verification from the sign-in page. Previous verification links
+              will stop working.
+            </p>
+            <q-banner v-if="editError" class="bg-red-1 text-negative" role="alert">
+              {{ editError }}
+            </q-banner>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancel" :disable="editSaving" @click="editDialog = false" />
+            <q-btn
+              color="primary"
+              type="submit"
+              :label="`Save ${editLabel}`"
+              :loading="editSaving"
+              :disable="!editNormalizedValue || editNormalizedValue === editOriginal"
+            />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
     <q-dialog v-model="mergeDialog">
       <q-card style="width: 600px; max-width: 95vw">
         <q-card-section class="text-h6">Merge accounts</q-card-section>
         <q-card-section class="q-gutter-md">
           <q-select
             v-model="mergeSource"
-            :options="mergeOptions"
+            :options="mergeSourceOptions"
             label="Retire this login"
+            use-input
+            input-debounce="0"
             outlined
+            @filter="filterMergeSource"
           />
           <q-select
             v-model="mergeTarget"
-            :options="mergeOptions.filter((name) => name !== mergeSource)"
+            :options="mergeTargetOptions"
             label="Keep this login"
+            use-input
+            input-debounce="0"
             outlined
+            @filter="filterMergeTarget"
           />
           <p>
             Project memberships transfer to the surviving account. Its password and MFA stay in
@@ -213,7 +295,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
-import { useQuasar, type QTableColumn, type QTableProps } from 'quasar';
+import { useQuasar, type QSelectProps, type QTableColumn, type QTableProps } from 'quasar';
 import { useApiStore } from '@/stores/api';
 import { useStore } from '@/stores/store';
 
@@ -230,6 +312,19 @@ const selected = ref<Row[]>([]);
 const metrics = ref<Row>({});
 const loading = ref(false);
 const error = ref('');
+const editDialog = ref(false);
+const editField = ref<'email' | 'displayName'>('email');
+const editLabel = computed(() => (editField.value === 'email' ? 'email' : 'name'));
+const editInputLabel = computed(() => (editField.value === 'email' ? 'Email address' : 'Name'));
+const editUsername = ref('');
+const editValue = ref('');
+const editOriginal = ref('');
+const editNeedsVerification = ref(false);
+const editSaving = ref(false);
+const editError = ref('');
+const editNormalizedValue = computed(() =>
+  editField.value === 'email' ? editValue.value.trim().toLowerCase() : editValue.value.trim()
+);
 const pagination = ref({
   page: 1,
   rowsPerPage: 50,
@@ -388,6 +483,39 @@ async function state(row: Row, value: string) {
   )
     await action(`/admin/user/${encodeURIComponent(row.username)}/state`, { status: value });
 }
+function openAccountField(row: Row, field: 'email' | 'displayName') {
+  if (editSaving.value) return;
+  editField.value = field;
+  editUsername.value = row.username;
+  editOriginal.value = row[field] || '';
+  editValue.value = editOriginal.value;
+  editNeedsVerification.value = row.status === 'unverified';
+  editError.value = '';
+  editDialog.value = true;
+}
+async function saveAccountField() {
+  const value = editNormalizedValue.value;
+  if (editSaving.value || !value || value === editOriginal.value) return;
+  editSaving.value = true;
+  editError.value = '';
+  try {
+    await API.$http.post(
+      `${API.URL}/admin/user/${encodeURIComponent(editUsername.value)}/${editLabel.value}`,
+      { [editField.value]: value }
+    );
+    editDialog.value = false;
+    await load();
+    $q.notify({ type: 'positive', message: `${editInputLabel.value} updated` });
+  } catch (e: any) {
+    editError.value =
+      e.response?.data?.error ||
+      e.response?.data ||
+      e.message ||
+      `Unable to update ${editLabel.value}`;
+  } finally {
+    editSaving.value = false;
+  }
+}
 async function archive(items: Row[]) {
   const active = items.filter((row) => row.status === 'active');
   if (!active.length) return;
@@ -452,6 +580,26 @@ const mergeDialog = ref(false);
 const mergeSource = ref('');
 const mergeTarget = ref('');
 const mergeOptions = ref<string[]>([]);
+const mergeSourceSearch = ref('');
+const mergeTargetSearch = ref('');
+const mergeSourceOptions = computed(() =>
+  mergeOptions.value.filter((name) => name.toLowerCase().includes(mergeSourceSearch.value))
+);
+const mergeTargetOptions = computed(() =>
+  mergeOptions.value.filter(
+    (name) => name !== mergeSource.value && name.toLowerCase().includes(mergeTargetSearch.value)
+  )
+);
+const filterMergeSource: QSelectProps['onFilter'] = (value, update) => {
+  update(() => {
+    mergeSourceSearch.value = value.toLowerCase();
+  });
+};
+const filterMergeTarget: QSelectProps['onFilter'] = (value, update) => {
+  update(() => {
+    mergeTargetSearch.value = value.toLowerCase();
+  });
+};
 async function openMerge() {
   try {
     const names: string[] = [];
@@ -466,6 +614,8 @@ async function openMerge() {
       if (!data.items.length) break;
     }
     mergeOptions.value = names;
+    mergeSourceSearch.value = '';
+    mergeTargetSearch.value = '';
     mergeDialog.value = true;
   } catch (e: any) {
     error.value = e.message;

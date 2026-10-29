@@ -17,11 +17,11 @@
     "format:check": "prettier --check src/ test/ \"*.json\""
   },
   "dependencies": {
-    "acorn": "8.18.0",
+    "acorn": "8.19.0",
     "parse5": "8.0.1",
-    "uuid": "14.0.2",
+    "uuid": "14.0.3",
     "yjs": "13.6.33",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "typescript": "~6.0.3"

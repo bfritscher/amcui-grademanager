@@ -23,6 +23,9 @@ The server needs Redis, AMC, GraphicsMagick and the SVG converter. Its developme
 compose file is in `apps/server/docker-compose.yml`. Build the core after changing
 it (`npm run build:core`, or `npm run build --workspace=@amcui/exam-core -- --watch`).
 Configure the frontend's `window.AMCUI_API` for your local server before development.
+Development mounts only the core's `src` and `dist` directories, preserving
+dependencies installed in the image. Rebuild the server image after changing
+workspace dependencies.
 Both Dockerfiles use the repository root as their build context:
 
 ```sh

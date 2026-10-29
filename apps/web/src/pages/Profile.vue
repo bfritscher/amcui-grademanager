@@ -1,6 +1,45 @@
 <template>
   <q-page class="container">
     <q-btn flat color="primary" class="q-mt-md" @click="router.back()">Back</q-btn>
+    <div class="row q-py-lg">
+      <q-card flat bordered class="col-12 col-md-8 offset-md-2">
+        <q-card-section>
+          <div class="text-h5">Account</div>
+          <q-linear-progress
+            v-if="account.loading"
+            indeterminate
+            class="q-mt-md"
+            aria-label="Loading account details"
+          />
+          <template v-else-if="account.error">
+            <p class="text-negative q-mt-md" role="alert">{{ account.error }}</p>
+            <q-btn flat color="primary" label="Retry" @click="loadAccount()" />
+          </template>
+          <q-list v-else>
+            <q-item class="q-px-none">
+              <q-item-section>
+                <q-item-label caption>Username</q-item-label>
+                <q-item-label>{{ account.username }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item class="q-px-none">
+              <q-item-section>
+                <q-item-label caption>Name</q-item-label>
+                <q-item-label>{{ account.displayName || 'Not set' }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item class="q-px-none">
+              <q-item-section>
+                <q-item-label caption>Email address</q-item-label>
+                <q-item-label>
+                  {{ account.email || 'No email address associated with this account.' }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+      </q-card>
+    </div>
     <McpConnections />
     <q-form class="row q-py-lg" @submit="changePassword()">
       <q-card flat bordered class="col-12 col-md-8 offset-md-2">
@@ -126,6 +165,31 @@ export default defineComponent({
     const API = useApiStore();
     const store = useStore();
     const router = useRouter();
+    const account = reactive({
+      username: '',
+      displayName: null as string | null,
+      email: null as string | null,
+      loading: true,
+      error: ''
+    });
+    async function loadAccount() {
+      account.loading = true;
+      account.error = '';
+      try {
+        const { data } = await API.$http.get<{
+          username: string;
+          displayName: string | null;
+          email: string | null;
+        }>(`${API.URL}/profile`);
+        account.username = data.username;
+        account.displayName = data.displayName;
+        account.email = data.email;
+      } catch {
+        account.error = 'Unable to load account details. Please try again.';
+      } finally {
+        account.loading = false;
+      }
+    }
     const profile = reactive({
       error: '',
       oldPassword: '',
@@ -137,9 +201,12 @@ export default defineComponent({
     });
     onMounted(() => {
       API.project = '';
+      void loadAccount();
     });
     return {
       store,
+      account,
+      loadAccount,
       profile,
       router,
       changePassword() {

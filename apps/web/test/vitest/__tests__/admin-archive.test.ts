@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
-import { Quasar, QTabs, QTable } from 'quasar';
+import { Notify, Quasar, QForm, QInput, QTabs, QTable } from 'quasar';
 import ArchivedProject from '@/pages/ArchivedProject.vue';
 import Admin from '@/pages/Admin.vue';
 
@@ -24,9 +24,10 @@ afterEach(() => {
 const render = (component: any) => {
   const wrapper = mount(component, {
     global: {
-      plugins: [Quasar],
+      plugins: [[Quasar, { plugins: { Notify } }]],
       stubs: {
         QPage: { template: '<main><slot /></main>' },
+        QDialog: { props: ['modelValue'], template: '<div v-if="modelValue"><slot /></div>' },
         RouterLink: { template: '<a><slot /></a>' }
       }
     }
@@ -108,6 +109,106 @@ describe('archived exam viewer', () => {
   });
 });
 describe('admin tables', () => {
+  it.each([
+    {
+      field: 'email',
+      label: 'email',
+      inputLabel: 'Email address',
+      previous: 'old@example.org',
+      input: ' New@Example.org ',
+      saved: 'new@example.org'
+    },
+    {
+      field: 'displayName',
+      label: 'name',
+      inputLabel: 'Name',
+      previous: 'Old name',
+      input: ' Élodie Müller ',
+      saved: 'Élodie Müller'
+    }
+  ] as const)(
+    'edits a user $label and refreshes the table after saving',
+    async ({ field, label, inputLabel, previous, input, saved }) => {
+      const user = {
+        username: 'alice+test',
+        status: 'active',
+        projects: [],
+        [field]: previous
+      };
+      state.get.mockImplementation(async (url: string) => ({
+        data: url.includes('/metrics') ? { inventoryAt: 123 } : { items: [user], total: 1 }
+      }));
+      state.post.mockImplementation(async (_url: string, body: Record<string, string>) => {
+        user[field] = body[field];
+        return { data: { username: user.username, [field]: user[field] } };
+      });
+      const wrapper = render(Admin);
+      await flushPromises();
+      wrapper.findComponent(QTabs).vm.$emit('update:modelValue', 'users');
+      await flushPromises();
+      await wrapper.find(`[aria-label="Edit ${label} for alice+test"]`).trigger('click');
+      const editor = wrapper
+        .findAllComponents(QInput)
+        .find((input) => input.props('label') === inputLabel)!;
+      expect(editor.props('modelValue')).toBe(previous);
+      await editor.find('input').setValue(input);
+      await wrapper.findComponent(QForm).trigger('submit');
+      await flushPromises();
+      expect(state.post).toHaveBeenCalledExactlyOnceWith(`/api/admin/user/alice%2Btest/${label}`, {
+        [field]: saved
+      });
+      expect(wrapper.text()).toContain(saved);
+      expect(wrapper.text()).not.toContain(`Edit ${label} for alice+test`);
+    }
+  );
+  it.each([
+    {
+      field: 'email',
+      label: 'email',
+      inputLabel: 'Email address',
+      value: 'taken@example.org',
+      error: 'Email address is already associated with another account'
+    },
+    {
+      field: 'displayName',
+      label: 'name',
+      inputLabel: 'Name',
+      value: 'Élodie Müller',
+      error: 'Operation already running'
+    }
+  ])(
+    'keeps rejected $label edits and allows cancellation without changing the account',
+    async ({ field, label, inputLabel, value, error }) => {
+      const user = { username: 'legacy', status: 'unverified', projects: [] };
+      state.get.mockImplementation(async (url: string) => ({
+        data: url.includes('/metrics') ? { inventoryAt: 123 } : { items: [user], total: 1 }
+      }));
+      state.post.mockRejectedValue({
+        response: { data: { error } }
+      });
+      const wrapper = render(Admin);
+      await flushPromises();
+      wrapper.findComponent(QTabs).vm.$emit('update:modelValue', 'users');
+      await flushPromises();
+      await wrapper.find(`[aria-label="Edit ${label} for legacy"]`).trigger('click');
+      expect(wrapper.text().includes('resend verification')).toBe(field === 'email');
+      const editor = wrapper
+        .findAllComponents(QInput)
+        .find((input) => input.props('label') === inputLabel)!;
+      await editor.find('input').setValue(value);
+      await wrapper.findComponent(QForm).trigger('submit');
+      await flushPromises();
+      expect(wrapper.find('[role="alert"]').text()).toContain(error);
+      expect(editor.props('modelValue')).toBe(value);
+      await wrapper
+        .findAll('button')
+        .find((button) => button.text() === 'Cancel')!
+        .trigger('click');
+      expect(wrapper.text()).not.toContain(`Edit ${label} for legacy`);
+      expect(state.post).toHaveBeenCalledTimes(1);
+      expect(user).not.toHaveProperty(field);
+    }
+  );
   it('loads paginated projects and pending counts without requesting disk scans', async () => {
     state.get.mockImplementation(async (url: string) => ({
       data: url.includes('/metrics')
@@ -131,11 +232,9 @@ describe('admin tables', () => {
       rowsPerPage: 50
     });
     expect(state.post).not.toHaveBeenCalled();
-    wrapper
-      .findComponent(QTable)
-      .vm.$emit('request', {
-        pagination: { page: 2, rowsPerPage: 50, sortBy: 'name', descending: false }
-      });
+    wrapper.findComponent(QTable).vm.$emit('request', {
+      pagination: { page: 2, rowsPerPage: 50, sortBy: 'name', descending: false }
+    });
     await flushPromises();
     expect(state.get.mock.calls.some(([url]) => url.includes('offset=50'))).toBe(true);
   });

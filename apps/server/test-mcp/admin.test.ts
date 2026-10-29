@@ -25,6 +25,7 @@ import {AdminStore, AdminError} from '../src/admin/store.js';
 import {AdminMail} from '../src/admin/mail.js';
 import {AdminAccounts, registrationSchema} from '../src/admin/accounts.js';
 import {AdminJobs} from '../src/admin/jobs.js';
+import {AdminService} from '../src/admin/service.js';
 import {ProjectLifecycle} from '../src/admin/lifecycle.js';
 import {
   makeResults,
@@ -362,6 +363,263 @@ describe.runIf(!!process.env.AMCUI_TEST_REDIS_URL)(
         message.text.match(/https:\/\/[^\s]+/)[0],
       ).searchParams.get('verify')!;
     }
+    const emailKey = (email: string) =>
+      'amcui:admin:email:' + createHash('sha256').update(email).digest('hex');
+    it('adds a trimmed Unicode display name without changing legacy credentials or access', async () => {
+      await seed('legacy');
+      const credentials = await redis.GET('user:legacy');
+      await expect(
+        accounts.updateDisplayName('legacy', ' Élodie Müller ', 'admin'),
+      ).resolves.toEqual({username: 'legacy', displayName: 'Élodie Müller'});
+      expect(await redis.GET('user:legacy')).toBe(credentials);
+      expect(await accounts.active('legacy', 0)).toBe(true);
+      expect((await accounts.list())[0].displayName).toBe('Élodie Müller');
+      const audit = await store.auditList();
+      expect(audit).toEqual([
+        expect.objectContaining({
+          actor: 'admin',
+          action: 'account.name',
+          target: 'legacy',
+        }),
+      ]);
+      expect(JSON.stringify(audit)).not.toContain('Élodie Müller');
+    });
+    it('updates a name without invalidating the account email or its verification link', async () => {
+      await register();
+      const verification = await token();
+      const before = await accounts.meta('alice');
+      await accounts.updateDisplayName('alice', 'Alice Example', 'admin');
+      expect(await accounts.meta('alice')).toEqual({
+        ...before,
+        displayName: 'Alice Example',
+      });
+      expect(await redis.GET(emailKey('alice@example.org'))).toBe('alice');
+      await accounts.verify(verification);
+      const verified = await accounts.meta('alice');
+      await accounts.updateDisplayName('alice', 'Alice Renamed', 'admin');
+      expect(await accounts.meta('alice')).toEqual({
+        ...verified,
+        displayName: 'Alice Renamed',
+      });
+    });
+    it('rejects invalid names and missing or retired accounts without modifying stored names', async () => {
+      await seed('legacy');
+      for (const name of [
+        '',
+        '   ',
+        'a'.repeat(151),
+        'Alice\u0000Example',
+        null,
+      ])
+        await expect(
+          accounts.updateDisplayName('legacy', name, 'admin'),
+        ).rejects.toThrow();
+      expect((await accounts.meta('legacy')).displayName).toBeUndefined();
+      await expect(
+        accounts.updateDisplayName('missing', 'Valid name', 'admin'),
+      ).rejects.toMatchObject({status: 404});
+      for (const status of ['merging', 'merged']) {
+        await store.set(
+          'account:' + createHash('sha256').update('legacy').digest('hex'),
+          {
+            username: 'legacy',
+            status,
+            sessionVersion: 0,
+            displayName: 'Original',
+          },
+        );
+        await expect(
+          accounts.updateDisplayName('legacy', 'Changed', 'admin'),
+        ).rejects.toMatchObject({status: 409});
+        expect((await accounts.meta('legacy')).displayName).toBe('Original');
+      }
+    });
+    it('adds a normalized email to a legacy account without changing credentials or access', async () => {
+      await seed('legacy');
+      const credentials = await redis.GET('user:legacy');
+      await expect(
+        accounts.updateEmail('legacy', ' Legacy@Example.org ', 'admin'),
+      ).resolves.toEqual({username: 'legacy', email: 'legacy@example.org'});
+      expect(await redis.GET('user:legacy')).toBe(credentials);
+      expect(await accounts.active('legacy', 0)).toBe(true);
+      expect(await redis.GET(emailKey('legacy@example.org'))).toBe('legacy');
+      expect((await accounts.meta('legacy')).verifiedAt).toBeUndefined();
+      const audit = await store.auditList();
+      expect(audit).toEqual([
+        expect.objectContaining({
+          actor: 'admin',
+          action: 'account.email',
+          target: 'legacy',
+        }),
+      ]);
+      expect(JSON.stringify(audit)).not.toContain('legacy@example.org');
+    });
+    it('replaces the email reservation and clears verification without changing account state or sessions', async () => {
+      await seed('alice');
+      await store.set(
+        'account:' + createHash('sha256').update('alice').digest('hex'),
+        {
+          username: 'alice',
+          status: 'active',
+          sessionVersion: 7,
+          email: 'old@example.org',
+          verifiedAt: 123,
+          displayName: 'Alice',
+        },
+      );
+      await redis.SET(emailKey('old@example.org'), 'alice');
+      await accounts.updateEmail('alice', 'new@example.org', 'admin');
+      expect(await redis.GET(emailKey('old@example.org'))).toBeNull();
+      expect(await redis.GET(emailKey('new@example.org'))).toBe('alice');
+      expect(await accounts.meta('alice')).toEqual({
+        username: 'alice',
+        status: 'active',
+        sessionVersion: 7,
+        email: 'new@example.org',
+        displayName: 'Alice',
+      });
+      expect(await accounts.active('alice', 7)).toBe(true);
+    });
+    it('rejects duplicate and invalid addresses without changing either account', async () => {
+      await register();
+      await seed('legacy');
+      await expect(
+        accounts.updateEmail('legacy', 'ALICE@EXAMPLE.ORG', 'admin'),
+      ).rejects.toMatchObject({status: 409});
+      for (const email of [
+        '',
+        'invalid',
+        'a@example.org\r\nBcc: b@example.org',
+        null,
+      ])
+        await expect(
+          accounts.updateEmail('legacy', email, 'admin'),
+        ).rejects.toThrow();
+      expect((await accounts.meta('legacy')).email).toBeUndefined();
+      expect((await accounts.meta('alice')).email).toBe('alice@example.org');
+      expect(await redis.GET(emailKey('alice@example.org'))).toBe('alice');
+    });
+    it('invalidates old verification links and queued messages while allowing verification to be resent', async () => {
+      await register();
+      const oldToken = await token();
+      await accounts.updateEmail('alice', 'corrected@example.org', 'admin');
+      await expect(accounts.verify(oldToken)).rejects.toThrow(
+        'Invalid or expired',
+      );
+      expect(await redis.ZCARD('amcui:admin:mailqueue')).toBe(0);
+      expect((await accounts.meta('alice')).status).toBe('unverified');
+      await accounts.resend('alice', 'long-password-123');
+      const [id] = await redis.ZRANGE('amcui:admin:mailqueue', 0, -1);
+      expect((await store.get<any>('mail:' + id)).to).toBe(
+        'corrected@example.org',
+      );
+      await accounts.verify(await token());
+      expect((await accounts.meta('alice')).status).toBe('pending');
+    });
+    it('keeps email ownership unique when registration races an administrator update', async () => {
+      await seed('legacy');
+      await Promise.allSettled([
+        accounts.updateEmail('legacy', 'shared@example.org', 'admin'),
+        accounts.register({
+          username: 'new-user',
+          email: 'shared@example.org',
+          displayName: 'New user',
+          password: 'long-password-123',
+        }),
+      ]);
+      const owner = await redis.GET(emailKey('shared@example.org'));
+      expect(['legacy', 'new-user']).toContain(owner);
+      const owners = (await accounts.list())
+        .filter((row) => row.email === 'shared@example.org')
+        .map((row) => row.username);
+      expect(owners).toEqual([owner]);
+    });
+    it('rejects missing or retired accounts and keeps unchanged addresses verified', async () => {
+      await expect(
+        accounts.updateEmail('missing', 'a@example.org', 'admin'),
+      ).rejects.toMatchObject({status: 404});
+      await register();
+      await accounts.verify(await token());
+      const before = await accounts.meta('alice');
+      await accounts.updateEmail('alice', 'alice@example.org', 'admin');
+      expect(await accounts.meta('alice')).toEqual(before);
+      for (const status of ['merging', 'merged']) {
+        await store.set(
+          'account:' + createHash('sha256').update('alice').digest('hex'),
+          {...before, status},
+        );
+        await expect(
+          accounts.updateEmail('alice', 'changed@example.org', 'admin'),
+        ).rejects.toMatchObject({status: 409});
+      }
+    });
+    it.each([
+      {
+        route: 'email',
+        field: 'email',
+        valid: 'New@Example.org',
+        saved: 'new@example.org',
+        invalid: 'not-an-email',
+      },
+      {
+        route: 'name',
+        field: 'displayName',
+        valid: ' Élodie Müller ',
+        saved: 'Élodie Müller',
+        invalid: '',
+      },
+    ])(
+      'requires administrator access to the $route update route',
+      async ({route, field, valid, saved, invalid}) => {
+        await seed('legacy');
+        const administration = new AdminService(
+          store,
+          accounts,
+          new ProjectLifecycle(store, await temporary()),
+          {} as any,
+          async () => {},
+        );
+        const app = express();
+        app.use(express.json());
+        app.use((req, _res, next) => {
+          req.user = {username: 'operator'};
+          next();
+        });
+        administration.install(
+          app,
+          (req, res, next) =>
+            req.headers['x-test-admin'] === 'true'
+              ? next()
+              : void res.sendStatus(403),
+          (_req, _res, next) => next(),
+          (_req, _res, next) => next(),
+        );
+        app.use((error: any, _req: any, res: any, _next: any) =>
+          res
+            .status(error.status || (error.name === 'ZodError' ? 400 : 500))
+            .json({error: error.message}),
+        );
+        await request(app)
+          .post('/admin/user/legacy/' + route)
+          .send({[field]: valid})
+          .expect(403);
+        expect(await accounts.meta('legacy')).not.toHaveProperty(field);
+        await request(app)
+          .post('/admin/user/legacy/' + route)
+          .set('x-test-admin', 'true')
+          .send({[field]: invalid})
+          .expect(400);
+        const response = await request(app)
+          .post('/admin/user/legacy/' + route)
+          .set('x-test-admin', 'true')
+          .send({[field]: valid})
+          .expect(200);
+        expect(response.body).toEqual({
+          username: 'legacy',
+          [field]: saved,
+        });
+      },
+    );
     it('requires verification and approval, keeps existing accounts active, and never overwrites duplicate credentials', async () => {
       await seed('admin', ['admin']);
       expect(await accounts.active('admin', 0)).toBe(true);
