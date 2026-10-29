@@ -1,4 +1,4 @@
-FROM node:24-trixie
+FROM node:26-trixie
 LABEL org.opencontainers.image.source=https://github.com/bfritscher/amcui-grademanager
 RUN apt-get update && apt-get install -y \
     auto-multiple-choice \
